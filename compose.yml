@@ -1,0 +1,25 @@
+name: ${COMPOSE_PROJECT_NAME:-postgres}
+services:
+  development:
+    container_name: ${CONTAINER_NAME:?container name is not defined...}
+    build:
+      context: .
+      target: database
+      dockerfile_inline: |
+        FROM postgres:16.0 as database
+        RUN localedef -i es_ES -c -f UTF-8 -A /usr/share/locale/locale.alias es_ES.UTF-8
+        ENV LANG es_ES.utf8
+    env_file: .env
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+      - POSTGRES_PASSWORD=${DB_PASS} # Mapeo de DB_PASS a POSTGRES_PASSWORD
+      - POSTGRES_USER=${DB_USER} # Opcional: Define el usuario si es necesario
+      - POSTGRES_DB=${DB_NAME}
+    restart: always
+    ports:
+      - ${DB_PORT:-5432}:5432
+    volumes:
+      - ./database/data:/var/lib/postgresql/data
+      - ./backups:/backups
+    extra_hosts:
+      - host.docker.internal:host-gateway
