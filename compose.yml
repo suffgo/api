@@ -10,13 +10,13 @@ services:
     env_file:
       - .env
     ports:
-      - ${API_PORT}:8080
+      - ${API_PORT}:3000
     networks:
       - suffgo-network
-    volumes:
-      - ./go.mod:/app/go.mod:rw
-      - ./go.sum:/app/go.sum:rw
-      - ./main.go:/app/main.go:rw
+    # volumes:
+      # - ./go.mod:/app/go.mod:rw
+      # - ./go.sum:/app/go.sum:rw
+      # - ./main.go:/app/main.go:rw
     extra_hosts:
       - host.docker.internal:host-gateway
 
