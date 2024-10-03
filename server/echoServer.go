@@ -2,6 +2,8 @@ package server
 
 import (
 	"fmt"
+	"suffgo-backend-t/config"
+	"suffgo-backend-t/database"
 
 	userHandlers "suffgo-backend-t/internal/user/handlers"
 	userRepositories "suffgo-backend-t/internal/user/repositories"
@@ -10,8 +12,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
-	"suffgo-backend-t/config"
-	"suffgo-backend-t/database"
 )
 
 type echoServer struct {
@@ -59,4 +59,5 @@ func (s *echoServer) initializeUserHttpHandler() {
 	userRoutes.POST("/register", userHttpHandler.RegisterUser)
 	userRoutes.GET("/:id", userHttpHandler.GetUserByID)
 	userRoutes.DELETE("/:id", userHttpHandler.DeleteUser)
+	userRoutes.GET("", userHttpHandler.GetAll)
 }

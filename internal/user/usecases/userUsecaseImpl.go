@@ -34,24 +34,19 @@ func (u *userUsecaseImpl) UserDataRegister(in *models.AddUserData) error {
 }
 
 func (u *userUsecaseImpl) GetUserByID(idStr string) (*entities.UserSafeDto, error) {
-
 	var userData *entities.UserSafeDto
 	id, err := strconv.Atoi(idStr)
-
 	if err != nil {
 		return userData, err
 	}
 
 	userData, nil := u.userRepository.GetUserByID(id)
 
-	
 	return userData, nil
 }
 
 func (u *userUsecaseImpl) DeleteUser(idStr string) error {
-
 	id, err := strconv.Atoi(idStr)
-
 	if err != nil {
 		return err
 	}
@@ -61,4 +56,25 @@ func (u *userUsecaseImpl) DeleteUser(idStr string) error {
 	}
 
 	return err
+}
+
+func (u *userUsecaseImpl) GetAll() ([]entities.UserSafeDto, error) {
+	users, err := u.userRepository.FetchAll()
+	if err != nil {
+		return nil, err
+	}
+
+	var usersDto []entities.UserSafeDto
+
+	for _, user := range users {
+		userDto := entities.UserSafeDto{
+			ID:       user.ID,
+			Dni:      user.Dni,
+			Mail:     user.Mail,
+			Username: user.Username,
+		}
+		usersDto = append(usersDto, userDto)
+	}
+
+	return usersDto, nil
 }

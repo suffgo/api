@@ -12,6 +12,7 @@ type (
 	}
 
 	UserDto struct {
+		ID       uint64 `json:"id"`
 		Dni      uint32
 		Mail     string
 		Password string
@@ -19,6 +20,7 @@ type (
 	}
 
 	UserSafeDto struct {
+		ID       uint   `json:"id"`
 		Dni      uint32 `json:"dni"`
 		Mail     string `json:"email"`
 		Username string `json:"username"`

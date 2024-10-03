@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-
 	"suffgo-backend-t/internal/user/models"
 	"suffgo-backend-t/internal/user/usecases"
 
@@ -49,9 +48,19 @@ func (h *userHttpHandler) GetUserByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, userData)
 }
 
-//Update
+// Retrieve all
+func (h *userHttpHandler) GetAll(c echo.Context) error {
+	users, err := h.userUsecase.GetAll()
+	if err != nil {
+		return err
+	}
 
-//Delete
+	return c.JSON(http.StatusOK, users)
+}
+
+// Update
+
+// Delete
 func (h *userHttpHandler) DeleteUser(c echo.Context) error {
 	userID := c.Param("id")
 

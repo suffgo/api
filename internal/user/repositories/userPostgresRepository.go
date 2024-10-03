@@ -35,8 +35,8 @@ func (r *userPostgresRepository) InsertUserData(in *entities.UserDto) error {
 	return nil
 }
 
+// esta mal esto deberia devolver el modelo original y en Usecase lo pasas a DTO
 func (r *userPostgresRepository) GetUserByID(id int) (*entities.UserSafeDto, error) {
-
 	var user entities.User
 
 	result := r.db.GetDb().First(&user, id)
@@ -45,6 +45,7 @@ func (r *userPostgresRepository) GetUserByID(id int) (*entities.UserSafeDto, err
 	}
 
 	userData := &entities.UserSafeDto{
+		ID:       user.ID,
 		Dni:      user.Dni,
 		Mail:     user.Mail,
 		Username: user.Username,
@@ -54,16 +55,29 @@ func (r *userPostgresRepository) GetUserByID(id int) (*entities.UserSafeDto, err
 }
 
 func (r *userPostgresRepository) DeleteUser(id int) error {
-	
-	result := r.db.GetDb().Delete(&entities.User{},id)
+	result := r.db.GetDb().Delete(&entities.User{}, id)
 
 	if result.Error != nil {
 		return result.Error
 	}
 
 	if result.RowsAffected == 0 {
-        return fmt.Errorf("user with ID %d not found", id)
-    }
+		return fmt.Errorf("user with ID %d not found", id)
+	}
 
 	return nil
+}
+
+func (r *userPostgresRepository) FetchAll() ([]entities.User, error) {
+	var users []entities.User
+
+	result := r.db.GetDb().Find(&users)
+
+	if result.RowsAffected == 0 {
+		return nil, fmt.Errorf("Any user was found")
+	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return users, nil
 }

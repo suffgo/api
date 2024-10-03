@@ -6,4 +6,5 @@ type UserHandler interface {
 	RegisterUser(c echo.Context) error
 	GetUserByID(c echo.Context) error
 	DeleteUser(c echo.Context) error
+	GetAll(c echo.Context) error
 }
