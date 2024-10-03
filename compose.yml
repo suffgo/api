@@ -1,25 +1,44 @@
-name: ${COMPOSE_PROJECT_NAME:-postgres}
+name: ${CONTAINER_NAME:?container name is not defined...}-postgres
 services:
-  development:
-    container_name: ${CONTAINER_NAME:?container name is not defined...}
+  app:
     build:
       context: .
-      target: database
-      dockerfile_inline: |
-        FROM postgres:16.0 as database
-        RUN localedef -i es_ES -c -f UTF-8 -A /usr/share/locale/locale.alias es_ES.UTF-8
-        ENV LANG es_ES.utf8
-    env_file: .env
-    environment:
-      - TZ=America/Argentina/Buenos_Aires
-      - POSTGRES_PASSWORD=${DB_PASS} # Mapeo de DB_PASS a POSTGRES_PASSWORD
-      - POSTGRES_USER=${DB_USER} # Opcional: Define el usuario si es necesario
-      - POSTGRES_DB=${DB_NAME}
-    restart: always
+      dockerfile: Dockerfile
+    container_name: go-app
+    depends_on:
+      - db
+    env_file:
+      - .env
     ports:
-      - ${DB_PORT:-5432}:5432
+      - ${API_PORT}:8080
+    networks:
+      - suffgo-network
     volumes:
-      - ./database/data:/var/lib/postgresql/data
-      - ./backups:/backups
+      - ./go.mod:/app/go.mod:rw
+      - ./go.sum:/app/go.sum:rw
+      - ./main.go:/app/main.go:rw
     extra_hosts:
       - host.docker.internal:host-gateway
+
+  db:
+    build: 
+      context: . 
+      target: database
+      dockerfile_inline: | 
+        FROM postgres:${POSTGRES_VERSION:-latest} as database
+        RUN localedef -i ${LOCALEDEF:-es_AR} -c -f UTF-8 -A /usr/share/locale/locale.alias ${LOCALEDEF:-es_AR}.UTF-8
+        ENV LANG ${LOCALEDEF:-es_AR}.utf8
+    restart: ${RESTART:-no}
+    ports:
+      - ${POSTGRES_PORT:-5432}:5432
+    volumes:
+      - ./docker/volumes/data:/var/lib/postgresql/data
+      - ./docker/volumes/backups:/backups
+    networks:
+      - suffgo-network
+    env_file:
+      - ./.env
+
+networks:
+  suffgo-network:
+    driver: bridge

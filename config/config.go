@@ -35,44 +35,43 @@ var (
 
 func GetConfig() *Config {
 	once.Do(func() {
-      err := godotenv.Load()
-      if err != nil {
-         log.Fatalf("Error al cargar archivo .env: %v", err)
-      }
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatalf("Error al cargar archivo .env: %v", err)
+		}
 
-      dbHost := os.Getenv("DB_HOST")
-      dbUser := os.Getenv("DB_USER")
-      dbPass := os.Getenv("DB_PASS")
-      dbName := os.Getenv("DB_NAME")
-      dbPort, err := strconv.Atoi(os.Getenv("DB_PORT"))
-      
-      if err != nil {
-         log.Fatalf("DB_PORT invalido: %s", os.Getenv("DB_PORT"))
-      }
+		dbHost := os.Getenv("POSTGRES_HOST")
+		dbUser := os.Getenv("POSTGRES_USER")
+		dbPass := os.Getenv("POSTGRES_PASSWORD")
+		dbName := os.Getenv("POSTGRES_NAME")
+		dbPort, err := strconv.Atoi(os.Getenv("POSTGRES_PORT"))
 
+		if err != nil {
+			log.Fatalf("POSTGRES_PORT invalido: %s", os.Getenv("POSTGRES_PORT"))
+		}
 
-      apiPort, err := strconv.Atoi(os.Getenv("API_PORT"))
+		apiPort, err := strconv.Atoi(os.Getenv("API_PORT"))
 
-      if err != nil {
-         log.Fatalf("API_PORT invalido: %s", os.Getenv("API_PORT"))
-      }
+		if err != nil {
+			log.Fatalf("API_PORT invalido: %s", os.Getenv("API_PORT"))
+		}
 
-      db := &Db{
-         Host: dbHost,
-         Port: dbPort,
-         User: dbUser,
-         Password: dbPass,
-         DBName: dbName,
-      }
+		db := &Db{
+			Host:     dbHost,
+			Port:     dbPort,
+			User:     dbUser,
+			Password: dbPass,
+			DBName:   dbName,
+		}
 
-      server := &Server{
-         Port: apiPort,
-      }
+		server := &Server{
+			Port: apiPort,
+		}
 
-      configInstance = &Config{
-         Server: server,
-         Db: db,
-      } 
+		configInstance = &Config{
+			Server: server,
+			Db:     db,
+		}
 	})
 
 	return configInstance
