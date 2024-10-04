@@ -74,7 +74,7 @@ func (r *userPostgresRepository) FetchAll() ([]entities.User, error) {
 	result := r.db.GetDb().Find(&users)
 
 	if result.RowsAffected == 0 {
-		return nil, fmt.Errorf("Any user was found")
+		return nil, fmt.Errorf("User table is null")
 	}
 	if result.Error != nil {
 		return nil, result.Error

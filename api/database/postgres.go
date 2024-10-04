@@ -30,7 +30,7 @@ func NewPostgresDatabase(conf *config.Config) Database {
 
 		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err != nil {
-			panic("failed to connect database")
+			panic("error to connect database")
 		}
 
 		dbInstance = &postgresDatabase{Db: db}

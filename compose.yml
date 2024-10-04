@@ -13,7 +13,8 @@ services:
       - ${API_PORT}:3000
     networks:
       - suffgo-network
-    # volumes:
+    volumes:
+      - ./api/:/app:rw
       # - ./go.mod:/app/go.mod:rw
       # - ./go.sum:/app/go.sum:rw
       # - ./main.go:/app/main.go:rw
