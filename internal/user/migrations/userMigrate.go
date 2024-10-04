@@ -1,9 +1,9 @@
 package main
 
 import (
-	"suffgo-backend-t/config"
-	"suffgo-backend-t/database"
-	"suffgo-backend-t/internal/user/entities"
+	"suffgo/config"
+	"suffgo/database"
+	"suffgo/internal/user/entities"
 )
 
 func main() {

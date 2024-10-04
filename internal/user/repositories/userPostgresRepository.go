@@ -2,8 +2,8 @@ package repositories
 
 import (
 	"fmt"
-	"suffgo-backend-t/database"
-	"suffgo-backend-t/internal/user/entities"
+	"suffgo/database"
+	"suffgo/internal/user/entities"
 
 	"github.com/labstack/gommon/log"
 )

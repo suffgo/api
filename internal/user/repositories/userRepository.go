@@ -1,6 +1,6 @@
 package repositories
 
-import "suffgo-backend-t/internal/user/entities"
+import "suffgo/internal/user/entities"
 
 type UserRepository interface {
 	InsertUserData(in *entities.UserDto) error

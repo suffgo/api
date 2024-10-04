@@ -2,7 +2,7 @@ package database
 
 import (
 	"fmt"
-	"suffgo-backend-t/config"
+	"suffgo/config"
 	"sync"
 
 	"gorm.io/driver/postgres"

@@ -2,12 +2,12 @@ package server
 
 import (
 	"fmt"
-	"suffgo-backend-t/config"
-	"suffgo-backend-t/database"
+	"suffgo/config"
+	"suffgo/database"
 
-	userHandlers "suffgo-backend-t/internal/user/handlers"
-	userRepositories "suffgo-backend-t/internal/user/repositories"
-	userUsecases "suffgo-backend-t/internal/user/usecases"
+	userHandlers "suffgo/internal/user/handlers"
+	userRepositories "suffgo/internal/user/repositories"
+	userUsecases "suffgo/internal/user/usecases"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"

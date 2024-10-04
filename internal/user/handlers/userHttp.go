@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"net/http"
-	"suffgo-backend-t/internal/user/models"
-	"suffgo-backend-t/internal/user/usecases"
+	"suffgo/internal/user/models"
+	"suffgo/internal/user/usecases"
 
 	"github.com/labstack/echo/v4"
 

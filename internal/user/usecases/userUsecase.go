@@ -1,8 +1,8 @@
 package usecases
 
 import (
-	"suffgo-backend-t/internal/user/entities"
-	"suffgo-backend-t/internal/user/models"
+	"suffgo/internal/user/entities"
+	"suffgo/internal/user/models"
 )
 
 type UserUsecase interface {

@@ -2,9 +2,9 @@ package usecases
 
 import (
 	"strconv"
-	"suffgo-backend-t/internal/user/entities"
-	"suffgo-backend-t/internal/user/models"
-	"suffgo-backend-t/internal/user/repositories"
+	"suffgo/internal/user/entities"
+	"suffgo/internal/user/models"
+	"suffgo/internal/user/repositories"
 )
 
 type userUsecaseImpl struct {
