@@ -15,6 +15,7 @@ services:
       - suffgo-network
     volumes:
       - ./api/:/app:rw
+      - ./.env:/app/.env:rw
       # - ./go.mod:/app/go.mod:rw
       # - ./go.sum:/app/go.sum:rw
       # - ./main.go:/app/main.go:rw

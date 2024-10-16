@@ -35,7 +35,7 @@ var (
 
 func GetConfig() *Config {
 	once.Do(func() {
-		err := godotenv.Load()
+		err := godotenv.Load("./.env")
 		if err != nil {
 			log.Fatalf("Error al cargar archivo .env: %v", err)
 		}
