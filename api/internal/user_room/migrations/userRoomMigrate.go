@@ -3,7 +3,7 @@ package main
 import (
 	"suffgo/config"
 	"suffgo/database"
-	"suffgo/internal/user/entities"
+	"suffgo/internal/user_room/entities"
 )
 
 func main() {
@@ -13,5 +13,5 @@ func main() {
 }
 
 func userMigrate(db database.Database) {
-	db.GetDb().Migrator().CreateTable(&entities.User{})
+	db.GetDb().Migrator().CreateTable(&entities.UserRoom{})
 }
