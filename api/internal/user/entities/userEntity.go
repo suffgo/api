@@ -1,28 +1,37 @@
 package entities
 
-import "gorm.io/gorm"
+import (
+	r "suffgo/internal/room/entities"
+	ur "suffgo/internal/user_room/entities"
+
+	"gorm.io/gorm"
+)
 
 type (
 	User struct {
 		gorm.Model
-		Dni      uint32 `gorm:"unique; not null"`
-		Mail     string `gorm:"unique; not null"`
-		Password string `gorm:"not null"`
-		Username string `gorm:"unique; not null"`
+		Dni          string        `gorm:"unique; not null"`
+		Mail         string        `gorm:"unique; not null"`
+		Password     string        `gorm:"not null"`
+		Username     string        `gorm:"unique; not null"`
+		CreatedRooms []r.Room      `gorm:"foreignKey:AdminID"`
+		AllowedRooms []ur.UserRoom `gorm:"foreignKey:UserID"` // salas a las que puede ingresar
 	}
 
 	UserDto struct {
-		ID       uint64 `json:"id"`
-		Dni      uint32
-		Mail     string
-		Password string
-		Username string
+		ID       uint        `json:"id"`
+		Dni      string      `json:"dni"`
+		Mail     string      `json:"mail"`
+		Password string      `json:"password"`
+		Username string      `json:"username"`
+		Rooms    []r.RoomDto `json:"rooms"`
 	}
 
 	UserSafeDto struct {
-		ID       uint   `json:"id"`
-		Dni      uint32 `json:"dni"`
-		Mail     string `json:"email"`
-		Username string `json:"username"`
+		ID       uint        `json:"id"`
+		Dni      string      `json:"dni"`
+		Mail     string      `json:"email"`
+		Username string      `json:"username"`
+		Rooms    []r.RoomDto `json:"rooms"`
 	}
 )

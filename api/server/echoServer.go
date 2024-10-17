@@ -5,6 +5,10 @@ import (
 	"suffgo/config"
 	"suffgo/database"
 
+	roomHandlers "suffgo/internal/room/handlers"
+	roomRepositories "suffgo/internal/room/repositories"
+	roomUsecases "suffgo/internal/room/usecases"
+
 	userHandlers "suffgo/internal/user/handlers"
 	userRepositories "suffgo/internal/user/repositories"
 	userUsecases "suffgo/internal/user/usecases"
@@ -41,6 +45,7 @@ func (s *echoServer) Start() {
 	})
 
 	s.initializeUserHttpHandler()
+	s.initializeRoomHttpHandler()
 	serverUrl := fmt.Sprintf(":%d", s.conf.Server.Port)
 	s.app.Logger.Fatal(s.app.Start(serverUrl))
 }
@@ -60,4 +65,19 @@ func (s *echoServer) initializeUserHttpHandler() {
 	userRoutes.GET("/:id", userHttpHandler.GetUserByID)
 	userRoutes.DELETE("/:id", userHttpHandler.DeleteUser)
 	userRoutes.GET("", userHttpHandler.GetAll)
+}
+
+func (s *echoServer) initializeRoomHttpHandler() {
+	roomPostgresRepository := roomRepositories.NewRoomPostgresRepository(s.db)
+	roomUsecase := roomUsecases.NewRoomUsecaseImpl(
+		roomPostgresRepository,
+	)
+
+	roomHttpHandler := roomHandlers.NewRoomHttpHandler(roomUsecase)
+
+	roomRoutes := s.app.Group("v1/room")
+	roomRoutes.POST("/register", roomHttpHandler.RegisterRoom)
+	roomRoutes.GET("/:id", roomHttpHandler.GetRoomByID)
+	roomRoutes.DELETE("/:id", roomHttpHandler.DeleteRoom)
+	roomRoutes.GET("", roomHttpHandler.GetAll)
 }
