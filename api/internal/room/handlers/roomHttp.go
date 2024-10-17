@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	usecases "suffgo/internal/room/usescases"
+	usecases "suffgo/internal/room/usecases"
 
 	"github.com/labstack/echo/v4"
 )
