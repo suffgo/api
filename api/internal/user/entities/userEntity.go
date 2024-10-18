@@ -19,19 +19,19 @@ type (
 	}
 
 	UserDto struct {
-		ID       uint        `json:"id"`
-		Dni      string      `json:"dni"`
-		Mail     string      `json:"mail"`
-		Password string      `json:"password"`
-		Username string      `json:"username"`
-		Rooms    []r.RoomDto `json:"rooms"`
+		ID           uint     `json:"id"`
+		Dni          string   `json:"dni"`
+		Mail         string   `json:"mail"`
+		Password     string   `json:"password"`
+		Username     string   `json:"username"`
+		CreatedRooms []r.Room `json:"createdRooms"`
 	}
 
 	UserSafeDto struct {
-		ID       uint        `json:"id"`
-		Dni      string      `json:"dni"`
-		Mail     string      `json:"email"`
-		Username string      `json:"username"`
-		Rooms    []r.RoomDto `json:"rooms"`
+		ID           uint     `json:"id"`
+		Dni          string   `json:"dni"`
+		Mail         string   `json:"email"`
+		Username     string   `json:"username"`
+		CreatedRooms []r.Room `json:"createdRooms"`
 	}
 )

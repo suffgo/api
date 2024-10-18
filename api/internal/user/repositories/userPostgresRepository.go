@@ -39,16 +39,17 @@ func (r *userPostgresRepository) InsertUserData(in *entities.UserDto) error {
 func (r *userPostgresRepository) GetUserByID(id int) (*entities.UserSafeDto, error) {
 	var user entities.User
 
-	result := r.db.GetDb().First(&user, id)
+	result := r.db.GetDb().Preload("CreatedRooms").First(&user, id)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
 	userData := &entities.UserSafeDto{
-		ID:       user.ID,
-		Dni:      user.Dni,
-		Mail:     user.Mail,
-		Username: user.Username,
+		ID:           user.ID,
+		Dni:          user.Dni,
+		Mail:         user.Mail,
+		Username:     user.Username,
+		CreatedRooms: user.CreatedRooms,
 	}
 
 	return userData, nil
@@ -71,7 +72,7 @@ func (r *userPostgresRepository) DeleteUser(id int) error {
 func (r *userPostgresRepository) FetchAll() ([]entities.User, error) {
 	var users []entities.User
 
-	result := r.db.GetDb().Find(&users)
+	result := r.db.GetDb().Preload("CreatedRooms").Find(&users)
 
 	if result.RowsAffected == 0 {
 		return nil, fmt.Errorf("User table is null")

@@ -1,8 +1,8 @@
 package models
 
 type AddUserData struct {
-	Dni      string `json:"Dni"`
-	Mail     string `json:"Mail"`
-	Password string `json:"Password"`
-	Username string `json:"Username"`
+	Dni      string `json:"dni"`
+	Mail     string `json:"mail"`
+	Password string `json:"password"`
+	Username string `json:"username"`
 }

@@ -22,6 +22,5 @@ type (
 		IsFormal     bool          `json:"isFormal"`
 		Name         string        `json:"name"`
 		AdminID      uint          `json:"admin"`
-		AllowedUsers []ur.UserRoom `json:"allowedUsers"`
 	}
 )

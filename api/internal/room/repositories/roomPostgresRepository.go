@@ -48,7 +48,6 @@ func (r *roomPostgresRepository) GetRoomByID(id int) (*entities.RoomDto, error) 
 		IsFormal:     room.IsFormal,
 		Name:         room.Name,
 		AdminID:      room.AdminID,
-		AllowedUsers: room.AllowedUsers,
 	}
 
 	return roomData, nil

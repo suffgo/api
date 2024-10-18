@@ -1,13 +1,8 @@
 package models
 
-import (
-	ur "suffgo/internal/user_room/entities"
-)
-
 type AddRoomData struct {
-	LinkInvite   *string
-	IsFormal     bool
-	Name         string
-	AdminID      uint
-	AllowedUsers []ur.UserRoom
+	LinkInvite *string `json:"linkInvite"`
+	IsFormal   bool    `json:"isFormal"`
+	Name       string  `json:"name"`
+	AdminID    uint    `json:"adminID"`
 }

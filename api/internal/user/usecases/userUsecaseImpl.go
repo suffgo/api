@@ -64,14 +64,15 @@ func (u *userUsecaseImpl) GetAll() ([]entities.UserSafeDto, error) {
 		return nil, err
 	}
 
-	var usersDto []entities.UserSafeDto
+	var usersDto []entities.UserSafeDto // devuelvo un dto seguro sin password
 
 	for _, user := range users {
 		userDto := entities.UserSafeDto{
-			ID:       user.ID,
-			Dni:      user.Dni,
-			Mail:     user.Mail,
-			Username: user.Username,
+			ID:           user.ID,
+			Dni:          user.Dni,
+			Mail:         user.Mail,
+			Username:     user.Username,
+			CreatedRooms: user.CreatedRooms,
 		}
 		usersDto = append(usersDto, userDto)
 	}
