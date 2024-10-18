@@ -10,6 +10,6 @@ import (
 func Migrate(db database.Database) {
 	err := db.GetDb().AutoMigrate(&u.User{}, &r.Room{}, &ur.UserRoom{})
 	if err != nil {
-		panic("Could migrate to database")
+		panic("Could not migrate to database")
 	}
 }
