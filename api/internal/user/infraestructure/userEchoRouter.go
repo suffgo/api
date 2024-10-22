@@ -1,0 +1,15 @@
+package infraestructure
+
+import (
+	"github.com/labstack/echo/v4"
+)
+
+
+func InitializeUserEchoRouter(e *echo.Echo, handler *UserHandler) {
+    userGroup := e.Group("/v1/users")
+
+    userGroup.POST("", handler.CreateUser)
+    userGroup.DELETE("/:id", handler.DeleteUser)
+    userGroup.GET("", handler.GetAllUsers)
+    userGroup.GET("/:id", handler.GetUserByID)
+}
