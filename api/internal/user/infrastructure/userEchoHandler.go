@@ -1,7 +1,9 @@
 package infrastructure
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 	u "suffgo/internal/user/application/useCases"
 
 	"suffgo/internal/user/domain"
@@ -87,5 +89,31 @@ func (h *UserHandler) GetAllUsers(c echo.Context) error {
 }
 
 func (h *UserHandler) GetUserByID(c echo.Context) error {
-	return nil
+	idParam := c.Param("id")
+    idInput, err := strconv.ParseInt(idParam, 10, 64)
+    if err != nil {
+        return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
+    }
+	
+	id, _ := v.NewID(uint(idInput))
+	user, err := h.GetUserByIDUsecase.Execute(*id)
+	
+	fmt.Printf("id = %d\n", id.Id)
+	if err != nil {
+        if err.Error() == "user not found" {
+            return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
+        }
+        return c.JSON(http.StatusInternalServerError, map[string]string{"error": "User fetch error"})
+    }
+
+	userDTO := &domain.UserDTO{
+		ID: user.ID().Id,
+		Name: user.FullName().Name,
+		Lastname: user.FullName().Lastname,
+		Username: user.Username().Username,
+		Dni: user.Dni().Dni,
+		Email: user.Email().Email,
+		Password: user.Password().Password,
+	}
+	return c.JSON(http.StatusOK, userDTO)
 }

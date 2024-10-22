@@ -18,7 +18,7 @@ func DomainToModel(user *domain.User) *m.User {
 	}
 }
 
-func modelToDomain(userModel *m.User) (*domain.User, error) {
+func ModelToDomain(userModel *m.User) (*domain.User, error) {
 	id, err := v.NewID(userModel.ID)
 	if err != nil {
 		return nil, err
