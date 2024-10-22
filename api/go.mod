@@ -4,14 +4,12 @@ go 1.23.2
 
 require (
 	github.com/joho/godotenv v1.5.1
-	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/lib/pq v1.10.9
 	xorm.io/xorm v1.3.9
 )
 
 require (
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/goccy/go-json v0.8.1 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/snappy v0.0.4 // indirect
