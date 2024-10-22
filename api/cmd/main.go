@@ -3,7 +3,7 @@ package main
 import (
 	"suffgo/cmd/config"
 	"suffgo/cmd/database"
-	e "suffgo/internal/shared/infraestructure"
+	e "suffgo/internal/shared/infrastructure"
 )
 
 func main() {

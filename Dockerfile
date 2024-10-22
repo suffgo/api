@@ -1,4 +1,4 @@
-FROM golang:1.23.1 AS builder
+FROM golang:1.23.2 AS builder
 
 WORKDIR /app
 
@@ -11,4 +11,4 @@ RUN go install github.com/air-verse/air@latest
 
 EXPOSE 8080
 
-CMD ["air"]
+CMD ["air", "-d"]

@@ -6,7 +6,7 @@ import (
 
 type (
 	User struct {
-		id       v.UserID
+		id       *v.UserID
 		name     v.UserFullName
 		username v.UserUserName
 		dni      v.UserDni
@@ -15,16 +15,33 @@ type (
 	}
 
 	UserDTO struct {
-		ID      v.UserID       `json:"id"`
-		Name     v.UserFullName `json:"name"`
-		Username v.UserUserName `json:"username"`
-		Dni      v.UserDni      `json:"dni"`
-		Email    v.UserEmail    `json:"email"`
-		Password v.UserPassword `json:"password"`
+		ID       uint   `json:"id"`
+		Name     string `json:"name"`
+		Lastname string `json:"lastname"`
+		Username string `json:"username"`
+		Dni      string `json:"dni"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	UserCreateRequest struct {
+		Name     string `json:"name" `
+		Lastname string `json:"lastname" `
+		Username string `json:"username" `
+		Dni      string `json:"dni" `
+		Email    string `json:"email"`
+		Password string `json:"password" `
 	}
 )
 
-func NewUser(id v.UserID, name v.UserFullName, username v.UserUserName, dni v.UserDni, email v.UserEmail, password v.UserPassword) *User {
+func NewUser(
+	id *v.UserID,
+	name v.UserFullName,
+	username v.UserUserName,
+	dni v.UserDni,
+	email v.UserEmail,
+	password v.UserPassword,
+) *User {
 	return &User{
 		id:       id,
 		name:     name,
@@ -36,7 +53,7 @@ func NewUser(id v.UserID, name v.UserFullName, username v.UserUserName, dni v.Us
 }
 
 func (u *User) ID() v.UserID {
-	return u.id
+	return *u.id
 }
 
 func (u *User) Email() v.UserEmail {
@@ -58,5 +75,3 @@ func (u *User) Password() v.UserPassword {
 func (u *User) FullName() v.UserFullName {
 	return u.name
 }
-
-

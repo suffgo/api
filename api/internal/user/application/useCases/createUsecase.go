@@ -20,6 +20,10 @@ func NewCreateUsecase(repository domain.UserRepository) *CreateUsecase {
 func (s *CreateUsecase) Execute(user domain.User) error {
 	// Business Logic: Check if the user already exists
 	existingUser, err := s.repository.GetByEmail(user.Email())
+	if err != nil {
+		return err
+	}
+
 	if existingUser != nil {
 		// User with the same email already exists
 		return errors.New("user already exists with this email")
