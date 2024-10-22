@@ -6,12 +6,12 @@ import (
 
 type (
 	User struct {
-		id       *v.UserID
-		name     v.UserFullName
-		username v.UserUserName
-		dni      v.UserDni
-		email    v.UserEmail
-		password v.UserPassword
+		id       *v.ID
+		name     v.FullName
+		username v.UserName
+		dni      v.Dni
+		email    v.Email
+		password v.Password
 	}
 
 	UserDTO struct {
@@ -35,12 +35,12 @@ type (
 )
 
 func NewUser(
-	id *v.UserID,
-	name v.UserFullName,
-	username v.UserUserName,
-	dni v.UserDni,
-	email v.UserEmail,
-	password v.UserPassword,
+	id *v.ID,
+	name v.FullName,
+	username v.UserName,
+	dni v.Dni,
+	email v.Email,
+	password v.Password,
 ) *User {
 	return &User{
 		id:       id,
@@ -52,26 +52,26 @@ func NewUser(
 	}
 }
 
-func (u *User) ID() v.UserID {
+func (u *User) ID() v.ID {
 	return *u.id
 }
 
-func (u *User) Email() v.UserEmail {
+func (u *User) Email() v.Email {
 	return u.email
 }
 
-func (u *User) Username() v.UserUserName {
+func (u *User) Username() v.UserName {
 	return u.username
 }
 
-func (u *User) Dni() v.UserDni {
+func (u *User) Dni() v.Dni {
 	return u.dni
 }
 
-func (u *User) Password() v.UserPassword {
+func (u *User) Password() v.Password {
 	return u.password
 }
 
-func (u *User) FullName() v.UserFullName {
+func (u *User) FullName() v.FullName {
 	return u.name
 }

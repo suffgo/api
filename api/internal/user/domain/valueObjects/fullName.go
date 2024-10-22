@@ -1,16 +1,16 @@
 package valueobjects
 
 type (
-	UserFullName struct {
+	FullName struct {
 		Name     string
 		Lastname string
 	}
 )
 
-func NewUserFullName(name, lastname string) *UserFullName {
+func NewFullName(name, lastname string) (*FullName, error) {
 
-	return &UserFullName{
+	return &FullName{
 		Name:     name,
 		Lastname: lastname,
-	}
+	}, nil
 }

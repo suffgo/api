@@ -17,7 +17,7 @@ func NewUserXormRepository(db database.Database) *UserXormRepository {
 	}
 }
 
-func (s *UserXormRepository) GetByID(id v.UserID) (*d.User, error) {
+func (s *UserXormRepository) GetByID(id v.ID) (*d.User, error) {
 	return nil, nil
 }
 
@@ -30,7 +30,7 @@ func (s *UserXormRepository) GetAll() ([]d.User, error) {
 	return users, nil
 }
 
-func (s *UserXormRepository) Delete(id v.UserID) error {
+func (s *UserXormRepository) Delete(id v.ID) error {
 	return nil
 }
 
@@ -38,7 +38,7 @@ func (s *UserXormRepository) Create(user d.User) error {
 	return nil
 }
 
-func (s *UserXormRepository) GetByEmail(email v.UserEmail) (*d.User, error) {
+func (s *UserXormRepository) GetByEmail(email v.Email) (*d.User, error) {
 	return nil, nil
 }
 

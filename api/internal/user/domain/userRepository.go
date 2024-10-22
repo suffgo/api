@@ -5,11 +5,11 @@ import (
 )
 
 type UserRepository interface {
-	GetByID(id v.UserID) (*User, error)
+	GetByID(id v.ID) (*User, error)
 	GetAll() ([]User, error)
-	Delete(id v.UserID) error
+	Delete(id v.ID) error
 	Create(user User) error
-	GetByEmail(email v.UserEmail) (*User, error)
+	GetByEmail(email v.Email) (*User, error)
 	Save(user User) error
 	// Update(user User) error
 }

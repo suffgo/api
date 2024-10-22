@@ -38,18 +38,39 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
+
+	fullname, err := v.NewFullName(req.Name, req.Lastname)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+	username, err := v.NewUserName(req.Username)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+	dni, err := v.NewDni(req.Dni)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+	email, err := v.NewEmail(req.Email)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+	password, err := v.NewPassword(req.Password)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
 	// Map DTO to domain entity
 	user := domain.NewUser(
 		nil,
-		*v.NewUserFullName(req.Name, req.Lastname),
-		*v.NewUserUserName(req.Username),
-		*v.NewUserDni(req.Dni),
-		*v.NewUserEmail(req.Email),
-		*v.NewUserPassword(req.Password),
+		*fullname,
+		*username,
+		*dni,
+		*email,
+		*password,
 	)
 
 	// Call the use case
-	err := h.CreateUserUsecase.Execute(*user)
+	err = h.CreateUserUsecase.Execute(*user)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
