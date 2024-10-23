@@ -11,3 +11,7 @@ func NewDeleteUsecase(repository domain.UserRepository) *DeleteUsecase {
 		userDeleteRepository: repository,
 	}
 }
+
+func (s *DeleteUsecase) Execute() error {
+	return nil
+}

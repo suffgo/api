@@ -34,7 +34,6 @@ func (s *EchoServer) Start() {
 	// Initialize the User Repository with xorm impl
 	userRepo := u.NewUserXormRepository(s.db)
 
-
 	// Initialize Use Cases
 	createUserUseCase := userUsecase.NewCreateUsecase(userRepo)
 	deleteUserUseCase := userUsecase.NewDeleteUsecase(userRepo)
