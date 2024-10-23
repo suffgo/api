@@ -3,7 +3,7 @@ package mappers
 import (
 	"suffgo/internal/user/domain"
 	v "suffgo/internal/user/domain/valueObjects"
-	m "suffgo/internal/shared/infrastructure/models"
+	m "suffgo/internal/user/infrastructure/models"
 	sv "suffgo/internal/shared/domain/valueObjects"
 )
 

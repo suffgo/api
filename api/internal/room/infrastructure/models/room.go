@@ -7,6 +7,5 @@ type (
 		IsFormal      bool    `xorm:"not null"`
 		Name          string  `xorm:"varchar(255) not null"`
 		UserID        uint    `xorm:"'user_id' index not null"` //admin
-		JoinableUsers []User  `xorm:"-"`
 	}
 )

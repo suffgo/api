@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"suffgo/cmd/config"
 	"suffgo/cmd/database"
-	m "suffgo/internal/shared/infrastructure/models"
+	m "suffgo/internal/user/infrastructure/models"
+	ur "suffgo/internal/userRoom/infrastructure/models"
+	r "suffgo/internal/room/infrastructure/models"
 )
 
 func main() {
@@ -32,7 +34,7 @@ func MigrateUser(db database.Database) error {
 }
 
 func MigrateRoom(db database.Database) error {
-	err := db.GetDb().Sync2(new(m.Room), new(m.UserRoom))
+	err := db.GetDb().Sync2(new(r.Room), new(ur.UserRoom))
 
 	if err!= nil {
 		panic(err)
