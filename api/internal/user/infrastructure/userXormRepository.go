@@ -6,7 +6,7 @@ import (
 	d "suffgo/internal/user/domain"
 	v "suffgo/internal/user/domain/valueObjects"
 	"suffgo/internal/user/infrastructure/mappers"
-	m "suffgo/internal/user/infrastructure/models"
+	m "suffgo/internal/shared/infrastructure/models"
 	ue "suffgo/internal/user/domain/errors"
 	se "suffgo/internal/shared/domain/errors"
 )

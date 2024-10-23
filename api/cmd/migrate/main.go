@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"suffgo/cmd/config"
 	"suffgo/cmd/database"
-	m "suffgo/internal/user/infrastructure/models"
+	m "suffgo/internal/shared/infrastructure/models"
 )
 
 func main() {
@@ -12,7 +12,7 @@ func main() {
 	db := database.NewPostgresDatabase(conf)
 
 	MigrateUser(db)
-	//MigrateRoom(db)
+	MigrateRoom(db)
 	//MigrateProposal(db)
 	//MigrateOption(db)
 	//MigrateRoomSetting(db)
@@ -26,6 +26,18 @@ func MigrateUser(db database.Database) error {
 		panic(err)
 	} else {
 		fmt.Printf("Se ha migrado User con exito\n")
+	}
+
+	return err
+}
+
+func MigrateRoom(db database.Database) error {
+	err := db.GetDb().Sync2(new(m.Room), new(m.UserRoom))
+
+	if err!= nil {
+		panic(err)
+	} else {
+		fmt.Printf("Se ha migrado Room y UserRoom con exito\n")
 	}
 
 	return err
