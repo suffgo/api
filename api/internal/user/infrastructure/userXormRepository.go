@@ -1,13 +1,14 @@
 package infrastructure
 
 import (
-	"errors"
 	"suffgo/cmd/database"
+	sv "suffgo/internal/shared/domain/valueObjects"
 	d "suffgo/internal/user/domain"
 	v "suffgo/internal/user/domain/valueObjects"
 	"suffgo/internal/user/infrastructure/mappers"
 	m "suffgo/internal/user/infrastructure/models"
-	sv "suffgo/internal/shared/domain/valueObjects"
+	ue "suffgo/internal/user/domain/errors"
+	se "suffgo/internal/shared/domain/errors"
 )
 
 type UserXormRepository struct {
@@ -27,38 +28,49 @@ func (s *UserXormRepository) GetByID(id sv.ID) (*d.User, error) {
 		return nil, err
 	}
 	if !has {
-		return nil, errors.New("user not found")
+		return nil, ue.UserNotFoundError
 	}
 
 	userEnt, err := mappers.ModelToDomain(userModel)
 
 	if err != nil {
-		return nil, errors.New("Error de mapeo de datos")
+		return nil, se.DataMappingError
 	}
 
 	return userEnt, nil
 }
 
 func (s *UserXormRepository) GetAll() ([]d.User, error) {
-	var users []d.User
+	var users []m.User
 	err := s.db.GetDb().Find(&users)
 	if err != nil {
 		return nil, err
 	}
-	return users, nil
+
+	var usersDomain []d.User
+	for _, user := range users {
+		userDomain, err := mappers.ModelToDomain(&user)
+
+		if err != nil {
+			return nil, err
+		}
+
+		usersDomain = append(usersDomain, *userDomain)
+	}
+	return usersDomain, nil
 }
 
 func (s *UserXormRepository) Delete(id sv.ID) error {
 
-	_, err := s.db.GetDb().ID(id.Id).Delete(&m.User{})
+	affected, err := s.db.GetDb().ID(id.Id).Delete(&m.User{})
 	if err != nil {
-		// Manejar el error
 		return  err
 	}
-	return nil
-}
 
-func (s *UserXormRepository) Create(user d.User) error {
+	if affected == 0 {
+		return ue.UserNotFoundError
+	}
+	
 	return nil
 }
 

@@ -9,7 +9,6 @@ type UserRepository interface {
 	GetByID(id sv.ID) (*User, error)
 	GetAll() ([]User, error)
 	Delete(id sv.ID) error
-	Create(user User) error
 	GetByEmail(email v.Email) (*User, error)
 	Save(user User) error
 	// Update(user User) error
