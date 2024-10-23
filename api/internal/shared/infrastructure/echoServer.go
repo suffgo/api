@@ -30,7 +30,7 @@ func NewEchoServer(db database.Database, conf *config.Config) *EchoServer {
 func (s *EchoServer) Start() {
 	s.app.Use(middleware.Recover())
 	s.app.Use(middleware.Logger())
-	
+	s.db.GetDb().ShowSQL(true)
 	s.InitializeUser()
 
 	// Health check adding
