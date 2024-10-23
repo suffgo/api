@@ -9,6 +9,7 @@ import (
 	v "suffgo/internal/user/domain/valueObjects"
 
 	"github.com/labstack/echo/v4"
+	sv "suffgo/internal/shared/domain/valueObjects"
 )
 
 type UserEchoHandler struct {
@@ -96,7 +97,7 @@ func (h *UserEchoHandler) GetUserByID(c echo.Context) error {
         return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
     }
 	
-	id, _ := v.NewID(uint(idInput))
+	id, _ := sv.NewID(uint(idInput))
 	user, err := h.GetUserByIDUsecase.Execute(*id)
 	
 	if err != nil {
