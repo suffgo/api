@@ -5,8 +5,8 @@ import (
 	"suffgo/cmd/database"
 	d "suffgo/internal/user/domain"
 	v "suffgo/internal/user/domain/valueObjects"
-	m "suffgo/internal/user/infrastructure/models"
 	"suffgo/internal/user/infrastructure/mappers"
+	m "suffgo/internal/user/infrastructure/models"
 )
 
 type UserXormRepository struct {
@@ -21,13 +21,13 @@ func NewUserXormRepository(db database.Database) *UserXormRepository {
 
 func (s *UserXormRepository) GetByID(id v.ID) (*d.User, error) {
 	userModel := new(m.User)
-    has, err := s.db.GetDb().ID(id.Id).Get(userModel)
-    if err != nil {
-        return nil, err
-    }
-    if !has {
-        return nil, errors.New("user not found")
-    }
+	has, err := s.db.GetDb().ID(id.Id).Get(userModel)
+	if err != nil {
+		return nil, err
+	}
+	if !has {
+		return nil, errors.New("user not found")
+	}
 
 	userEnt, err := mappers.ModelToDomain(userModel)
 
@@ -35,7 +35,7 @@ func (s *UserXormRepository) GetByID(id v.ID) (*d.User, error) {
 		return nil, errors.New("Error de mapeo de datos")
 	}
 
-    return userEnt, nil
+	return userEnt, nil
 }
 
 func (s *UserXormRepository) GetAll() ([]d.User, error) {
@@ -48,6 +48,12 @@ func (s *UserXormRepository) GetAll() ([]d.User, error) {
 }
 
 func (s *UserXormRepository) Delete(id v.ID) error {
+
+	_, err := s.db.GetDb().ID(id.Id).Delete(&m.User{})
+	if err != nil {
+		// Manejar el error
+		return  err
+	}
 	return nil
 }
 
