@@ -1,7 +1,6 @@
 package infrastructure
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	u "suffgo/internal/user/application/useCases"
@@ -12,21 +11,21 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type UserHandler struct {
+type UserEchoHandler struct {
 	CreateUserUsecase  *u.CreateUsecase
 	DeleteUserUsecase  *u.DeleteUsecase
 	GetAllUsersUsecase *u.GetAllUsecase
 	GetUserByIDUsecase *u.GetByIDUsecase
 }
 
-// Constructor for UserHandler
+// Constructor for UserEchoHandler
 func NewUserEchoHandler(
 	createUC *u.CreateUsecase,
 	deleteUC *u.DeleteUsecase,
 	getAllUC *u.GetAllUsecase,
 	getByIDUC *u.GetByIDUsecase,
-) *UserHandler {
-	return &UserHandler{
+) *UserEchoHandler {
+	return &UserEchoHandler{
 		CreateUserUsecase:  createUC,
 		DeleteUserUsecase:  deleteUC,
 		GetAllUsersUsecase: getAllUC,
@@ -34,9 +33,9 @@ func NewUserEchoHandler(
 	}
 }
 
-func (h *UserHandler) CreateUser(c echo.Context) error {
-	// Bind the request body to a DTO or model
+func (h *UserEchoHandler) CreateUser(c echo.Context) error {
 	var req domain.UserCreateRequest
+	// bindea el body del request (json) al dto
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -62,6 +61,7 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 	// Map DTO to domain entity
+
 	user := domain.NewUser(
 		nil,
 		*fullname,
@@ -80,15 +80,16 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 	return c.JSON(http.StatusCreated, req)
 }
 
-func (h *UserHandler) DeleteUser(c echo.Context) error {
+func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
 	return nil
 }
 
-func (h *UserHandler) GetAllUsers(c echo.Context) error {
+func (h *UserEchoHandler) GetAllUsers(c echo.Context) error {
 	return nil
 }
 
-func (h *UserHandler) GetUserByID(c echo.Context) error {
+func (h *UserEchoHandler) GetUserByID(c echo.Context) error {
+	
 	idParam := c.Param("id")
     idInput, err := strconv.ParseInt(idParam, 10, 64)
     if err != nil {
@@ -98,7 +99,6 @@ func (h *UserHandler) GetUserByID(c echo.Context) error {
 	id, _ := v.NewID(uint(idInput))
 	user, err := h.GetUserByIDUsecase.Execute(*id)
 	
-	fmt.Printf("id = %d\n", id.Id)
 	if err != nil {
         if err.Error() == "user not found" {
             return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})

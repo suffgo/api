@@ -4,7 +4,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func InitializeUserEchoRouter(e *echo.Echo, handler *UserHandler) {
+func InitializeUserEchoRouter(e *echo.Echo, handler *UserEchoHandler) {
 	userGroup := e.Group("/v1/users")
 
 	userGroup.POST("", handler.CreateUser)
