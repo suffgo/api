@@ -2,11 +2,12 @@ package domain
 
 import (
 	v "suffgo/internal/user/domain/valueObjects"
+	sv "suffgo/internal/shared/domain/valueObjects"
 )
 
 type (
 	User struct {
-		id       *v.ID
+		id       *sv.ID
 		name     v.FullName
 		username v.UserName
 		dni      v.Dni
@@ -35,7 +36,7 @@ type (
 )
 
 func NewUser(
-	id *v.ID,
+	id *sv.ID,
 	name v.FullName,
 	username v.UserName,
 	dni v.Dni,
@@ -52,7 +53,7 @@ func NewUser(
 	}
 }
 
-func (u *User) ID() v.ID {
+func (u *User) ID() sv.ID {
 	return *u.id
 }
 

@@ -2,7 +2,7 @@ package usecases
 
 import (
 	"suffgo/internal/user/domain"
-	v "suffgo/internal/user/domain/valueObjects"
+	sv "suffgo/internal/shared/domain/valueObjects"
 )
 
 type GetByIDUsecase struct {
@@ -16,7 +16,7 @@ func NewGetByIDUsecase(repository domain.UserRepository) *GetByIDUsecase{
 	}
 }
 
-func (s *GetByIDUsecase) Execute(id v.ID) (*domain.User, error) {
+func (s *GetByIDUsecase) Execute(id sv.ID) (*domain.User, error) {
 
 	user, err := s.userGetByIDRepository.GetByID(id)
 
