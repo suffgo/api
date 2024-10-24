@@ -5,10 +5,13 @@ import (
 	"strconv"
 	u "suffgo/internal/user/application/useCases"
 
-	"suffgo/internal/user/domain"
+	d "suffgo/internal/user/domain"
 	v "suffgo/internal/user/domain/valueObjects"
 
 	"github.com/labstack/echo/v4"
+	sv "suffgo/internal/shared/domain/valueObjects"
+
+	se "suffgo/internal/shared/domain/errors"
 )
 
 type UserEchoHandler struct {
@@ -34,7 +37,7 @@ func NewUserEchoHandler(
 }
 
 func (h *UserEchoHandler) CreateUser(c echo.Context) error {
-	var req domain.UserCreateRequest
+	var req d.UserCreateRequest
 	// bindea el body del request (json) al dto
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -62,7 +65,7 @@ func (h *UserEchoHandler) CreateUser(c echo.Context) error {
 	}
 	// Map DTO to domain entity
 
-	user := domain.NewUser(
+	user := d.NewUser(
 		nil,
 		*fullname,
 		*username,
@@ -81,38 +84,79 @@ func (h *UserEchoHandler) CreateUser(c echo.Context) error {
 }
 
 func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
-	return nil
+
+	idParam := c.Param("id")
+	idInput, err := strconv.ParseInt(idParam, 10, 64)
+
+	if err != nil {
+		invalidErr := &se.InvalidIDError{ID: idParam}
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
+	}
+
+	id, _ := sv.NewID(uint(idInput))
+	err = h.DeleteUserUsecase.Execute(*id)
+
+	if err != nil {
+		if err.Error() == "user not found" {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"success": "User deleted succesfully"})
 }
 
 func (h *UserEchoHandler) GetAllUsers(c echo.Context) error {
-	return nil
+	
+	users, err := h.GetAllUsersUsecase.Execute()
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	var usersDTO []d.UserDTO
+	for _, user := range users {
+		userDTO := &d.UserDTO{
+			ID:       user.ID().Id,
+			Name:     user.FullName().Name,
+			Lastname: user.FullName().Lastname,
+			Username: user.Username().Username,
+			Dni:      user.Dni().Dni,
+			Email:    user.Email().Email,
+			Password: user.Password().Password,
+		}
+		usersDTO = append(usersDTO, *userDTO)
+	}
+
+	return c.JSON(http.StatusOK, usersDTO)
 }
 
 func (h *UserEchoHandler) GetUserByID(c echo.Context) error {
-	
-	idParam := c.Param("id")
-    idInput, err := strconv.ParseInt(idParam, 10, 64)
-    if err != nil {
-        return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
-    }
-	
-	id, _ := v.NewID(uint(idInput))
-	user, err := h.GetUserByIDUsecase.Execute(*id)
-	
-	if err != nil {
-        if err.Error() == "user not found" {
-            return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
-        }
-        return c.JSON(http.StatusInternalServerError, map[string]string{"error": "User fetch error"})
-    }
 
-	userDTO := &domain.UserDTO{
-		ID: user.ID().Id,
-		Name: user.FullName().Name,
+	idParam := c.Param("id")
+	idInput, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		invalidErr := &se.InvalidIDError{ID: idParam}
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
+	}
+
+	id, _ := sv.NewID(uint(idInput))
+	user, err := h.GetUserByIDUsecase.Execute(*id)
+
+	if err != nil {
+		if err.Error() == "user not found" {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	userDTO := &d.UserDTO{
+		ID:       user.ID().Id,
+		Name:     user.FullName().Name,
 		Lastname: user.FullName().Lastname,
 		Username: user.Username().Username,
-		Dni: user.Dni().Dni,
-		Email: user.Email().Email,
+		Dni:      user.Dni().Dni,
+		Email:    user.Email().Email,
 		Password: user.Password().Password,
 	}
 	return c.JSON(http.StatusOK, userDTO)

@@ -30,7 +30,24 @@ func NewEchoServer(db database.Database, conf *config.Config) *EchoServer {
 func (s *EchoServer) Start() {
 	s.app.Use(middleware.Recover())
 	s.app.Use(middleware.Logger())
+	s.db.GetDb().ShowSQL(true)
+	s.InitializeUser()
+
+	// Health check adding
+	s.app.GET("/v1/health", func(c echo.Context) error {
+		return c.String(200, "OK")
+	})
+
+	for _, route := range s.app.Routes() {
+		fmt.Printf("Ruta registrada: Método=%s, Ruta=%s\n", route.Method, route.Path)
+	}
 	
+	serverUrl := fmt.Sprintf(":%d", s.conf.Server.Port)
+	s.app.Logger.Fatal(s.app.Start(serverUrl))
+}
+
+
+func (s *EchoServer) InitializeUser() {
 	// Initialize the User Repository with xorm impl
 	userRepo := u.NewUserXormRepository(s.db)
 
@@ -50,16 +67,4 @@ func (s *EchoServer) Start() {
 
 	// Initialize User Router
 	u.InitializeUserEchoRouter(s.app, userHandler)
-
-	// Health check adding
-	s.app.GET("/v1/health", func(c echo.Context) error {
-		return c.String(200, "OK")
-	})
-
-	for _, route := range s.app.Routes() {
-		fmt.Printf("Ruta registrada: Método=%s, Ruta=%s\n", route.Method, route.Path)
-	}
-	
-	serverUrl := fmt.Sprintf(":%d", s.conf.Server.Port)
-	s.app.Logger.Fatal(s.app.Start(serverUrl))
 }

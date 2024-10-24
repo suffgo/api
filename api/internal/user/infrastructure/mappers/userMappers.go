@@ -4,6 +4,7 @@ import (
 	"suffgo/internal/user/domain"
 	v "suffgo/internal/user/domain/valueObjects"
 	m "suffgo/internal/user/infrastructure/models"
+	sv "suffgo/internal/shared/domain/valueObjects"
 )
 
 func DomainToModel(user *domain.User) *m.User {
@@ -19,7 +20,7 @@ func DomainToModel(user *domain.User) *m.User {
 }
 
 func ModelToDomain(userModel *m.User) (*domain.User, error) {
-	id, err := v.NewID(userModel.ID)
+	id, err := sv.NewID(userModel.ID)
 	if err != nil {
 		return nil, err
 	}
