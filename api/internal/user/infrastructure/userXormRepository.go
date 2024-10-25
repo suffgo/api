@@ -22,7 +22,7 @@ func NewUserXormRepository(db database.Database) *UserXormRepository {
 }
 
 func (s *UserXormRepository) GetByID(id sv.ID) (*d.User, error) {
-	userModel := new(m.User)
+	userModel := new(m.Users)
 	has, err := s.db.GetDb().ID(id.Id).Get(userModel)
 	if err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func (s *UserXormRepository) GetByID(id sv.ID) (*d.User, error) {
 }
 
 func (s *UserXormRepository) GetAll() ([]d.User, error) {
-	var users []m.User
+	var users []m.Users
 	err := s.db.GetDb().Find(&users)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func (s *UserXormRepository) GetAll() ([]d.User, error) {
 
 func (s *UserXormRepository) Delete(id sv.ID) error {
 
-	affected, err := s.db.GetDb().ID(id.Id).Delete(&m.User{})
+	affected, err := s.db.GetDb().ID(id.Id).Delete(&m.Users{})
 	if err != nil {
 		return  err
 	}
@@ -79,7 +79,7 @@ func (s *UserXormRepository) GetByEmail(email v.Email) (*d.User, error) {
 }
 
 func (s *UserXormRepository) Save(user d.User) error {
-	userModel := &m.User{
+	userModel := &m.Users{
 		Dni:      user.Dni().Dni,
 		Username: user.Username().Username,
 		Password: user.Password().Password,
