@@ -7,8 +7,8 @@ import (
 	sv "suffgo/internal/shared/domain/valueObjects"
 )
 
-func DomainToModel(user *domain.User) *m.User {
-	return &m.User{
+func DomainToModel(user *domain.User) *m.Users {
+	return &m.Users{
 		ID:       user.ID().Id, // Convierte ID a uint
 		Dni:      user.Dni().Dni,
 		Username: user.Username().Username,
@@ -19,7 +19,7 @@ func DomainToModel(user *domain.User) *m.User {
 	}
 }
 
-func ModelToDomain(userModel *m.User) (*domain.User, error) {
+func ModelToDomain(userModel *m.Users) (*domain.User, error) {
 	id, err := sv.NewID(userModel.ID)
 	if err != nil {
 		return nil, err
