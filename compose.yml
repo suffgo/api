@@ -43,4 +43,5 @@ services:
 
 networks:
   suffgo-network:
-    driver: bridge
+    external: true  # Indica que es una red externa
+

@@ -9,6 +9,4 @@ RUN go install github.com/air-verse/air@latest
 
 # RUN go build -o main .
 
-EXPOSE 8080
-
 CMD ["air", "-d"]
