@@ -47,7 +47,7 @@ func (s *OptionXormRepository) GetByValue(value v.Value) (*d.Option, error) {
 		return nil, err
 	}
 	if !has {
-		return nil, oe.OptionNotFoundError
+		return nil, nil
 	}
 
 	optionEnt, err := mappers.ModelToDomain(optionModel)

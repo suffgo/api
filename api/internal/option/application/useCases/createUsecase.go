@@ -3,7 +3,6 @@ package usecases
 import (
 	"errors"
 	"suffgo/internal/option/domain"
-	oe "suffgo/internal/option/domain/errors"
 )
 
 type (
@@ -21,10 +20,9 @@ func NewCreateUsecase(repository domain.OptionRepository) *CreateUsecase {
 func (s *CreateUsecase) Execute(option domain.Option) error {
 	existingOption, err := s.repository.GetByValue(option.Value())
 
-	if err != nil && !errors.Is(err, oe.OptionNotFoundError) { // Ignorar si es OptionNotFoundError
+	if err != nil {
 		return err
 	}
-
 	if existingOption != nil {
 		return errors.New("opcion ya existe")
 	}
