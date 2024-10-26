@@ -8,6 +8,9 @@ import (
 	userUsecase "suffgo/internal/user/application/useCases"
 	u "suffgo/internal/user/infrastructure"
 
+	optionUsecase "suffgo/internal/option/application/useCases"
+	o "suffgo/internal/option/infrastructure"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -32,6 +35,7 @@ func (s *EchoServer) Start() {
 	s.app.Use(middleware.Logger())
 	s.db.GetDb().ShowSQL(true)
 	s.InitializeUser()
+	s.InitializeOption()
 
 	// Health check adding
 	s.app.GET("/v1/health", func(c echo.Context) error {
@@ -41,11 +45,10 @@ func (s *EchoServer) Start() {
 	for _, route := range s.app.Routes() {
 		fmt.Printf("Ruta registrada: Método=%s, Ruta=%s\n", route.Method, route.Path)
 	}
-	
+
 	serverUrl := fmt.Sprintf(":%d", s.conf.Server.Port)
 	s.app.Logger.Fatal(s.app.Start(serverUrl))
 }
-
 
 func (s *EchoServer) InitializeUser() {
 	// Initialize the User Repository with xorm impl
@@ -67,4 +70,23 @@ func (s *EchoServer) InitializeUser() {
 
 	// Initialize User Router
 	u.InitializeUserEchoRouter(s.app, userHandler)
+}
+
+func (s *EchoServer) InitializeOption() {
+	optionRepo := o.NewOptionXormRepository(s.db)
+
+	createOptionUseCase := optionUsecase.NewCreateUsecase(optionRepo)
+	deleteOptionUseCase := optionUsecase.NewDeleteUsecase(optionRepo)
+	getAllOptionUseCase := optionUsecase.NewGetAllRepository(optionRepo)
+	getOptionByIDUseCase := optionUsecase.NewGetByIDUsecase(optionRepo)
+	getOptionByValueUseCase := optionUsecase.NewGetByValueUsecase(optionRepo)
+
+	optionHandler := o.NewOptionEchoHandler(
+		createOptionUseCase,
+		deleteOptionUseCase,
+		getAllOptionUseCase,
+		getOptionByIDUseCase,
+		getOptionByValueUseCase,
+	)
+	o.InitializeOptionEchoRouter(s.app, optionHandler)
 }
