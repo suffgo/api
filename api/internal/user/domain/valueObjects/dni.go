@@ -1,5 +1,7 @@
 package valueobjects
 
+import "errors"
+
 type (
 	Dni struct {
 		Dni string
@@ -10,6 +12,13 @@ type (
 func NewDni(dni string) (*Dni, error) {
 
 	// validaciones re locas
+	if dni == "" {
+		return nil, errors.New("Invalid dni")
+	}
+
+	if len(dni) < 8 {
+		return nil, errors.New("Invalid dni")
+	}
 
 	return &Dni{
 		Dni: dni,

@@ -1,5 +1,7 @@
 package valueobjects
 
+import "errors"
+
 type (
 	Password struct {
 		Password string
@@ -7,6 +9,11 @@ type (
 )
 
 func NewPassword(password string) (*Password, error) {
+	
+	if password == "" {
+		return nil, errors.New("Invalid password")
+	}
+
 	return &Password{
 		Password: password,
 	}, nil

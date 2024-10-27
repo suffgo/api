@@ -15,3 +15,18 @@ Levantamos el contenedor
 docker exec -it go-app bash
 
 go run cmd/migrate/main.go
+
+## Endpoints con ejemplos
+
+Retrieve all users
+
+    {
+        "name":"Tiago",
+        "lastname":"Cardenas",
+        "username": "tiaguinho",
+        "dni": "1412312",
+        "email": "tcardenas@gmail.com",
+        "Password": "gaturro01"
+    }
+
+
