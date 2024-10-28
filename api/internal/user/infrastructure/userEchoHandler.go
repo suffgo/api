@@ -8,8 +8,9 @@ import (
 	d "suffgo/internal/user/domain"
 	v "suffgo/internal/user/domain/valueObjects"
 
-	"github.com/labstack/echo/v4"
 	sv "suffgo/internal/shared/domain/valueObjects"
+
+	"github.com/labstack/echo/v4"
 
 	se "suffgo/internal/shared/domain/errors"
 )
@@ -34,6 +35,10 @@ func NewUserEchoHandler(
 		GetAllUsersUsecase: getAllUC,
 		GetUserByIDUsecase: getByIDUC,
 	}
+}
+
+func (u *UserEchoHandler) Login(c echo.Context) error {
+	return nil
 }
 
 func (h *UserEchoHandler) CreateUser(c echo.Context) error {
@@ -84,10 +89,8 @@ func (h *UserEchoHandler) CreateUser(c echo.Context) error {
 }
 
 func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
-
 	idParam := c.Param("id")
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
-
 	if err != nil {
 		invalidErr := &se.InvalidIDError{ID: idParam}
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
@@ -95,7 +98,6 @@ func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
 
 	id, _ := sv.NewID(uint(idInput))
 	err = h.DeleteUserUsecase.Execute(*id)
-
 	if err != nil {
 		if err.Error() == "user not found" {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
@@ -107,9 +109,7 @@ func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
 }
 
 func (h *UserEchoHandler) GetAllUsers(c echo.Context) error {
-	
 	users, err := h.GetAllUsersUsecase.Execute()
-
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -132,7 +132,6 @@ func (h *UserEchoHandler) GetAllUsers(c echo.Context) error {
 }
 
 func (h *UserEchoHandler) GetUserByID(c echo.Context) error {
-
 	idParam := c.Param("id")
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
@@ -142,7 +141,6 @@ func (h *UserEchoHandler) GetUserByID(c echo.Context) error {
 
 	id, _ := sv.NewID(uint(idInput))
 	user, err := h.GetUserByIDUsecase.Execute(*id)
-
 	if err != nil {
 		if err.Error() == "user not found" {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})

@@ -11,4 +11,5 @@ func InitializeUserEchoRouter(e *echo.Echo, handler *UserEchoHandler) {
 	userGroup.DELETE("/:id", handler.DeleteUser)
 	userGroup.GET("", handler.GetAllUsers)
 	userGroup.GET("/:id", handler.GetUserByID)
+	// userGroup.POST("/login", handler)
 }
