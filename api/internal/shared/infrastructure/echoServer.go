@@ -42,9 +42,9 @@ func (s *EchoServer) Start() {
 		return c.String(200, "OK")
 	})
 
-	for _, route := range s.app.Routes() {
-		fmt.Printf("Ruta registrada: Método=%s, Ruta=%s\n", route.Method, route.Path)
-	}
+	// for _, route := range s.app.Routes() {
+	// 	fmt.Printf("Ruta registrada: Método=%s, Ruta=%s\n", route.Method, route.Path)
+	// }
 
 	serverUrl := fmt.Sprintf(":%d", s.conf.Server.Port)
 	s.app.Logger.Fatal(s.app.Start(serverUrl))
