@@ -26,12 +26,12 @@ type (
 	}
 
 	UserCreateRequest struct {
-		Name     string `json:"name" `
-		Lastname string `json:"lastname" `
-		Username string `json:"username" `
-		Dni      string `json:"dni" `
+		Name     string `json:"name"`
+		Lastname string `json:"lastname"`
+		Username string `json:"username"`
+		Dni      string `json:"dni"`
 		Email    string `json:"email"`
-		Password string `json:"password" `
+		Password string `json:"password"`
 	}
 )
 

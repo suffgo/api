@@ -1,6 +1,9 @@
 package valueobjects
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 type (
 	Dni struct {
@@ -11,6 +14,8 @@ type (
 // falta devolver error opcionalmente en caso de error de validacion
 func NewDni(dni string) (*Dni, error) {
 
+	dni = strings.TrimSpace(dni)
+	
 	// validaciones re locas
 	if dni == "" {
 		return nil, errors.New("Invalid dni")

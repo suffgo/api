@@ -75,7 +75,63 @@ func (s *UserXormRepository) Delete(id sv.ID) error {
 }
 
 func (s *UserXormRepository) GetByEmail(email v.Email) (*d.User, error) {
-	return nil, nil
+	var user m.Users
+	has, err := s.db.GetDb().Where("email = ?", email.Email).Get(&user)
+	
+	if err != nil {
+		return nil, err
+	}
+
+	if !has {
+		return nil, nil
+	}
+
+	mappedUser, err:= mappers.ModelToDomain(&user)
+
+	if err != nil {
+		return nil, err
+	}
+	return mappedUser, nil
+}
+
+func (s *UserXormRepository) GetByDni(dni v.Dni) (*d.User, error) {
+	var user m.Users
+	has, err := s.db.GetDb().Where("dni = ?", dni.Dni).Get(&user)
+	
+	if err != nil {
+		return nil, err
+	}
+
+	if !has {
+		return nil, nil
+	}
+
+	mappedUser, err:= mappers.ModelToDomain(&user)
+
+	if err != nil {
+		return nil, err
+	}
+	return mappedUser, nil
+}
+
+func (s *UserXormRepository) GetByUsername(username v.UserName) (*d.User, error) {
+	var user m.Users
+	has, err := s.db.GetDb().Where("username = ?", username.Username).Get(&user)
+	
+	if err != nil {
+		return nil, err
+	}
+
+	if !has {
+		return nil, nil
+	}
+
+	mappedUser, err:= mappers.ModelToDomain(&user)
+
+	if err != nil {
+		return nil, err
+	}
+	return mappedUser, nil
 }
 
 func (s *UserXormRepository) Save(user d.User) error {
