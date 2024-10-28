@@ -48,7 +48,7 @@ func (s *CreateUsecase) Execute(user domain.User) error {
 		// Usuario con mismo username  ya existe
 		return errors.New("user already exists with this username")
 	}
-	
+
 	// Save the user to the repository
 	err = s.repository.Save(user)
 	if err != nil {
