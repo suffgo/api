@@ -20,7 +20,7 @@ go run cmd/migrate/main.go
 
 Create user POST `localhost:{API_PORT}/v1/users`
 
-body 
+    body 
     {
         "name":"Tiago",
         "lastname":"Cardenas",
@@ -42,7 +42,7 @@ Delete user by id DELETE `localhost:{API_PORT}/v1/users/:id`
 
 Login POST `localhost:{API_PORT}/v1/users/login`
 
-body 
+    body 
     {
         "username":"yourusername",
         "password":"yourpassword"
@@ -58,6 +58,6 @@ En el header tenes que crear un campo Authorization con el siguiente valor:
 
 Y te va a devolver un mensaje
 
-{  
-  "message": "Hola max, usted esta autorizado"
-}
+    {  
+        "message": "Hola max, usted esta autorizado"
+    }

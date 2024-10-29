@@ -62,13 +62,13 @@ func (u *UserEchoHandler) Login(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
 	}
 
-	userId, err := u.LoginUsecase.Execute(*username, *pass)
+	_ , err = u.LoginUsecase.Execute(*username, *pass)
 
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"message": err.Error()})
 	}
 
-	token, err := createToken(*username, c.RealIP(), c.Request().UserAgent(), *userId)
+	token, err := createToken(*username, c.RealIP(), c.Request().UserAgent())
     
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
@@ -87,7 +87,7 @@ func (h *UserEchoHandler) SecureHello(c echo.Context) error {
 	// Extraer los claims del token
 	claims := user.Claims.(jwt.MapClaims)
 	name := claims["username"].(string)
-
+	
 	if claims["ip"] != c.RealIP() || claims["user_agent"] != c.Request().UserAgent() {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "token no válido"})
 	}
