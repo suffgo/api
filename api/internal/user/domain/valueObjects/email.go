@@ -9,11 +9,10 @@ type (
 )
 
 func NewEmail(email string) (*Email, error) {
-	
 	if email == "" {
-		return nil, errors.New("Invalid email")
+		return nil, errors.New("invalid email")
 	}
-	
+
 	return &Email{
 		Email: email,
 	}, nil

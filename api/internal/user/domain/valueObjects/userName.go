@@ -9,9 +9,8 @@ type (
 )
 
 func NewUserName(username string) (*UserName, error) {
-	
 	if username == "" {
-		return nil, errors.New("Invalid username")
+		return nil, errors.New("invalid username")
 	}
 
 	return &UserName{

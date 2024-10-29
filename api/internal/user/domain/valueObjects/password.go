@@ -9,12 +9,12 @@ type (
 )
 
 func NewPassword(password string) (*Password, error) {
-	
 	if password == "" {
-		return nil, errors.New("Invalid password")
+		return nil, errors.New("invalid password")
 	}
 
 	return &Password{
 		Password: password,
 	}, nil
 }
+

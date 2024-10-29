@@ -89,11 +89,11 @@ func (h *UserEchoHandler) SecureHello(c echo.Context) error {
 	name := claims["username"].(string)
 
 	if claims["ip"] != c.RealIP() || claims["user_agent"] != c.Request().UserAgent() {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "Token no válido"})
+		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "token no válido"})
 	}
 
 
-	resp := fmt.Sprintf("Hola %s, usted esta autorizado", name)
+	resp := fmt.Sprintf("hola %s, usted esta autorizado", name)
 	return c.JSON(http.StatusOK, map[string]string{"message": resp})
 }
 
@@ -161,7 +161,7 @@ func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{"success": "User deleted succesfully"})
+	return c.JSON(http.StatusOK, map[string]string{"success": "user deleted succesfully"})
 }
 
 func (h *UserEchoHandler) GetAllUsers(c echo.Context) error {

@@ -50,7 +50,7 @@ body
 
 > En caso exitoso, devuelve un token
 
-Suponete que ahora necesito acceder a un endpoint que esta protegido con autenticacion JWT como por ejemplo GET `localhost:{API_PORT}/secure`
+Supongamos que ahora necesito acceder a un endpoint que esta protegido con autenticacion JWT como por ejemplo GET `localhost:{API_PORT}/secure`
 
 En el header tenes que crear un campo Authorization con el siguiente valor:
 
