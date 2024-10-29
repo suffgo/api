@@ -47,7 +47,7 @@ func (u *UserEchoHandler) Login(c echo.Context) error {
 	var req d.LoginRequest
 
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+		return  c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
 	}
 
 	username, err := v.NewUserName(req.Username)
@@ -62,14 +62,15 @@ func (u *UserEchoHandler) Login(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
 	}
 
-	err = u.LoginUsecase.Execute(*username, *pass)
+	userId, err := u.LoginUsecase.Execute(*username, *pass)
 
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"message": err.Error()})
 	}
 
-	token, err := createToken(*username)
-    if err != nil {
+	token, err := createToken(*username, c.RealIP(), c.Request().UserAgent(), *userId)
+    
+	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
     }
 
@@ -86,6 +87,11 @@ func (h *UserEchoHandler) SecureHello(c echo.Context) error {
 	// Extraer los claims del token
 	claims := user.Claims.(jwt.MapClaims)
 	name := claims["username"].(string)
+
+	if claims["ip"] != c.RealIP() || claims["user_agent"] != c.Request().UserAgent() {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "Token no válido"})
+	}
+
 
 	resp := fmt.Sprintf("Hola %s, usted esta autorizado", name)
 	return c.JSON(http.StatusOK, map[string]string{"message": resp})
