@@ -33,6 +33,11 @@ type (
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
+
+	LoginRequest struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
 )
 
 func NewUser(

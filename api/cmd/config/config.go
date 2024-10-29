@@ -11,8 +11,9 @@ import (
 
 type (
 	Config struct {
-		Server *Server
-		Db     *Db
+		Server    *Server
+		Db        *Db
+		SecretKey string
 	}
 
 	Server struct {
@@ -31,6 +32,7 @@ type (
 var (
 	once           sync.Once
 	configInstance *Config
+	SecretKey      string
 )
 
 func GetConfig() *Config {
@@ -54,6 +56,8 @@ func GetConfig() *Config {
 			log.Fatalf("API_PORT invalido: %s", os.Getenv("API_PORT"))
 		}
 
+		SecretKey := os.Getenv("JWT_SECRET_KEY")
+
 		db := &Db{
 			Host:     dbHost,
 			Port:     dbPort,
@@ -67,10 +71,13 @@ func GetConfig() *Config {
 		}
 
 		configInstance = &Config{
-			Server: server,
-			Db:     db,
+			Server:    server,
+			Db:        db,
+			SecretKey: SecretKey,
 		}
 	})
 
 	return configInstance
 }
+
+

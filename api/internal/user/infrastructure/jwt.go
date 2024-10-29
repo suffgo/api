@@ -1,41 +1,25 @@
 package infrastructure
 
 import (
-	"fmt"
-	"suffgo/internal/user/domain"
+	"suffgo/cmd/config"
+	valueobjects "suffgo/internal/user/domain/valueObjects"
 	"time"
 
 	"github.com/golang-jwt/jwt"
 )
 
-var secretKey = []byte("secret-key")
+var secretKey = []byte(config.SecretKey) 
 
-func CreateToken(user domain.User) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
-		jwt.MapClaims{
-			"dni": user.Dni().Dni,
-			"exp": time.Now().Add(time.Hour * 24).Unix(),
-		})
+func createToken(username valueobjects.UserName) (string, error) {
 
-	tokenString, err := token.SignedString(secretKey)
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["username"] = username.Username
+	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+
+	t, err := token.SignedString(secretKey)
 	if err != nil {
 		return "", err
 	}
-
-	return tokenString, nil
-}
-
-func ValidateToken(tokenStr string) error {
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		return secretKey, nil
-	})
-	if err != nil {
-		return err
-	}
-
-	if !token.Valid {
-		return fmt.Errorf("invalid token")
-	}
-
-	return nil
+	return t, nil
 }

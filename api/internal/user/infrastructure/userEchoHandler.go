@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	u "suffgo/internal/user/application/useCases"
@@ -10,9 +11,10 @@ import (
 
 	sv "suffgo/internal/shared/domain/valueObjects"
 
-	"github.com/labstack/echo/v4"
-
 	se "suffgo/internal/shared/domain/errors"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/labstack/echo/v4"
 )
 
 type UserEchoHandler struct {
@@ -20,6 +22,7 @@ type UserEchoHandler struct {
 	DeleteUserUsecase  *u.DeleteUsecase
 	GetAllUsersUsecase *u.GetAllUsecase
 	GetUserByIDUsecase *u.GetByIDUsecase
+	LoginUsecase       *u.LoginUsecase
 }
 
 // Constructor for UserEchoHandler
@@ -28,45 +31,92 @@ func NewUserEchoHandler(
 	deleteUC *u.DeleteUsecase,
 	getAllUC *u.GetAllUsecase,
 	getByIDUC *u.GetByIDUsecase,
+	loginUC *u.LoginUsecase,
 ) *UserEchoHandler {
 	return &UserEchoHandler{
 		CreateUserUsecase:  createUC,
 		DeleteUserUsecase:  deleteUC,
 		GetAllUsersUsecase: getAllUC,
 		GetUserByIDUsecase: getByIDUC,
+		LoginUsecase:       loginUC,
 	}
 }
 
 func (u *UserEchoHandler) Login(c echo.Context) error {
-	return nil
+
+	var req d.LoginRequest
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+	}
+
+	username, err := v.NewUserName(req.Username)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+	}
+
+	pass, err := v.NewPassword(req.Password)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+	}
+
+	err = u.LoginUsecase.Execute(*username, *pass)
+
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"message": err.Error()})
+	}
+
+	token, err := createToken(*username)
+    if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+    }
+
+    // Devolver el token al cliente
+    return c.JSON(http.StatusOK, echo.Map{
+        "token": token,
+    })
+}
+
+func (h *UserEchoHandler) SecureHello(c echo.Context) error {
+
+	user := c.Get("user").(*jwt.Token)	
+
+	// Extraer los claims del token
+	claims := user.Claims.(jwt.MapClaims)
+	name := claims["username"].(string)
+
+	resp := fmt.Sprintf("Hola %s, usted esta autorizado", name)
+	return c.JSON(http.StatusOK, map[string]string{"message": resp})
 }
 
 func (h *UserEchoHandler) CreateUser(c echo.Context) error {
 	var req d.UserCreateRequest
 	// bindea el body del request (json) al dto
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
 	}
 
 	fullname, err := v.NewFullName(req.Name, req.Lastname)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
 	}
 	username, err := v.NewUserName(req.Username)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
 	}
 	dni, err := v.NewDni(req.Dni)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
 	}
 	email, err := v.NewEmail(req.Email)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
 	}
 	password, err := v.NewPassword(req.Password)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
 	}
 	// Map DTO to domain entity
 
@@ -82,7 +132,7 @@ func (h *UserEchoHandler) CreateUser(c echo.Context) error {
 	// Call the use case
 	err = h.CreateUserUsecase.Execute(*user)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusConflict, map[string]string{"message": err.Error()})
 	}
 
 	return c.JSON(http.StatusCreated, req)
@@ -93,16 +143,16 @@ func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
 		invalidErr := &se.InvalidIDError{ID: idParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": invalidErr.Error()})
 	}
 
 	id, _ := sv.NewID(uint(idInput))
 	err = h.DeleteUserUsecase.Execute(*id)
 	if err != nil {
 		if err.Error() == "user not found" {
-			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusNotFound, map[string]string{"message": err.Error()})
 		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{"success": "User deleted succesfully"})
@@ -111,7 +161,7 @@ func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
 func (h *UserEchoHandler) GetAllUsers(c echo.Context) error {
 	users, err := h.GetAllUsersUsecase.Execute()
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
 
 	var usersDTO []d.UserDTO
@@ -136,16 +186,16 @@ func (h *UserEchoHandler) GetUserByID(c echo.Context) error {
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
 		invalidErr := &se.InvalidIDError{ID: idParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": invalidErr.Error()})
 	}
 
 	id, _ := sv.NewID(uint(idInput))
 	user, err := h.GetUserByIDUsecase.Execute(*id)
 	if err != nil {
 		if err.Error() == "user not found" {
-			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusNotFound, map[string]string{"message": err.Error()})
 		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
 
 	userDTO := &d.UserDTO{

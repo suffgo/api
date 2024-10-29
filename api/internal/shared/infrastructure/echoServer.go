@@ -34,6 +34,7 @@ func (s *EchoServer) Start() {
 	s.app.Use(middleware.Recover())
 	s.app.Use(middleware.Logger())
 	s.db.GetDb().ShowSQL(true)
+
 	s.InitializeUser()
 	s.InitializeOption()
 
@@ -59,6 +60,7 @@ func (s *EchoServer) InitializeUser() {
 	deleteUserUseCase := userUsecase.NewDeleteUsecase(userRepo)
 	getAllUsersUseCase := userUsecase.NewGetAllUsecase(userRepo)
 	getUserByIDUseCase := userUsecase.NewGetByIDUsecase(userRepo)
+	loginUseCase := userUsecase.NewLoginUsecase(userRepo)
 
 	// Initialize Handler
 	userHandler := u.NewUserEchoHandler(
@@ -66,6 +68,7 @@ func (s *EchoServer) InitializeUser() {
 		deleteUserUseCase,
 		getAllUsersUseCase,
 		getUserByIDUseCase,
+		loginUseCase,
 	)
 
 	// Initialize User Router
