@@ -52,6 +52,7 @@ Login POST `localhost:{API_PORT}/v1/users/login`
 
 Supongamos que ahora necesito acceder a un endpoint que esta protegido con autenticacion JWT como por ejemplo GET `localhost:{API_PORT}/secure`
 
+
 En el header tenes que crear un campo Authorization con el siguiente valor:
 
     Bearer {token-que-te-devuelve-la-ruta-login}
