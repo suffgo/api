@@ -11,5 +11,4 @@ func InitializeOptionEchoRouter(e *echo.Echo, handler *OptionEchoHandler) {
 	optionGroup.DELETE("/:id", handler.DeleteOption)
 	optionGroup.GET("", handler.GetAllOptions)
 	optionGroup.GET("/:id", handler.GetOptionByID)
-	optionGroup.GET("/value/:value", handler.GetOptionByValue)
 }

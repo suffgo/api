@@ -1,10 +1,10 @@
 package mappers
 
 import (
+	sv "suffgo/internal/shared/domain/valueObjects"
 	"suffgo/internal/user/domain"
 	v "suffgo/internal/user/domain/valueObjects"
 	m "suffgo/internal/user/infrastructure/models"
-	sv "suffgo/internal/shared/domain/valueObjects"
 )
 
 func DomainToModel(user *domain.User) *m.Users {
@@ -44,6 +44,6 @@ func ModelToDomain(userModel *m.Users) (*domain.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return domain.NewUser(id, *name, *username, *dni, *email, *password), nil
 }
