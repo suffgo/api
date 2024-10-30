@@ -8,9 +8,9 @@ import (
 type (
 	Proposal struct {
 		id          *sv.ID
-		archive     v.Archive
+		archive     *v.Archive
 		title       v.Title
-		description v.Description
+		description *v.Description
 	}
 
 	PorposalDTO struct {
@@ -20,7 +20,7 @@ type (
 		Description *string `json:"description"`
 	}
 
-	PorposalCreateRequest struct {
+	ProposalCreateRequest struct {
 		Archive     *string `json:"archive"`
 		Title       string  `json:"title"`
 		Description *string `json:"description"`
@@ -29,9 +29,9 @@ type (
 
 func NewProposal(
 	id *sv.ID,
-	archive v.Archive,
+	archive *v.Archive,
 	title v.Title,
-	description v.Description,
+	description *v.Description,
 
 ) *Proposal {
 	return &Proposal{
@@ -46,7 +46,7 @@ func (u *Proposal) ID() sv.ID {
 	return *u.id
 }
 
-func (u *Proposal) Archive() v.Archive {
+func (u *Proposal) Archive() *v.Archive {
 	return u.archive
 }
 
@@ -54,6 +54,6 @@ func (u *Proposal) Title() v.Title {
 	return u.title
 }
 
-func (u *Proposal) Description() v.Description {
+func (u *Proposal) Description() *v.Description {
 	return u.description
 }
