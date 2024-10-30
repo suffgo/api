@@ -2,13 +2,13 @@ package infrastructure
 
 import (
 	"suffgo/cmd/database"
+	se "suffgo/internal/shared/domain/errors"
 	sv "suffgo/internal/shared/domain/valueObjects"
 	d "suffgo/internal/user/domain"
+	ue "suffgo/internal/user/domain/errors"
 	v "suffgo/internal/user/domain/valueObjects"
 	"suffgo/internal/user/infrastructure/mappers"
 	m "suffgo/internal/user/infrastructure/models"
-	ue "suffgo/internal/user/domain/errors"
-	se "suffgo/internal/shared/domain/errors"
 )
 
 type UserXormRepository struct {
@@ -151,4 +151,30 @@ func (s *UserXormRepository) Save(user d.User) error {
 	}
 
 	return nil
+}
+
+func (s *UserXormRepository) SaveSession(sessionStr string, id sv.ID) error {
+	return nil
+}
+
+func (s *UserXormRepository) GetIDBySession(sessionStr string, id sv.ID) (*sv.ID, error){
+	
+	var session m.Session
+	has, err := s.db.GetDb().Where("session_id = ? AND user_id = ?", sessionStr, id.Id).Get(&session)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !has {
+		return nil, nil
+	}
+
+	sessionId, err := sv.NewID(session.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return sessionId, nil 
 }

@@ -23,6 +23,7 @@ type UserEchoHandler struct {
 	GetAllUsersUsecase *u.GetAllUsecase
 	GetUserByIDUsecase *u.GetByIDUsecase
 	LoginUsecase       *u.LoginUsecase
+	ValidateUsecase    *u.ValidateSessionUsecase
 }
 
 // Constructor for UserEchoHandler
@@ -32,6 +33,7 @@ func NewUserEchoHandler(
 	getAllUC *u.GetAllUsecase,
 	getByIDUC *u.GetByIDUsecase,
 	loginUC *u.LoginUsecase,
+	ValidateUC *u.ValidateSessionUsecase,
 ) *UserEchoHandler {
 	return &UserEchoHandler{
 		CreateUserUsecase:  createUC,
@@ -39,6 +41,7 @@ func NewUserEchoHandler(
 		GetAllUsersUsecase: getAllUC,
 		GetUserByIDUsecase: getByIDUC,
 		LoginUsecase:       loginUC,
+		ValidateUsecase:    ValidateUC,
 	}
 }
 
@@ -47,7 +50,7 @@ func (u *UserEchoHandler) Login(c echo.Context) error {
 	var req d.LoginRequest
 
 	if err := c.Bind(&req); err != nil {
-		return  c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
 	}
 
 	username, err := v.NewUserName(req.Username)
@@ -62,36 +65,50 @@ func (u *UserEchoHandler) Login(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
 	}
 
-	_ , err = u.LoginUsecase.Execute(*username, *pass)
+	userID, err := u.LoginUsecase.Execute(*username, *pass)
 
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"message": err.Error()})
 	}
 
-	token, err := createToken(*username, c.RealIP(), c.Request().UserAgent())
-    
+	token, err := createToken(*username, c.RealIP(), c.Request().UserAgent(), *userID)
+
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
-    }
+	}
 
-    // Devolver el token al cliente
-    return c.JSON(http.StatusOK, echo.Map{
-        "token": token,
-    })
+	// Devolver el token al cliente
+	return c.JSON(http.StatusOK, echo.Map{
+		"token": token,
+	})
 }
 
 func (h *UserEchoHandler) SecureHello(c echo.Context) error {
 
-	user := c.Get("user").(*jwt.Token)	
+	user := c.Get("user").(*jwt.Token)
 
 	// Extraer los claims del token
 	claims := user.Claims.(jwt.MapClaims)
 	name := claims["username"].(string)
-	
+
 	if claims["ip"] != c.RealIP() || claims["user_agent"] != c.Request().UserAgent() {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "token no válido"})
+		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "invalid token"})
 	}
 
+	userIDFromToken := claims["user_id"].(uint)
+	sessionIDFromToken := claims["session_id"].(string)
+
+	userID, err := sv.NewID(userIDFromToken)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+	}
+
+	err = h.ValidateUsecase.Execute(sessionIDFromToken, userID)
+
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "invalid session"})
+	}
 
 	resp := fmt.Sprintf("hola %s, usted esta autorizado", name)
 	return c.JSON(http.StatusOK, map[string]string{"message": resp})
