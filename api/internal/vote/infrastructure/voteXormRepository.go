@@ -17,12 +17,12 @@ func NewVoteXormRepository(db database.Database) *VoteXormRepository {
 }
 
 func (s *VoteXormRepository) Save(vote d.Vote) error {
-	optionModel := &m.Vote{
+	voteModel := &m.Vote{
 		UserID:   vote.UserID().Id,
 		OptionID: vote.OptionID().Id,
 	}
 
-	_, err := s.db.GetDb().Insert(optionModel)
+	_, err := s.db.GetDb().Insert(voteModel)
 	if err != nil {
 		return err
 	}
