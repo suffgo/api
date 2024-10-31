@@ -24,12 +24,44 @@ Create user POST `localhost:{API_PORT}/v1/users`
 
     body 
     {
-        "name":"Tiago",
-        "lastname":"Cardenas",
+        "name": "Tiago",
+        "lastname": "Cardenas",
         "username": "tiaguinho",
-        "dni": "1412312",
+        "dni": "14123122",
         "email": "tcardenas@gmail.com",
-        "Password": "gaturro01"
+        "password": "gaturro01"
+    },
+    {
+        "name": "Ignacio",
+        "lastname": "Sanchez",
+        "username": "neich",
+        "dni": "43299985",
+        "email": "nachoagusss1@@gmail.com",
+        "password": "goesgodcolapinto"
+    },
+    {
+        "name": "Marcos",
+        "lastname": "Soto",
+        "username": "msoto",
+        "dni": "33998222",
+        "email": "m.soto123@@gmail.com",
+        "password": "redhot"
+    },
+    {
+        "name": "Constanza",
+        "lastname": "Benedetti",
+        "username": "coty2",
+        "dni": "12312312",
+        "email": "coreanos@@gmail.com",
+        "password": "cotoyoteconozco"
+    },
+     {
+        "name": "Cristian",
+        "lastname": "Balihaut",
+        "username": "crisbal",
+        "dni": "339988798",
+        "email": "b.cris@@gmail.com",
+        "password": "racingmicorazon"
     }
 
 
