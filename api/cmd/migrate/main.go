@@ -143,7 +143,7 @@ func MakeConstraints(db database.Database) error {
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("ALTER TABLE option ADD CONSTRAINT fk_proposal FOREIGN KEY (proposal_id) REFERENCES proposal(id) succes\n")
+		fmt.Printf("ALTER TABLE option ADD CONSTRAINT fk_proposal FOREIGN KEY (proposal_id) REFERENCES proposal(id) success\n")
 	}
 
 	_, err = db.GetDb().Exec("ALTER TABLE vote ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)")
@@ -157,7 +157,7 @@ func MakeConstraints(db database.Database) error {
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("ALTER TABLE vote ADD CONSTRAINT fk_option FOREIGN KEY(option_id) REFERENCES option(id) succes\n")
+		fmt.Printf("ALTER TABLE vote ADD CONSTRAINT fk_option FOREIGN KEY(option_id) REFERENCES option(id) success\n")
 	}
 
 	return nil
