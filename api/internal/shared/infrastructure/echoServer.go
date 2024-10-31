@@ -5,14 +5,14 @@ import (
 	"suffgo/cmd/config"
 	"suffgo/cmd/database"
 
-	userUsecase "suffgo/internal/user/application/useCases"
-	u "suffgo/internal/user/infrastructure"
+	userUsecase "suffgo/internal/users/application/useCases"
+	u "suffgo/internal/users/infrastructure"
 
-	optionUsecase "suffgo/internal/option/application/useCases"
-	o "suffgo/internal/option/infrastructure"
+	optionUsecase "suffgo/internal/options/application/useCases"
+	o "suffgo/internal/options/infrastructure"
 
-	voteUsecase "suffgo/internal/vote/application/useCases"
-	v "suffgo/internal/vote/infrastructure"
+	voteUsecase "suffgo/internal/votes/application/useCases"
+	v "suffgo/internal/votes/infrastructure"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
