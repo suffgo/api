@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"suffgo/cmd/config"
 	"suffgo/cmd/database"
-	o "suffgo/internal/option/infrastructure/models"
-	p "suffgo/internal/proposal/infrastructure/models"
-	r "suffgo/internal/room/infrastructure/models"
-	s "suffgo/internal/settingRoom/infrastructure/models"
-	m "suffgo/internal/user/infrastructure/models"
-	ur "suffgo/internal/userRoom/infrastructure/models"
-	e "suffgo/internal/vote/infrastructure/models"
+	o "suffgo/internal/options/infrastructure/models"
+	p "suffgo/internal/proposals/infrastructure/models"
+	r "suffgo/internal/rooms/infrastructure/models"
+	s "suffgo/internal/settingsRoom/infrastructure/models"
+	m "suffgo/internal/users/infrastructure/models"
+	ur "suffgo/internal/userRooms/infrastructure/models"
+	e "suffgo/internal/votes/infrastructure/models"
 )
 
 func main() {
@@ -143,7 +143,7 @@ func MakeConstraints(db database.Database) error {
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("ALTER TABLE option ADD CONSTRAINT fk_proposal FOREIGN KEY (proposal_id) REFERENCES proposal(id) succes\n")
+		fmt.Printf("ALTER TABLE option ADD CONSTRAINT fk_proposal FOREIGN KEY (proposal_id) REFERENCES proposal(id) success\n")
 	}
 
 	_, err = db.GetDb().Exec("ALTER TABLE vote ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)")
@@ -157,7 +157,7 @@ func MakeConstraints(db database.Database) error {
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("ALTER TABLE vote ADD CONSTRAINT fk_option FOREIGN KEY(option_id) REFERENCES option(id) succes\n")
+		fmt.Printf("ALTER TABLE vote ADD CONSTRAINT fk_option FOREIGN KEY(option_id) REFERENCES option(id) success\n")
 	}
 
 	return nil
