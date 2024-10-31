@@ -1,7 +1,6 @@
 package infrastructure
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	u "suffgo/internal/user/application/useCases"
@@ -13,7 +12,7 @@ import (
 
 	se "suffgo/internal/shared/domain/errors"
 
-	"github.com/golang-jwt/jwt/v5"
+
 	"github.com/labstack/echo/v4"
 )
 
@@ -23,7 +22,6 @@ type UserEchoHandler struct {
 	GetAllUsersUsecase *u.GetAllUsecase
 	GetUserByIDUsecase *u.GetByIDUsecase
 	LoginUsecase       *u.LoginUsecase
-	ValidateUsecase    *u.ValidateSessionUsecase
 }
 
 // Constructor for UserEchoHandler
@@ -33,7 +31,6 @@ func NewUserEchoHandler(
 	getAllUC *u.GetAllUsecase,
 	getByIDUC *u.GetByIDUsecase,
 	loginUC *u.LoginUsecase,
-	ValidateUC *u.ValidateSessionUsecase,
 ) *UserEchoHandler {
 	return &UserEchoHandler{
 		CreateUserUsecase:  createUC,
@@ -41,7 +38,6 @@ func NewUserEchoHandler(
 		GetAllUsersUsecase: getAllUC,
 		GetUserByIDUsecase: getByIDUC,
 		LoginUsecase:       loginUC,
-		ValidateUsecase:    ValidateUC,
 	}
 }
 
@@ -71,48 +67,12 @@ func (u *UserEchoHandler) Login(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"message": err.Error()})
 	}
 
-	token, err := createToken(*username, c.RealIP(), c.Request().UserAgent(), *userID)
-
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
-	}
-
-	// Devolver el token al cliente
+	// Devuelvo el id del usuario logueado
 	return c.JSON(http.StatusOK, echo.Map{
-		"token": token,
+		"welcome": userID ,
 	})
 }
 
-func (h *UserEchoHandler) SecureHello(c echo.Context) error {
-
-	user := c.Get("user").(*jwt.Token)
-
-	// Extraer los claims del token
-	claims := user.Claims.(jwt.MapClaims)
-	name := claims["username"].(string)
-
-	if claims["ip"] != c.RealIP() || claims["user_agent"] != c.Request().UserAgent() {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "invalid token"})
-	}
-
-	userIDFromToken := claims["user_id"].(uint)
-	sessionIDFromToken := claims["session_id"].(string)
-
-	userID, err := sv.NewID(userIDFromToken)
-
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
-	}
-
-	err = h.ValidateUsecase.Execute(sessionIDFromToken, userID)
-
-	if err != nil {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "invalid session"})
-	}
-
-	resp := fmt.Sprintf("hola %s, usted esta autorizado", name)
-	return c.JSON(http.StatusOK, map[string]string{"message": resp})
-}
 
 func (h *UserEchoHandler) CreateUser(c echo.Context) error {
 	var req d.UserCreateRequest

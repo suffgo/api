@@ -21,6 +21,8 @@ type EchoServer struct {
 	conf *config.Config
 }
 
+var Db database.Database
+
 func NewEchoServer(db database.Database, conf *config.Config) *EchoServer {
 	echoApp := echo.New()
 	return &EchoServer{
@@ -55,13 +57,14 @@ func (s *EchoServer) InitializeUser() {
 	// Initialize the User Repository with xorm impl
 	userRepo := u.NewUserXormRepository(s.db)
 
+	// Le digo la base de datos a la que van a apuntar las operaciones hechas para jwt
+
 	// Initialize Use Cases
 	createUserUseCase := userUsecase.NewCreateUsecase(userRepo)
 	deleteUserUseCase := userUsecase.NewDeleteUsecase(userRepo)
 	getAllUsersUseCase := userUsecase.NewGetAllUsecase(userRepo)
 	getUserByIDUseCase := userUsecase.NewGetByIDUsecase(userRepo)
 	loginUseCase := userUsecase.NewLoginUsecase(userRepo)
-	validateUseCase := userUsecase.NewValidateSessionUsecase(userRepo)
 
 	// Initialize Handler
 	userHandler := u.NewUserEchoHandler(
@@ -70,7 +73,6 @@ func (s *EchoServer) InitializeUser() {
 		getAllUsersUseCase,
 		getUserByIDUseCase,
 		loginUseCase,
-		validateUseCase,
 	)
 
 	// Initialize User Router

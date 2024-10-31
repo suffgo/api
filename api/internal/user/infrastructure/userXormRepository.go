@@ -152,29 +152,3 @@ func (s *UserXormRepository) Save(user d.User) error {
 
 	return nil
 }
-
-func (s *UserXormRepository) SaveSession(sessionStr string, id sv.ID) error {
-	return nil
-}
-
-func (s *UserXormRepository) GetIDBySession(sessionStr string, id sv.ID) (*sv.ID, error){
-	
-	var session m.Session
-	has, err := s.db.GetDb().Where("session_id = ? AND user_id = ?", sessionStr, id.Id).Get(&session)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if !has {
-		return nil, nil
-	}
-
-	sessionId, err := sv.NewID(session.ID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return sessionId, nil 
-}
