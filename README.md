@@ -12,9 +12,9 @@ Levantamos el contenedor
 
 ## Ejecutar migraciones
 
-docker exec -it go-app bash
+    docker exec -it go-app bash
 
-go run cmd/migrate/main.go
+    go run cmd/migrate/main.go
 
 ## Endpoints
 
