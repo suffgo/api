@@ -11,6 +11,9 @@ import (
 	optionUsecase "suffgo/internal/option/application/useCases"
 	o "suffgo/internal/option/infrastructure"
 
+	proposalUsecase "suffgo/internal/proposal/application/useCases"
+	p "suffgo/internal/proposal/infrastructure"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -36,6 +39,7 @@ func (s *EchoServer) Start() {
 	s.db.GetDb().ShowSQL(true)
 	s.InitializeUser()
 	s.InitializeOption()
+	s.InitializeProposal()
 
 	// Health check adding
 	s.app.GET("/v1/health", func(c echo.Context) error {
@@ -89,4 +93,23 @@ func (s *EchoServer) InitializeOption() {
 		getOptionByValueUseCase,
 	)
 	o.InitializeOptionEchoRouter(s.app, optionHandler)
+}
+
+func (s *EchoServer) InitializeProposal() {
+
+	proposalRepo := p.NewProposalXormRepository(s.db)
+
+	createProposalUseCase := proposalUsecase.NewCreateUsecase(proposalRepo)
+	deleteProposalUseCase := proposalUsecase.NewDeleteUseCase(proposalRepo)
+	getAllProposalsUseCase := proposalUsecase.NewGetAllUseCase(proposalRepo)
+	getProposalByIDUseCase := proposalUsecase.NewGetByIDUseCase(proposalRepo)
+
+	proposalHandler := p.NewProposalEchoHandler(
+		createProposalUseCase,
+		getAllProposalsUseCase,
+		getProposalByIDUseCase,
+		deleteProposalUseCase,
+	)
+
+	p.InitializeProposalEchoRouter(s.app, proposalHandler)
 }
