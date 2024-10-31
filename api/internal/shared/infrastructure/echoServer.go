@@ -11,6 +11,9 @@ import (
 	optionUsecase "suffgo/internal/option/application/useCases"
 	o "suffgo/internal/option/infrastructure"
 
+	voteUsecase "suffgo/internal/vote/application/useCases"
+	v "suffgo/internal/vote/infrastructure"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -39,6 +42,7 @@ func (s *EchoServer) Start() {
 
 	s.InitializeUser()
 	s.InitializeOption()
+	s.InitializeVote()
 
 	// Health check adding
 	s.app.GET("/v1/health", func(c echo.Context) error {
@@ -96,4 +100,21 @@ func (s *EchoServer) InitializeOption() {
 		getOptionByValueUseCase,
 	)
 	o.InitializeOptionEchoRouter(s.app, optionHandler)
+}
+
+func (s *EchoServer) InitializeVote() {
+	voteRepo := v.NewVoteXormRepository(s.db)
+
+	createVoteUseCase := voteUsecase.NewCreateUsecase(voteRepo)
+	deleteVoteUseCase := voteUsecase.NewDeleteUsecase(voteRepo)
+	getAllVoteUseCase := voteUsecase.NewGetAllRepository(voteRepo)
+	getVoteByIDUseCase := voteUsecase.NewGetByIDUsecase(voteRepo)
+
+	voteHandler := v.NewVoteEchoHandler(
+		createVoteUseCase,
+		deleteVoteUseCase,
+		getAllVoteUseCase,
+		getVoteByIDUseCase,
+	)
+	v.InitializeVoteEchoRouter(s.app, voteHandler)
 }
