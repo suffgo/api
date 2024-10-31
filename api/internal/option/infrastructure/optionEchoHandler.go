@@ -51,10 +51,15 @@ func (h *OptionEchoHandler) CreateOption(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
+	proposalID, err := sv.NewID(req.ProposalID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
 
 	option := d.NewOption(
 		nil,
 		*value,
+		proposalID,
 	)
 
 	err = h.CreateOptionUsecase.Execute(*option)
@@ -97,8 +102,9 @@ func (h *OptionEchoHandler) GetAllOptions(c echo.Context) error {
 	var OptionsDTO []d.OptionDTO
 	for _, option := range options {
 		OptionDTO := &d.OptionDTO{
-			ID:    option.ID().Id,
-			Value: option.Value().Value,
+			ID:         option.ID().Id,
+			Value:      option.Value().Value,
+			ProposalID: option.ProposalID().Id,
 		}
 		OptionsDTO = append(OptionsDTO, *OptionDTO)
 	}
@@ -126,8 +132,9 @@ func (h *OptionEchoHandler) GetOptionByID(c echo.Context) error {
 	}
 
 	optionDTO := &d.OptionDTO{
-		ID:    option.ID().Id,
-		Value: option.Value().Value,
+		ID:         option.ID().Id,
+		Value:      option.Value().Value,
+		ProposalID: option.ProposalID().Id,
 	}
 
 	return c.JSON(http.StatusOK, optionDTO)
@@ -151,8 +158,9 @@ func (h *OptionEchoHandler) GetOptionByValue(c echo.Context) error {
 	}
 
 	optionDTO := &d.OptionDTO{
-		ID:    option.ID().Id,
-		Value: option.Value().Value,
+		ID:         option.ID().Id,
+		Value:      option.Value().Value,
+		ProposalID: option.ProposalID().Id,
 	}
 	return c.JSON(http.StatusOK, optionDTO)
 

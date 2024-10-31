@@ -9,8 +9,9 @@ import (
 
 func DomainToModel(option *domain.Option) *m.Option {
 	return &m.Option{
-		ID:    option.ID().Id,
-		Value: option.Value().Value,
+		ID:         option.ID().Id,
+		Value:      option.Value().Value,
+		ProposalID: option.ProposalID().Id,
 	}
 }
 
@@ -25,6 +26,11 @@ func ModelToDomain(optionModel *m.Option) (*domain.Option, error) {
 		return nil, err
 	}
 
-	return domain.NewOption(id, *value), nil
+	proposal, err := sv.NewID(optionModel.ProposalID)
+	if err != nil {
+		return nil, err
+	}
+
+	return domain.NewOption(id, *value, proposal), nil
 
 }
