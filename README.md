@@ -12,10 +12,8 @@ Levantamos el contenedor
 
 ## Ejecutar migraciones
 
-    docker exec -it go-app bash
-
-    go run cmd/migrate/main.go
-
+    sh /scripts/migrate.sh
+    
 ## Endpoints
 
 El formato estandar de los endpoints va a ser `v1/{entidad}` (solo para endpoints que tengan que ver con los datos)
