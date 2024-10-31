@@ -11,8 +11,9 @@ import (
 
 type (
 	Config struct {
-		Server *Server
-		Db     *Db
+		Server    *Server
+		Db        *Db
+		SecretKey string
 	}
 
 	Server struct {
@@ -67,10 +68,12 @@ func GetConfig() *Config {
 		}
 
 		configInstance = &Config{
-			Server: server,
-			Db:     db,
+			Server:    server,
+			Db:        db,
 		}
 	})
 
 	return configInstance
 }
+
+

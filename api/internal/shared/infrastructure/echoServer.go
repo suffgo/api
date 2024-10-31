@@ -5,14 +5,17 @@ import (
 	"suffgo/cmd/config"
 	"suffgo/cmd/database"
 
-	userUsecase "suffgo/internal/user/application/useCases"
-	u "suffgo/internal/user/infrastructure"
+	userUsecase "suffgo/internal/users/application/useCases"
+	u "suffgo/internal/users/infrastructure"
 
-	optionUsecase "suffgo/internal/option/application/useCases"
-	o "suffgo/internal/option/infrastructure"
+	optionUsecase "suffgo/internal/options/application/useCases"
+	o "suffgo/internal/options/infrastructure"
 
-	proposalUsecase "suffgo/internal/proposal/application/useCases"
-	p "suffgo/internal/proposal/infrastructure"
+	voteUsecase "suffgo/internal/votes/application/useCases"
+	v "suffgo/internal/votes/infrastructure"
+
+	proposalUsecase "suffgo/internal/proposals/application/useCases"
+	p "suffgo/internal/proposals/infrastructure"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -23,6 +26,8 @@ type EchoServer struct {
 	db   database.Database
 	conf *config.Config
 }
+
+var Db database.Database
 
 func NewEchoServer(db database.Database, conf *config.Config) *EchoServer {
 	echoApp := echo.New()
@@ -37,18 +42,20 @@ func (s *EchoServer) Start() {
 	s.app.Use(middleware.Recover())
 	s.app.Use(middleware.Logger())
 	s.db.GetDb().ShowSQL(true)
+
 	s.InitializeUser()
 	s.InitializeOption()
 	s.InitializeProposal()
+	s.InitializeVote()
 
 	// Health check adding
 	s.app.GET("/v1/health", func(c echo.Context) error {
 		return c.String(200, "OK")
 	})
 
-	for _, route := range s.app.Routes() {
-		fmt.Printf("Ruta registrada: Método=%s, Ruta=%s\n", route.Method, route.Path)
-	}
+	// for _, route := range s.app.Routes() {
+	// 	fmt.Printf("Ruta registrada: Método=%s, Ruta=%s\n", route.Method, route.Path)
+	// }
 
 	serverUrl := fmt.Sprintf(":%d", s.conf.Server.Port)
 	s.app.Logger.Fatal(s.app.Start(serverUrl))
@@ -58,11 +65,14 @@ func (s *EchoServer) InitializeUser() {
 	// Initialize the User Repository with xorm impl
 	userRepo := u.NewUserXormRepository(s.db)
 
+	// Le digo la base de datos a la que van a apuntar las operaciones hechas para jwt
+
 	// Initialize Use Cases
 	createUserUseCase := userUsecase.NewCreateUsecase(userRepo)
 	deleteUserUseCase := userUsecase.NewDeleteUsecase(userRepo)
 	getAllUsersUseCase := userUsecase.NewGetAllUsecase(userRepo)
 	getUserByIDUseCase := userUsecase.NewGetByIDUsecase(userRepo)
+	loginUseCase := userUsecase.NewLoginUsecase(userRepo)
 
 	// Initialize Handler
 	userHandler := u.NewUserEchoHandler(
@@ -70,6 +80,7 @@ func (s *EchoServer) InitializeUser() {
 		deleteUserUseCase,
 		getAllUsersUseCase,
 		getUserByIDUseCase,
+		loginUseCase,
 	)
 
 	// Initialize User Router
@@ -112,4 +123,21 @@ func (s *EchoServer) InitializeProposal() {
 	)
 
 	p.InitializeProposalEchoRouter(s.app, proposalHandler)
+}
+
+func (s *EchoServer) InitializeVote() {
+	voteRepo := v.NewVoteXormRepository(s.db)
+
+	createVoteUseCase := voteUsecase.NewCreateUsecase(voteRepo)
+	deleteVoteUseCase := voteUsecase.NewDeleteUsecase(voteRepo)
+	getAllVoteUseCase := voteUsecase.NewGetAllRepository(voteRepo)
+	getVoteByIDUseCase := voteUsecase.NewGetByIDUsecase(voteRepo)
+
+	voteHandler := v.NewVoteEchoHandler(
+		createVoteUseCase,
+		deleteVoteUseCase,
+		getAllVoteUseCase,
+		getVoteByIDUseCase,
+	)
+	v.InitializeVoteEchoRouter(s.app, voteHandler)
 }
