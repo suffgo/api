@@ -5,7 +5,7 @@ import (
 	"suffgo/cmd/config"
 	"suffgo/cmd/database"
 	o "suffgo/internal/options/infrastructure/models"
-	p "suffgo/internal/proposalss/infrastructure/models"
+	p "suffgo/internal/proposals/infrastructure/models"
 	r "suffgo/internal/rooms/infrastructure/models"
 	s "suffgo/internal/settingsRoom/infrastructure/models"
 	ur "suffgo/internal/userRooms/infrastructure/models"
