@@ -23,9 +23,9 @@ func ModelToDomain(voteModel *m.Vote) (*domain.Vote, error) {
 	if err != nil {
 		return nil, err
 	}
-	proposalID, err := sv.NewID(voteModel.OptionID)
+	optionID, err := sv.NewID(voteModel.OptionID)
 	if err != nil {
 		return nil, err
 	}
-	return domain.NeweVote(id, userID, proposalID), nil
+	return domain.NeweVote(id, userID, optionID), nil
 }
