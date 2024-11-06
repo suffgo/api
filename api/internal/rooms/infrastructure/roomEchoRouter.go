@@ -4,7 +4,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func InitializeUserEchoRouter(e *echo.Echo, handler *RoomEchoHandler) {
+func InitializeRoomEchoRouter(e *echo.Echo, handler *RoomEchoHandler) {
 	roomGroup := e.Group("/v1/rooms")
 
 	roomGroup.POST("", handler.CreateRoom)

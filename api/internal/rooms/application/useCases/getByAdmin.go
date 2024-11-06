@@ -16,7 +16,7 @@ func NewGetByAdminUsecase(repository domain.RoomRepository) *GetByAdminUsecase {
 }
 
 func (s *GetByAdminUsecase) Execute(adminID sv.ID) ([]domain.Room, error) {
-	rooms, err := s.roomGetByAdminRepository.GetByAdmin(adminID)
+	rooms, err := s.roomGetByAdminRepository.GetByAdminID(adminID)
 	if err != nil {
 		return nil, err
 	}

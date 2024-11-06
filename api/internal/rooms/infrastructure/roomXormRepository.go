@@ -14,7 +14,7 @@ type RoomXormRepository struct {
 	db database.Database
 }
 
-func NewUserXormRepository(db database.Database) *RoomXormRepository {
+func NewRoomXormRepository(db database.Database) *RoomXormRepository {
 	return &RoomXormRepository{
 		db: db,
 	}

@@ -14,6 +14,9 @@ import (
 	voteUsecase "suffgo/internal/votes/application/useCases"
 	v "suffgo/internal/votes/infrastructure"
 
+	roomUsecase "suffgo/internal/rooms/application/useCases"
+	r "suffgo/internal/rooms/infrastructure"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -43,6 +46,7 @@ func (s *EchoServer) Start() {
 	s.InitializeUser()
 	s.InitializeOption()
 	s.InitializeVote()
+	s.InitializeRoom()
 
 	// Health check adding
 	s.app.GET("/v1/health", func(c echo.Context) error {
@@ -117,4 +121,23 @@ func (s *EchoServer) InitializeVote() {
 		getVoteByIDUseCase,
 	)
 	v.InitializeVoteEchoRouter(s.app, voteHandler)
+}
+
+func (s *EchoServer) InitializeRoom() {
+	roomRepo := r.NewRoomXormRepository(s.db)
+	createRoomUseCase := roomUsecase.NewCreateUsecase(roomRepo)
+	deleteRoomUseCase := roomUsecase.NewDeleteUsecase(roomRepo)
+	getAllRoomUseCase := roomUsecase.NewGetAllUsecase(roomRepo)
+	getByIDRoomUseCase := roomUsecase.NewGetByIDUsecase(roomRepo)
+	getByAdminRoomUseCase := roomUsecase.NewGetByAdminUsecase(roomRepo)
+
+	roomHandler := r.NewRoomEchoHandler(
+		createRoomUseCase,
+		deleteRoomUseCase,
+		getAllRoomUseCase,
+		getByIDRoomUseCase,
+		getByAdminRoomUseCase,
+	)
+	r.InitializeRoomEchoRouter(s.app, roomHandler)
+
 }
