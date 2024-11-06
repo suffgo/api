@@ -88,7 +88,7 @@ func (s *RoomXormRepository) Save(room d.Room) error {
 		LinkInvite: ptr(room.LinkInvite().LinkInvite),
 		IsFormal:   room.IsFormal().IsFormal,
 		Name:       room.Name().Name,
-		UserID:     room.AdminID().Id,
+		AdminID:    room.AdminID().Id,
 	}
 
 	_, err := s.db.GetDb().Insert(roomModel)

@@ -13,7 +13,7 @@ func DomainToModel(room *domain.Room) *m.Room {
 		LinkInvite: ptr(room.LinkInvite().LinkInvite),
 		IsFormal:   room.IsFormal().IsFormal,
 		Name:       room.Name().Name,
-		UserID:     room.AdminID().Id,
+		AdminID:    room.AdminID().Id,
 	}
 }
 
@@ -34,7 +34,7 @@ func ModelToDomain(roomModel *m.Room) (*domain.Room, error) {
 	if err != nil {
 		return nil, err
 	}
-	adminID, err := sv.NewID(roomModel.UserID)
+	adminID, err := sv.NewID(roomModel.AdminID)
 	if err != nil {
 		return nil, err
 	}
