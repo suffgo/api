@@ -8,8 +8,8 @@ import (
 	p "suffgo/internal/proposals/infrastructure/models"
 	r "suffgo/internal/rooms/infrastructure/models"
 	s "suffgo/internal/settingsRoom/infrastructure/models"
-	m "suffgo/internal/users/infrastructure/models"
 	ur "suffgo/internal/userRooms/infrastructure/models"
+	m "suffgo/internal/users/infrastructure/models"
 	e "suffgo/internal/votes/infrastructure/models"
 )
 
@@ -118,11 +118,11 @@ func MakeConstraints(db database.Database) error {
 		fmt.Printf("ALTER TABLE user_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id) success\n")
 	}
 
-	_, err = db.GetDb().Exec("ALTER TABLE room ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)")
+	_, err = db.GetDb().Exec("ALTER TABLE room ADD CONSTRAINT fk_user FOREIGN KEY (admin_id)REFERENCES users(id)")
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("ALTER TABLE room ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)")
+		fmt.Printf("ALTER TABLE room ADD CONSTRAINT fk_user FOREIGN KEY (admin_id) REFERENCES users(id)")
 	}
 
 	_, err = db.GetDb().Exec("ALTER TABLE proposal ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id)")
