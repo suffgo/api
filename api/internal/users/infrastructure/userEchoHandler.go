@@ -10,7 +10,7 @@ import (
 
 	sv "suffgo/internal/shared/domain/valueObjects"
 
-	se "suffgo/internal/shared/domain/errors"
+	se "suffgo/internal/shared/domain/errors" 
 
 	"github.com/labstack/echo/v4"
 )

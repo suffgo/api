@@ -69,3 +69,17 @@ Retrieve user by id GET `localhost:{API_PORT}/v1/users/:id`
 
 Delete user by id DELETE `localhost:{API_PORT}/v1/users/:id`
 
+## Sesiones
+
+Ahora se implemento las sesiones.
+Hasta el momento solamente las rutas protegidas son aquellas que tienen que ver con las salas. Lo pueden ver en internal/rooms/roomEchoRouter.go
+
+**importante!!** es necesario que definan la nueva variable de entorno en .env
+
+    SECRET_SESSION_AUTH_KEY=
+
+pueden crear una llave secreta para este campo con el siguiente comando
+
+    openssl rand -hex 32
+
+> Necesitan tener openssl instalado, por defecto ya se encuentra instalado en linux
