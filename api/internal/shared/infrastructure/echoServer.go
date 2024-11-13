@@ -46,8 +46,8 @@ func (s *EchoServer) Start() {
 	s.db.GetDb().ShowSQL(true)
 
 	authKey := []byte(s.conf.SecretKey)
-
-	s.app.Use(session.Middleware(sessions.NewCookieStore(authKey)))
+    store := sessions.NewCookieStore(authKey)
+    s.app.Use(session.Middleware(store))
 
 	s.InitializeUser()
 	s.InitializeOption()

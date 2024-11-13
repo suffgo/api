@@ -66,7 +66,9 @@ func (u *UserEchoHandler) Login(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"message": err.Error()})
 	}
 
-	createSession(user.ID(), c)
+	if err := createSession(user.ID(), c); err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
 	
 	userDTO := &d.UserSafeDTO{
 		ID:       user.ID().Id,
