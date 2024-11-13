@@ -56,7 +56,19 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-	adminID, err := sv.NewID(req.AdminID)
+
+	// Obtener el user_id del contexto
+	userIDStr, ok := c.Get("user_id").(string)
+	if !ok || userIDStr == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
+	}
+
+	adminIDUint, err := strconv.ParseUint(userIDStr, 10, 64)
+    if err != nil {
+        return c.JSON(http.StatusBadRequest, map[string]string{"error": "id de usuario inválido"})
+    }
+
+	adminID, err := sv.NewID(uint(adminIDUint))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -69,11 +81,20 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 		adminID,
 	)
 
-	err = h.CreateRoomUsecase.Execute(*room)
+	createdRoom, err := h.CreateRoomUsecase.Execute(*room)
 	if err != nil {
 		return c.JSON(http.StatusConflict, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusCreated, req)
+
+	roomDTO := &d.RoomDTO{
+        ID:         createdRoom.ID().Id,
+        LinkInvite: createdRoom.LinkInvite().LinkInvite,
+        IsFormal:   createdRoom.IsFormal().IsFormal,
+        Name:       createdRoom.Name().Name,
+        AdminID:    createdRoom.AdminID().Id,
+    }
+
+	return c.JSON(http.StatusCreated, roomDTO)
 }
 
 func (h *RoomEchoHandler) DeleteRoom(c echo.Context) error {
@@ -150,11 +171,11 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 	// 	invalidErr := &se.InvalidIDError{ID: idParam}
 	// 	return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
 	// }
-	
+
 	userIDStr, ok := c.Get("user_id").(string)
-    if !ok || userIDStr == "" {
-        return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
-    }
+	if !ok || userIDStr == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
+	}
 
 	idInt, err := strconv.ParseUint(userIDStr, 10, 64)
 	if err != nil {
@@ -163,8 +184,8 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 
 	userID, err := sv.NewID(uint(idInt))
 	if err != nil {
-        return c.JSON(http.StatusBadRequest, map[string]string{"error": "error al crear ID de usuario"})
-    }
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "error al crear ID de usuario"})
+	}
 
 	// id, _ := sv.NewID(uint(idInput))
 	rooms, err := h.GetByAdminUsecase.Execute(*userID)

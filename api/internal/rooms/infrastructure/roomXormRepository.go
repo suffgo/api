@@ -94,7 +94,7 @@ func (r *RoomXormRepository) GetByAdminID(adminID sv.ID) ([]d.Room, error) {
 	return roomsDomain, nil
 }
 
-func (s *RoomXormRepository) Save(room d.Room) error {
+func (s *RoomXormRepository) Save(room d.Room) (*d.Room,error) {
 	roomModel := &m.Room{
 		LinkInvite: ptr(room.LinkInvite().LinkInvite),
 		IsFormal:   room.IsFormal().IsFormal,
@@ -104,10 +104,15 @@ func (s *RoomXormRepository) Save(room d.Room) error {
 
 	_, err := s.db.GetDb().Insert(roomModel)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	roomDom, err := mappers.ModelToDomain(roomModel)
+	if err != nil {
+		return nil, err
+	}
+
+	return roomDom, nil
 }
 
 func ptr(s string) *string {

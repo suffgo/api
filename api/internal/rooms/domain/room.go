@@ -26,7 +26,6 @@ type (
 		LinkInvite string `json:"link_invite"`
 		IsFormal   bool   `json:"is_formal"`
 		Name       string `json:"name"`
-		AdminID    uint   `json:"admin_id"`
 	}
 )
 

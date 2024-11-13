@@ -8,6 +8,6 @@ type RoomRepository interface {
 	GetByID(id sv.ID) (*Room, error)
 	GetAll() ([]Room, error)
 	Delete(id sv.ID) error
-	Save(room Room) error
+	Save(room Room) (*Room, error)
 	GetByAdminID(adminID sv.ID) ([]Room, error)
 }

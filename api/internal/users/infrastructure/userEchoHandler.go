@@ -156,16 +156,15 @@ func (h *UserEchoHandler) GetAllUsers(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	var usersDTO []d.UserDTO
+	var usersDTO []d.UserSafeDTO
 	for _, user := range users {
-		userDTO := &d.UserDTO{
+		userDTO := &d.UserSafeDTO{
 			ID:       user.ID().Id,
 			Name:     user.FullName().Name,
 			Lastname: user.FullName().Lastname,
 			Username: user.Username().Username,
 			Dni:      user.Dni().Dni,
 			Email:    user.Email().Email,
-			Password: user.Password().Password,
 		}
 		usersDTO = append(usersDTO, *userDTO)
 	}
@@ -190,14 +189,13 @@ func (h *UserEchoHandler) GetUserByID(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	userDTO := &d.UserDTO{
+	userDTO := &d.UserSafeDTO{
 		ID:       user.ID().Id,
 		Name:     user.FullName().Name,
 		Lastname: user.FullName().Lastname,
 		Username: user.Username().Username,
 		Dni:      user.Dni().Dni,
 		Email:    user.Email().Email,
-		Password: user.Password().Password,
 	}
 	return c.JSON(http.StatusOK, userDTO)
 }
