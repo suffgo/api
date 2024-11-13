@@ -205,7 +205,7 @@ func (h *UserEchoHandler) GetUserByID(c echo.Context) error {
 
 func (h *UserEchoHandler) Logout(c echo.Context) error {
 	
-	err := Logout(c)
+	err := logout(c)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}

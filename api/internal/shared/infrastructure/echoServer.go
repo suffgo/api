@@ -45,6 +45,8 @@ func (s *EchoServer) Start() {
 	s.app.Use(middleware.Logger())
 	s.db.GetDb().ShowSQL(true)
 
+	// s.app.Pre(middleware.HTTPSNonWWWRedirect()) a tener en cuenta para el futuro en caso de despliegue
+	
 	authKey := []byte(s.conf.SecretKey)
     store := sessions.NewCookieStore(authKey)
     s.app.Use(session.Middleware(store))
