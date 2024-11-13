@@ -42,7 +42,7 @@ Create user POST `localhost:{API_PORT}/v1/users`
         "lastname": "Soto",
         "username": "msoto",
         "dni": "33998222",
-        "email": "m.soto123@@gmail.com",
+        "email": "m.soto123@gmail.com",
         "password": "redhot"
     },
     {
@@ -50,7 +50,7 @@ Create user POST `localhost:{API_PORT}/v1/users`
         "lastname": "Benedetti",
         "username": "coty2",
         "dni": "12312312",
-        "email": "coreanos@@gmail.com",
+        "email": "coreanos@gmail.com",
         "password": "cotoyoteconozco"
     },
      {

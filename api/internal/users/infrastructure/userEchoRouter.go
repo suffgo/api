@@ -14,5 +14,4 @@ func InitializeUserEchoRouter(e *echo.Echo, handler *UserEchoHandler) {
 	userGroup.GET("/:id", handler.GetUserByID)
 
 	userGroup.POST("/login", handler.Login)
-
 }
