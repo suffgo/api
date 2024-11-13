@@ -34,7 +34,7 @@ Create user POST `localhost:{API_PORT}/v1/users`
         "lastname": "Sanchez",
         "username": "neich",
         "dni": "43299985",
-        "email": "nachoagusss1@@gmail.com",
+        "email": "nachoagusss1@gmail.com",
         "password": "goesgodcolapinto"
     },
     {
@@ -42,7 +42,7 @@ Create user POST `localhost:{API_PORT}/v1/users`
         "lastname": "Soto",
         "username": "msoto",
         "dni": "33998222",
-        "email": "m.soto123@@gmail.com",
+        "email": "m.soto123@gmail.com",
         "password": "redhot"
     },
     {
@@ -50,7 +50,7 @@ Create user POST `localhost:{API_PORT}/v1/users`
         "lastname": "Benedetti",
         "username": "coty2",
         "dni": "12312312",
-        "email": "coreanos@@gmail.com",
+        "email": "coreanos@gmail.com",
         "password": "cotoyoteconozco"
     },
      {
@@ -58,7 +58,7 @@ Create user POST `localhost:{API_PORT}/v1/users`
         "lastname": "Balihaut",
         "username": "crisbal",
         "dni": "339988798",
-        "email": "b.cris@@gmail.com",
+        "email": "b.cris@gmail.com",
         "password": "racingmicorazon"
     }
 
