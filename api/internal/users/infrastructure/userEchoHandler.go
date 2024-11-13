@@ -42,6 +42,7 @@ func NewUserEchoHandler(
 
 func (u *UserEchoHandler) Login(c echo.Context) error {
 
+	
 	var req d.LoginRequest
 
 	if err := c.Bind(&req); err != nil {
@@ -79,8 +80,13 @@ func (u *UserEchoHandler) Login(c echo.Context) error {
 		Email:    user.Email().Email,
 	}
 
+	response := map[string]interface{}{
+		"success": "autenticación exitosa",
+		"user":    userDTO,
+	}
+
 	// Devuelvo el id del usuario logueado
-	return c.JSON(http.StatusOK, userDTO)
+	return c.JSON(http.StatusOK, response)
 }
 
 func (h *UserEchoHandler) CreateUser(c echo.Context) error {
