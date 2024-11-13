@@ -144,14 +144,30 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 
 func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 
-	idParam := c.Param("id")
-	idInput, err := strconv.ParseInt(idParam, 10, 64)
+	// idParam := c.Param("id")
+	// idInput, err := strconv.ParseInt(idParam, 10, 64)
+	// if err != nil {
+	// 	invalidErr := &se.InvalidIDError{ID: idParam}
+	// 	return c.JSON(http.StatusBadRequest, map[string]string{"message": invalidErr.Error()})
+	// }
+	
+	userIDStr, ok := c.Get("user_id").(string)
+    if !ok || userIDStr == "" {
+        return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
+    }
+
+	idInt, err := strconv.ParseUint(userIDStr, 10, 64)
 	if err != nil {
-		invalidErr := &se.InvalidIDError{ID: idParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": invalidErr.Error()})
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "id invalido"})
 	}
-	id, _ := sv.NewID(uint(idInput))
-	rooms, err := h.GetByAdminUsecase.Execute(*id)
+
+	userID, err := sv.NewID(uint(idInt))
+	if err != nil {
+        return c.JSON(http.StatusBadRequest, map[string]string{"error": "error al crear ID de usuario"})
+    }
+
+	// id, _ := sv.NewID(uint(idInput))
+	rooms, err := h.GetByAdminUsecase.Execute(*userID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}

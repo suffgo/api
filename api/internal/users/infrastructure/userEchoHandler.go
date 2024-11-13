@@ -60,16 +60,25 @@ func (u *UserEchoHandler) Login(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
 	}
 
-	userID, err := u.LoginUsecase.Execute(*username, *pass)
+	user, err := u.LoginUsecase.Execute(*username, *pass)
 
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"message": err.Error()})
 	}
 
+	createSession(user.ID(), c)
+	
+	userDTO := &d.UserSafeDTO{
+		ID:       user.ID().Id,
+		Name:     user.FullName().Name,
+		Lastname: user.FullName().Lastname,
+		Username: user.Username().Username,
+		Dni:      user.Dni().Dni,
+		Email:    user.Email().Email,
+	}
+
 	// Devuelvo el id del usuario logueado
-	return c.JSON(http.StatusOK, echo.Map{
-		"welcome": userID,
-	})
+	return c.JSON(http.StatusOK, userDTO)
 }
 
 func (h *UserEchoHandler) CreateUser(c echo.Context) error {

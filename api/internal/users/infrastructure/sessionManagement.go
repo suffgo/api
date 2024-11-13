@@ -1,0 +1,57 @@
+package infrastructure
+
+import (
+	"net/http"
+	"strconv"
+	sv "suffgo/internal/shared/domain/valueObjects"
+
+	"github.com/gorilla/sessions"
+	"github.com/labstack/echo-contrib/session"
+	"github.com/labstack/echo/v4"
+)
+
+func createSession(userID sv.ID, c echo.Context) {
+	// Crear la sesión
+    sess, _ := session.Get("session", c)
+    sess.Options = &sessions.Options{
+        Path:     "/",
+        MaxAge:   86400 * 2, // Duración de la sesión en segundos (2 días en este caso)
+        HttpOnly: true,
+        Secure:   false, // Establecer en 'false' si estás usando 'http'
+        SameSite: http.SameSiteLaxMode,
+    }
+    // Convertir el userID a string antes de almacenarlo
+    sess.Values["user_id"] = strconv.FormatUint(uint64(userID.Id), 10)
+    sess.Save(c.Request(), c.Response())
+}
+
+func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+    return func(c echo.Context) error {
+        sess, err := session.Get("session", c)
+        if err != nil {
+            return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error al obtener la sesión"})
+        }
+
+        userID, ok := sess.Values["user_id"].(string)
+        if !ok || userID == "" {
+            return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
+        }
+
+        // Almacenar el userID en el contexto para usarlo en los handlers
+        c.Set("user_id", userID)
+
+        return next(c)
+    }
+}
+
+func Logout(c echo.Context) error {
+    sess, err := session.Get("session", c)
+    if err != nil {
+        return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error al obtener la sesión"})
+    }
+
+    sess.Options.MaxAge = -1
+    sess.Save(c.Request(), c.Response())
+
+    return c.JSON(http.StatusOK, map[string]string{"message": "Sesión cerrada exitosamente"})
+}
