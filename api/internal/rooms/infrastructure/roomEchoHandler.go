@@ -42,23 +42,23 @@ func NewRoomEchoHandler(
 func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 	var req d.RoomCreateRequest
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 	linkInvite, err := v.NewLinkInvite(req.LinkInvite)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 	isFormal, err := v.NewIsFormal(req.IsFormal)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 	name, err := v.NewName(req.Name)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 	adminID, err := sv.NewID(req.AdminID)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
 	room := d.NewRoom(
@@ -71,7 +71,7 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 
 	err = h.CreateRoomUsecase.Execute(*room)
 	if err != nil {
-		return c.JSON(http.StatusConflict, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusConflict, map[string]string{"error": err.Error()})
 	}
 	return c.JSON(http.StatusCreated, req)
 }
@@ -81,16 +81,16 @@ func (h *RoomEchoHandler) DeleteRoom(c echo.Context) error {
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
 		invalidErr := &se.InvalidIDError{ID: idParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": invalidErr.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
 	}
 
 	id, _ := sv.NewID(uint(idInput))
 	err = h.DeleteRoomUsecase.Execute(*id)
 	if err != nil {
 		if err.Error() == "room not found" {
-			return c.JSON(http.StatusNotFound, map[string]string{"message": err.Error()})
+			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 	return c.JSON(http.StatusOK, map[string]string{"success": "room deleted succesfully"})
 }
@@ -98,7 +98,7 @@ func (h *RoomEchoHandler) DeleteRoom(c echo.Context) error {
 func (h *RoomEchoHandler) GetAllRooms(c echo.Context) error {
 	rooms, err := h.GetAllUsecase.Execute()
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
 	var roomsDTO []d.RoomDTO
@@ -120,16 +120,16 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
 		invalidErr := &se.InvalidIDError{ID: idParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": invalidErr.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
 	}
 
 	id, _ := sv.NewID(uint(idInput))
 	room, err := h.GetRoomByIDUsecase.Execute(*id)
 	if err != nil {
 		if err.Error() == "room not found" {
-			return c.JSON(http.StatusNotFound, map[string]string{"message": err.Error()})
+			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
 	roomDTO := &d.RoomDTO{
@@ -148,7 +148,7 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 	// idInput, err := strconv.ParseInt(idParam, 10, 64)
 	// if err != nil {
 	// 	invalidErr := &se.InvalidIDError{ID: idParam}
-	// 	return c.JSON(http.StatusBadRequest, map[string]string{"message": invalidErr.Error()})
+	// 	return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
 	// }
 	
 	userIDStr, ok := c.Get("user_id").(string)
@@ -169,7 +169,7 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 	// id, _ := sv.NewID(uint(idInput))
 	rooms, err := h.GetByAdminUsecase.Execute(*userID)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
 	var roomsDTO []d.RoomDTO

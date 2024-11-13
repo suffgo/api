@@ -59,6 +59,7 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func Logout(c echo.Context) error {
+	
 	sess, err := session.Get("session", c)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error al obtener la sesión"})
@@ -67,5 +68,6 @@ func Logout(c echo.Context) error {
 	sess.Options.MaxAge = -1
 	sess.Save(c.Request(), c.Response())
 
-	return c.JSON(http.StatusOK, map[string]string{"message": "Sesión cerrada exitosamente"})
+	
+	return nil
 }

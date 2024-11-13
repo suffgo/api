@@ -45,25 +45,25 @@ func (u *UserEchoHandler) Login(c echo.Context) error {
 	var req d.LoginRequest
 
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
 	username, err := v.NewUserName(req.Username)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
 	pass, err := v.NewPassword(req.Password)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
 	user, err := u.LoginUsecase.Execute(*username, *pass)
 
 	if err != nil {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
 	}
 
 	if err := createSession(user.ID(), c); err != nil {
@@ -87,28 +87,28 @@ func (h *UserEchoHandler) CreateUser(c echo.Context) error {
 	var req d.UserCreateRequest
 	// bindea el body del request (json) al dto
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
 	fullname, err := v.NewFullName(req.Name, req.Lastname)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 	username, err := v.NewUserName(req.Username)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 	dni, err := v.NewDni(req.Dni)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 	email, err := v.NewEmail(req.Email)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 	password, err := v.NewPassword(req.Password)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 	// Map DTO to domain entity
 
@@ -124,7 +124,7 @@ func (h *UserEchoHandler) CreateUser(c echo.Context) error {
 	// Call the use case
 	err = h.CreateUserUsecase.Execute(*user)
 	if err != nil {
-		return c.JSON(http.StatusConflict, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusConflict, map[string]string{"error": err.Error()})
 	}
 
 	return c.JSON(http.StatusCreated, req)
@@ -135,16 +135,16 @@ func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
 		invalidErr := &se.InvalidIDError{ID: idParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": invalidErr.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
 	}
 
 	id, _ := sv.NewID(uint(idInput))
 	err = h.DeleteUserUsecase.Execute(*id)
 	if err != nil {
 		if err.Error() == "user not found" {
-			return c.JSON(http.StatusNotFound, map[string]string{"message": err.Error()})
+			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{"success": "user deleted succesfully"})
@@ -153,7 +153,7 @@ func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
 func (h *UserEchoHandler) GetAllUsers(c echo.Context) error {
 	users, err := h.GetAllUsersUsecase.Execute()
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
 	var usersDTO []d.UserDTO
@@ -178,16 +178,16 @@ func (h *UserEchoHandler) GetUserByID(c echo.Context) error {
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
 		invalidErr := &se.InvalidIDError{ID: idParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": invalidErr.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
 	}
 
 	id, _ := sv.NewID(uint(idInput))
 	user, err := h.GetUserByIDUsecase.Execute(*id)
 	if err != nil {
 		if err.Error() == "user not found" {
-			return c.JSON(http.StatusNotFound, map[string]string{"message": err.Error()})
+			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
 	userDTO := &d.UserDTO{
@@ -200,4 +200,15 @@ func (h *UserEchoHandler) GetUserByID(c echo.Context) error {
 		Password: user.Password().Password,
 	}
 	return c.JSON(http.StatusOK, userDTO)
+}
+
+
+func (h *UserEchoHandler) Logout(c echo.Context) error {
+	
+	err := Logout(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"success": "sesion cerrada exitosamente"})
 }
