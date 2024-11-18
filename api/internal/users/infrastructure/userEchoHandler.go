@@ -10,7 +10,7 @@ import (
 
 	sv "suffgo/internal/shared/domain/valueObjects"
 
-	se "suffgo/internal/shared/domain/errors" 
+	se "suffgo/internal/shared/domain/errors"
 
 	"github.com/labstack/echo/v4"
 )
@@ -42,7 +42,6 @@ func NewUserEchoHandler(
 
 func (u *UserEchoHandler) Login(c echo.Context) error {
 
-	
 	var req d.LoginRequest
 
 	if err := c.Bind(&req); err != nil {
@@ -70,7 +69,7 @@ func (u *UserEchoHandler) Login(c echo.Context) error {
 	if err := createSession(user.ID(), c); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	
+
 	userDTO := &d.UserSafeDTO{
 		ID:       user.ID().Id,
 		Name:     user.FullName().Name,
@@ -81,8 +80,8 @@ func (u *UserEchoHandler) Login(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
-		"success": "autenticación exitosa",
-		"user":    userDTO,
+		"sucess": "autenticación exitosa",
+		"user":   userDTO,
 	}
 
 	// Devuelvo el id del usuario logueado
@@ -128,12 +127,26 @@ func (h *UserEchoHandler) CreateUser(c echo.Context) error {
 	)
 
 	// Call the use case
-	err = h.CreateUserUsecase.Execute(*user)
+	user, err = h.CreateUserUsecase.Execute(*user)
 	if err != nil {
 		return c.JSON(http.StatusConflict, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusCreated, req)
+	userDTO := &d.UserSafeDTO{
+		ID:       user.ID().Id,
+		Name:     user.FullName().Name,
+		Lastname: user.FullName().Lastname,
+		Username: user.Username().Username,
+		Dni:      user.Dni().Dni,
+		Email:    user.Email().Email,
+	}
+
+	response := map[string]interface{}{
+		"sucess": "usuario creado exitosamente",
+		"user":   userDTO,
+	}
+
+	return c.JSON(http.StatusCreated, response)
 }
 
 func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
@@ -153,7 +166,7 @@ func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{"success": "user deleted succesfully"})
+	return c.JSON(http.StatusOK, map[string]string{"sucess": "user deleted succesfully"})
 }
 
 func (h *UserEchoHandler) GetAllUsers(c echo.Context) error {
@@ -206,13 +219,12 @@ func (h *UserEchoHandler) GetUserByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, userDTO)
 }
 
-
 func (h *UserEchoHandler) Logout(c echo.Context) error {
-	
+
 	err := logout(c)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{"success": "sesion cerrada exitosamente"})
+	return c.JSON(http.StatusOK, map[string]string{"sucess": "sesion cerrada exitosamente"})
 }

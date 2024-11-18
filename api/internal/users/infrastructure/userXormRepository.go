@@ -134,7 +134,7 @@ func (s *UserXormRepository) GetByUsername(username v.UserName) (*d.User, error)
 	return mappedUser, nil
 }
 
-func (s *UserXormRepository) Save(user d.User) error {
+func (s *UserXormRepository) Save(user d.User) (*d.User, error) {
 	userModel := &m.Users{
 		Dni:      user.Dni().Dni,
 		Username: user.Username().Username,
@@ -147,8 +147,13 @@ func (s *UserXormRepository) Save(user d.User) error {
 	// Inserta el usuario en la base de datos
 	_, err := s.db.GetDb().Insert(userModel)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	domusr, err := mappers.ModelToDomain(userModel)
+	if err != nil {
+		return nil, err
+	}
+
+	return domusr, nil
 }

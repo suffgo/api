@@ -64,9 +64,9 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 	}
 
 	adminIDUint, err := strconv.ParseUint(userIDStr, 10, 64)
-    if err != nil {
-        return c.JSON(http.StatusBadRequest, map[string]string{"error": "id de usuario inválido"})
-    }
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "id de usuario inválido"})
+	}
 
 	adminID, err := sv.NewID(uint(adminIDUint))
 	if err != nil {
@@ -87,12 +87,12 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 	}
 
 	roomDTO := &d.RoomDTO{
-        ID:         createdRoom.ID().Id,
-        LinkInvite: createdRoom.LinkInvite().LinkInvite,
-        IsFormal:   createdRoom.IsFormal().IsFormal,
-        Name:       createdRoom.Name().Name,
-        AdminID:    createdRoom.AdminID().Id,
-    }
+		ID:         createdRoom.ID().Id,
+		LinkInvite: createdRoom.LinkInvite().LinkInvite,
+		IsFormal:   createdRoom.IsFormal().IsFormal,
+		Name:       createdRoom.Name().Name,
+		AdminID:    createdRoom.AdminID().Id,
+	}
 
 	return c.JSON(http.StatusCreated, roomDTO)
 }
@@ -113,7 +113,7 @@ func (h *RoomEchoHandler) DeleteRoom(c echo.Context) error {
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, map[string]string{"success": "room deleted succesfully"})
+	return c.JSON(http.StatusOK, map[string]string{"sucess": "room deleted succesfully"})
 }
 
 func (h *RoomEchoHandler) GetAllRooms(c echo.Context) error {
