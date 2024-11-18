@@ -82,7 +82,7 @@ func (h *VoteEchoHandler) DeleteVote(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{"success": "User deleted succesfully"})
+	return c.JSON(http.StatusOK, map[string]string{"sucess": "User deleted succesfully"})
 }
 
 func (h *VoteEchoHandler) GetAllVotes(c echo.Context) error {
@@ -96,8 +96,8 @@ func (h *VoteEchoHandler) GetAllVotes(c echo.Context) error {
 	for _, vote := range votes {
 		voteDTO := &d.VoteDTO{
 			ID:       vote.ID().Id,
-			OptionID: vote.OptionID().Id,
 			UserID:   vote.UserID().Id,
+			OptionID: vote.OptionID().Id,
 		}
 		votesDTO = append(votesDTO, *voteDTO)
 	}
@@ -126,8 +126,8 @@ func (h *VoteEchoHandler) GetVoteByID(c echo.Context) error {
 
 	voteDTO := &d.VoteDTO{
 		ID:       vote.ID().Id,
-		OptionID: vote.OptionID().Id,
 		UserID:   vote.UserID().Id,
+		OptionID: vote.OptionID().Id,
 	}
 	return c.JSON(http.StatusOK, voteDTO)
 }

@@ -24,6 +24,16 @@ type (
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
+	
+	//para no comprometer la pass
+	UserSafeDTO struct {
+		ID       uint   `json:"id"`
+		Name     string `json:"name"`
+		Lastname string `json:"lastname"`
+		Username string `json:"username"`
+		Dni      string `json:"dni"`
+		Email    string `json:"email"`
+	}
 
 	UserCreateRequest struct {
 		Name     string `json:"name"`

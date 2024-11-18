@@ -2,7 +2,6 @@ package usecases
 
 import (
 	"errors"
-	sv "suffgo/internal/shared/domain/valueObjects"
 	"suffgo/internal/users/domain"
 	valueobjects "suffgo/internal/users/domain/valueObjects"
 )
@@ -18,7 +17,7 @@ func NewLoginUsecase(repo domain.UserRepository) *LoginUsecase {
 	}
 }
 
-func (s *LoginUsecase) Execute(username valueobjects.UserName, password valueobjects.Password) (*sv.ID, error) {
+func (s *LoginUsecase) Execute(username valueobjects.UserName, password valueobjects.Password) (*domain.User, error) {
 
 	user, err := s.repository.GetByUsername(username)
 
@@ -30,7 +29,6 @@ func (s *LoginUsecase) Execute(username valueobjects.UserName, password valueobj
 		return nil, errors.New("Credenciales invalidas")
 	}
 
-	id := user.ID()
 
-	return &id, nil
+	return user, nil
 }
