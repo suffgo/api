@@ -82,7 +82,7 @@ func (h *VoteEchoHandler) DeleteVote(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{"success": "User deleted succesfully"})
+	return c.JSON(http.StatusOK, map[string]string{"sucess": "User deleted succesfully"})
 }
 
 func (h *VoteEchoHandler) GetAllVotes(c echo.Context) error {

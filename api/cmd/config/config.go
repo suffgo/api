@@ -55,6 +55,9 @@ func GetConfig() *Config {
 			log.Fatalf("API_PORT invalido: %s", os.Getenv("API_PORT"))
 		}
 
+		//secret key para validar sesiones
+		secretKey := os.Getenv("SECRET_SESSION_AUTH_KEY")
+
 		db := &Db{
 			Host:     dbHost,
 			Port:     dbPort,
@@ -70,6 +73,7 @@ func GetConfig() *Config {
 		configInstance = &Config{
 			Server:    server,
 			Db:        db,
+			SecretKey: secretKey,
 		}
 	})
 

@@ -16,13 +16,13 @@ func NewCreateUsecase(repository domain.RoomRepository) *CreateUsecase {
 	}
 }
 
-func (s *CreateUsecase) Execute(room domain.Room) error {
+func (s *CreateUsecase) Execute(roomData domain.Room) (*domain.Room, error) {
 
-	err := s.repository.Save(room)
+	createdRoom, err := s.repository.Save(roomData)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return createdRoom,nil
 
 }
