@@ -17,6 +17,12 @@ import (
 	proposalUsecase "suffgo/internal/proposals/application/useCases"
 	p "suffgo/internal/proposals/infrastructure"
 
+	roomUsecase "suffgo/internal/rooms/application/useCases"
+	r "suffgo/internal/rooms/infrastructure"
+
+	"github.com/gorilla/sessions"
+	"github.com/labstack/echo-contrib/session"
+  
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -43,29 +49,32 @@ func (s *EchoServer) Start() {
 	s.app.Use(middleware.Logger())
 	s.db.GetDb().ShowSQL(true)
 
+	// s.app.Pre(middleware.HTTPSNonWWWRedirect()) a tener en cuenta para el futuro en caso de despliegue
+	
+	authKey := []byte(s.conf.SecretKey)
+    store := sessions.NewCookieStore(authKey)
+    s.app.Use(session.Middleware(store))
+
 	s.InitializeUser()
 	s.InitializeOption()
 	s.InitializeProposal()
 	s.InitializeVote()
+	s.InitializeRoom()
 
-	// Health check adding
 	s.app.GET("/v1/health", func(c echo.Context) error {
 		return c.String(200, "OK")
 	})
 
 	// for _, route := range s.app.Routes() {
 	// 	fmt.Printf("Ruta registrada: Método=%s, Ruta=%s\n", route.Method, route.Path)
-	// }
+	// } estas lineas sirven para debuguear registros de rutas
 
 	serverUrl := fmt.Sprintf(":%d", s.conf.Server.Port)
 	s.app.Logger.Fatal(s.app.Start(serverUrl))
 }
 
 func (s *EchoServer) InitializeUser() {
-	// Initialize the User Repository with xorm impl
 	userRepo := u.NewUserXormRepository(s.db)
-
-	// Le digo la base de datos a la que van a apuntar las operaciones hechas para jwt
 
 	// Initialize Use Cases
 	createUserUseCase := userUsecase.NewCreateUsecase(userRepo)
@@ -140,4 +149,23 @@ func (s *EchoServer) InitializeVote() {
 		getVoteByIDUseCase,
 	)
 	v.InitializeVoteEchoRouter(s.app, voteHandler)
+}
+
+func (s *EchoServer) InitializeRoom() {
+	roomRepo := r.NewRoomXormRepository(s.db)
+	createRoomUseCase := roomUsecase.NewCreateUsecase(roomRepo)
+	deleteRoomUseCase := roomUsecase.NewDeleteUsecase(roomRepo)
+	getAllRoomUseCase := roomUsecase.NewGetAllUsecase(roomRepo)
+	getByIDRoomUseCase := roomUsecase.NewGetByIDUsecase(roomRepo)
+	getByAdminRoomUseCase := roomUsecase.NewGetByAdminUsecase(roomRepo)
+
+	roomHandler := r.NewRoomEchoHandler(
+		createRoomUseCase,
+		deleteRoomUseCase,
+		getAllRoomUseCase,
+		getByIDRoomUseCase,
+		getByAdminRoomUseCase,
+	)
+	r.InitializeRoomEchoRouter(s.app, roomHandler)
+
 }

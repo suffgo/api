@@ -108,56 +108,56 @@ func MakeConstraints(db database.Database) error {
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("ALTER TABLE user_room ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) success\n")
+		fmt.Printf("ALTER TABLE user_room ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) sucess\n")
 	}
 
 	_, err = db.GetDb().Exec("ALTER TABLE user_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id)")
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("ALTER TABLE user_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id) success\n")
+		fmt.Printf("ALTER TABLE user_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id) sucess\n")
 	}
 
-	_, err = db.GetDb().Exec("ALTER TABLE room ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)")
+	_, err = db.GetDb().Exec("ALTER TABLE room ADD CONSTRAINT fk_user FOREIGN KEY (admin_id)REFERENCES users(id)")
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("ALTER TABLE room ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)")
+		fmt.Printf("ALTER TABLE room ADD CONSTRAINT fk_user FOREIGN KEY (admin_id) REFERENCES users(id)")
 	}
 
 	_, err = db.GetDb().Exec("ALTER TABLE proposal ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id)")
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("ALTER TABLE proposal ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id) success\n")
+		fmt.Printf("ALTER TABLE proposal ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id) sucess\n")
 	}
 
 	_, err = db.GetDb().Exec("ALTER TABLE setting_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id)")
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("ALTER TABLE setting_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id) success\n")
+		fmt.Printf("ALTER TABLE setting_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id) sucess\n")
 	}
 
 	_, err = db.GetDb().Exec("ALTER TABLE option ADD CONSTRAINT fk_proposal FOREIGN KEY (proposal_id) REFERENCES proposal(id)")
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("ALTER TABLE option ADD CONSTRAINT fk_proposal FOREIGN KEY (proposal_id) REFERENCES proposal(id) success\n")
+		fmt.Printf("ALTER TABLE option ADD CONSTRAINT fk_proposal FOREIGN KEY (proposal_id) REFERENCES proposal(id) sucess\n")
 	}
 
 	_, err = db.GetDb().Exec("ALTER TABLE vote ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)")
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("ALTER TABLE vote ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) success\n")
+		fmt.Printf("ALTER TABLE vote ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) sucess\n")
 	}
 
 	_, err = db.GetDb().Exec("ALTER TABLE vote ADD CONSTRAINT fk_option FOREIGN KEY(option_id) REFERENCES option(id)")
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("ALTER TABLE vote ADD CONSTRAINT fk_option FOREIGN KEY(option_id) REFERENCES option(id) success\n")
+		fmt.Printf("ALTER TABLE vote ADD CONSTRAINT fk_option FOREIGN KEY(option_id) REFERENCES option(id) sucess\n")
 	}
 
 	return nil
