@@ -113,7 +113,7 @@ func (h *RoomEchoHandler) DeleteRoom(c echo.Context) error {
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, map[string]string{"sucess": "room deleted succesfully"})
+	return c.JSON(http.StatusOK, map[string]string{"success": "room deleted succesfully"})
 }
 
 func (h *RoomEchoHandler) GetAllRooms(c echo.Context) error {
