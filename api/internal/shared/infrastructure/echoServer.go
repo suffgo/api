@@ -56,10 +56,10 @@ func (s *EchoServer) Start() {
     s.app.Use(session.Middleware(store))
 
 	s.InitializeUser()
-	s.InitializeOption()
-	s.InitializeProposal()
+	roomRepo := s.InitializeRoom()
+	s.InitializeProposal(roomRepo)
 	s.InitializeVote()
-	s.InitializeRoom()
+	s.InitializeOption()
 
 	s.app.GET("/v1/health", func(c echo.Context) error {
 		return c.String(200, "OK")
@@ -115,25 +115,6 @@ func (s *EchoServer) InitializeOption() {
 	o.InitializeOptionEchoRouter(s.app, optionHandler)
 }
 
-func (s *EchoServer) InitializeProposal() {
-
-	proposalRepo := p.NewProposalXormRepository(s.db)
-
-	createProposalUseCase := proposalUsecase.NewCreateUsecase(proposalRepo)
-	deleteProposalUseCase := proposalUsecase.NewDeleteUseCase(proposalRepo)
-	getAllProposalsUseCase := proposalUsecase.NewGetAllUseCase(proposalRepo)
-	getProposalByIDUseCase := proposalUsecase.NewGetByIDUseCase(proposalRepo)
-
-	proposalHandler := p.NewProposalEchoHandler(
-		createProposalUseCase,
-		getAllProposalsUseCase,
-		getProposalByIDUseCase,
-		deleteProposalUseCase,
-	)
-
-	p.InitializeProposalEchoRouter(s.app, proposalHandler)
-}
-
 func (s *EchoServer) InitializeVote() {
 	voteRepo := v.NewVoteXormRepository(s.db)
 
@@ -151,7 +132,7 @@ func (s *EchoServer) InitializeVote() {
 	v.InitializeVoteEchoRouter(s.app, voteHandler)
 }
 
-func (s *EchoServer) InitializeRoom() {
+func (s *EchoServer) InitializeRoom() *r.RoomXormRepository {
 	roomRepo := r.NewRoomXormRepository(s.db)
 	createRoomUseCase := roomUsecase.NewCreateUsecase(roomRepo)
 	deleteRoomUseCase := roomUsecase.NewDeleteUsecase(roomRepo)
@@ -168,4 +149,25 @@ func (s *EchoServer) InitializeRoom() {
 	)
 	r.InitializeRoomEchoRouter(s.app, roomHandler)
 
+	return roomRepo
+
+}
+
+func (s *EchoServer) InitializeProposal(roomRepo *r.RoomXormRepository) {
+
+	proposalRepo := p.NewProposalXormRepository(s.db)
+
+	createProposalUseCase := proposalUsecase.NewCreateUsecase(proposalRepo, roomRepo)
+	deleteProposalUseCase := proposalUsecase.NewDeleteUseCase(proposalRepo)
+	getAllProposalsUseCase := proposalUsecase.NewGetAllUseCase(proposalRepo)
+	getProposalByIDUseCase := proposalUsecase.NewGetByIDUseCase(proposalRepo)
+
+	proposalHandler := p.NewProposalEchoHandler(
+		createProposalUseCase,
+		getAllProposalsUseCase,
+		getProposalByIDUseCase,
+		deleteProposalUseCase,
+	)
+
+	p.InitializeProposalEchoRouter(s.app, proposalHandler)
 }

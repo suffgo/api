@@ -1,29 +1,52 @@
 package usecases
 
 import (
+	"errors"
+	"fmt"
 	"suffgo/internal/proposals/domain"
+	roomDomain "suffgo/internal/rooms/domain"
+	sv "suffgo/internal/shared/domain/valueObjects"
 )
 
 type (
 	CreateUsecase struct {
-		repository domain.ProposalRepository
+		proposalRepo domain.ProposalRepository
+		roomRepo     roomDomain.RoomRepository
 	}
 )
 
-func NewCreateUsecase(repository domain.ProposalRepository) *CreateUsecase {
+func NewCreateUsecase(proposalRepo domain.ProposalRepository, roomRepo roomDomain.RoomRepository) *CreateUsecase {
 	return &CreateUsecase{
-		repository: repository,
+		proposalRepo: proposalRepo,
+		roomRepo:     roomRepo,
 	}
 }
 
-func (s *CreateUsecase) Execute(proposal domain.Proposal) error {
+func (s *CreateUsecase) Execute(proposal domain.Proposal, requesterUsr sv.ID) (*domain.Proposal, error) {
 
-	err := s.repository.Save(proposal)
-
+	//verificar existencia de sala
+	fmt.Println("1..")
+	room, err := s.roomRepo.GetByID(proposal.RoomID())
+	fmt.Println("2")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	if room == nil {
+		return nil, errors.New("invalid room id")
+	}
+
+	//validar usuario creador de propuesta con admin de la sala
+	if room.AdminID().Id != requesterUsr.Id {
+		return nil, errors.New("operación no autorizada para este usuario")
+	}
+	fmt.Println("3")
+	createdProp, err := s.proposalRepo.Save(proposal)
+	fmt.Println("4")
+	if err != nil {
+		return nil, err
+	}
+
+	return createdProp, nil
 
 }

@@ -94,7 +94,12 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 		AdminID:    createdRoom.AdminID().Id,
 	}
 
-	return c.JSON(http.StatusCreated, roomDTO)
+	response := map[string]interface{}{
+		"success": "éxito al crear sala",
+		"room":    roomDTO,
+	}
+
+	return c.JSON(http.StatusCreated, response)
 }
 
 func (h *RoomEchoHandler) DeleteRoom(c echo.Context) error {
@@ -164,13 +169,6 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 }
 
 func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
-
-	// idParam := c.Param("id")
-	// idInput, err := strconv.ParseInt(idParam, 10, 64)
-	// if err != nil {
-	// 	invalidErr := &se.InvalidIDError{ID: idParam}
-	// 	return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
-	// }
 
 	userIDStr, ok := c.Get("user_id").(string)
 	if !ok || userIDStr == "" {

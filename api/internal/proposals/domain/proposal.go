@@ -11,19 +11,23 @@ type (
 		archive     *v.Archive
 		title       v.Title
 		description *v.Description
+		roomID      sv.ID
 	}
 
-	PorposalDTO struct {
+	ProposalDTO struct {
 		ID          uint    `json:"id"`
 		Archive     *string `json:"archive"`
 		Title       string  `json:"title"`
 		Description *string `json:"description"`
+		RoomID      uint    `json:"room_id"`
 	}
 
 	ProposalCreateRequest struct {
-		Archive     *string `json:"archive"`
-		Title       string  `json:"title"`
-		Description *string `json:"description"`
+		Archive       *string `json:"archive"`
+		Title         string  `json:"title"`
+		Description   *string `json:"description"`
+		RoomID        uint    `json:"room_id"`
+		UserCreatorID uint    `json:"user_creator_id"`
 	}
 )
 
@@ -32,28 +36,33 @@ func NewProposal(
 	archive *v.Archive,
 	title v.Title,
 	description *v.Description,
-
+	roomID *sv.ID,
 ) *Proposal {
 	return &Proposal{
 		id:          id,
 		archive:     archive,
 		title:       title,
 		description: description,
+		roomID:      *roomID,
 	}
 }
 
-func (u *Proposal) ID() sv.ID {
-	return *u.id
+func (p *Proposal) ID() sv.ID {
+	return *p.id
 }
 
-func (u *Proposal) Archive() *v.Archive {
-	return u.archive
+func (p *Proposal) Archive() *v.Archive {
+	return p.archive
 }
 
-func (u *Proposal) Title() v.Title {
-	return u.title
+func (p *Proposal) Title() v.Title {
+	return p.title
 }
 
-func (u *Proposal) Description() *v.Description {
-	return u.description
+func (p *Proposal) Description() *v.Description {
+	return p.description
+}
+
+func (p *Proposal) RoomID() sv.ID {
+	return p.roomID
 }

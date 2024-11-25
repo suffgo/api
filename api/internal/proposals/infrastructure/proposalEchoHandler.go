@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	u "suffgo/internal/proposals/application/useCases"
@@ -37,6 +38,23 @@ func NewProposalEchoHandler(
 func (h *ProposalEchoHandler) CreateProposal(c echo.Context) error {
 	var req d.ProposalCreateRequest
 
+	//obtengo id del usuario de la sesion para verificar que sea el dueño de la sala
+	userIDStr, ok := c.Get("user_id").(string)
+	if !ok || userIDStr == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
+	}
+
+	userCreatorIDUint, err := strconv.ParseUint(userIDStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "id de usuario inválido"})
+	}
+
+	fmt.Println("checkpoint 1")
+	userCreatorID, err := sv.NewID(uint(userCreatorIDUint))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
 	// bindea el body del request (json) al dto
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -57,19 +75,47 @@ func (h *ProposalEchoHandler) CreateProposal(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
+	roomID, err := sv.NewID(req.RoomID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	fmt.Println("checkpoint 2")
 	proposal := d.NewProposal(
 		nil,
 		archive,
 		*title,
 		description,
+		roomID,
 	)
 
-	err = h.CreateProposalUsecase.Execute(*proposal)
+	createdProp, err := h.CreateProposalUsecase.Execute(*proposal, *userCreatorID)
 	if err != nil {
+
+		if err.Error() == "operación no autorizada para este usuario" {
+			return c.JSON(http.StatusMethodNotAllowed, map[string]string{"error": err.Error()})
+		} else if err.Error() == "invalid room id" {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		}
+		fmt.Println("checkpoint 3")
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
+	fmt.Println("checkpoint 4")
 
-	return c.JSON(http.StatusCreated, req)
+	proposalDTO := d.ProposalDTO{
+		ID: createdProp.ID().Id,
+		Archive: &createdProp.Archive().Archive,
+		Title: createdProp.Title().Title,
+		Description: &createdProp.Description().Description,
+		RoomID: createdProp.RoomID().Id,
+	}
+
+	response := map[string]interface{}{
+		"success": "éxito al crear propuesta",
+		"proposal": proposalDTO   ,
+	}
+
+	return c.JSON(http.StatusCreated, response)
 
 }
 
@@ -80,11 +126,11 @@ func (h *ProposalEchoHandler) GetAllProposal(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	var proposalDTO []d.PorposalDTO
+	var proposalDTO []d.ProposalDTO
 
 	for _, prop := range proposal {
 
-		propDTO := &d.PorposalDTO{
+		propDTO := &d.ProposalDTO{
 			ID:          prop.ID().Id,
 			Archive:     &prop.Archive().Archive,
 			Title:       prop.Title().Title,
@@ -116,7 +162,7 @@ func (h *ProposalEchoHandler) GetProposalByID(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	proposalDTO := &d.PorposalDTO{
+	proposalDTO := &d.ProposalDTO{
 		ID:          proposal.ID().Id,
 		Archive:     &proposal.Archive().Archive,
 		Title:       proposal.Title().Title,
