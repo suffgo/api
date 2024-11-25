@@ -14,11 +14,15 @@ import (
 	voteUsecase "suffgo/internal/votes/application/useCases"
 	v "suffgo/internal/votes/infrastructure"
 
+	proposalUsecase "suffgo/internal/proposals/application/useCases"
+	p "suffgo/internal/proposals/infrastructure"
+
 	roomUsecase "suffgo/internal/rooms/application/useCases"
 	r "suffgo/internal/rooms/infrastructure"
 
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
+  
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -53,6 +57,7 @@ func (s *EchoServer) Start() {
 
 	s.InitializeUser()
 	s.InitializeOption()
+	s.InitializeProposal()
 	s.InitializeVote()
 	s.InitializeRoom()
 
@@ -108,6 +113,25 @@ func (s *EchoServer) InitializeOption() {
 		getOptionByValueUseCase,
 	)
 	o.InitializeOptionEchoRouter(s.app, optionHandler)
+}
+
+func (s *EchoServer) InitializeProposal() {
+
+	proposalRepo := p.NewProposalXormRepository(s.db)
+
+	createProposalUseCase := proposalUsecase.NewCreateUsecase(proposalRepo)
+	deleteProposalUseCase := proposalUsecase.NewDeleteUseCase(proposalRepo)
+	getAllProposalsUseCase := proposalUsecase.NewGetAllUseCase(proposalRepo)
+	getProposalByIDUseCase := proposalUsecase.NewGetByIDUseCase(proposalRepo)
+
+	proposalHandler := p.NewProposalEchoHandler(
+		createProposalUseCase,
+		getAllProposalsUseCase,
+		getProposalByIDUseCase,
+		deleteProposalUseCase,
+	)
+
+	p.InitializeProposalEchoRouter(s.app, proposalHandler)
 }
 
 func (s *EchoServer) InitializeVote() {
