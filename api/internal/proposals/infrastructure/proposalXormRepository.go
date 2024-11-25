@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"fmt"
 	"suffgo/cmd/database"
 	d "suffgo/internal/proposals/domain"
 	ue "suffgo/internal/proposals/domain/errors"
@@ -20,20 +21,29 @@ func NewProposalXormRepository(db database.Database) *ProposalXormRepository {
 	}
 }
 
-func (s *ProposalXormRepository) Save(proposal d.Proposal) error {
+func (s *ProposalXormRepository) Save(proposal d.Proposal) (*d.Proposal, error) {
 
+	fmt.Println("a ver!")
 	proposalModel := &m.Proposal{
 		Archive:     &proposal.Archive().Archive,
 		Title:       proposal.Title().Title,
 		Description: &proposal.Description().Description,
+		RoomID:      proposal.RoomID().Id,
 	}
 
+	fmt.Println("Antes de crear")
 	_, err := s.db.GetDb().Insert(proposalModel)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	propMod, err := mappers.ModelToDomain(proposalModel)
+
+	if err != nil {
+		return nil, err
+	}
+	
+	return propMod, nil
 
 }
 
@@ -62,6 +72,7 @@ func (s *ProposalXormRepository) GetById(id sv.ID) (*d.Proposal, error) {
 	proposalModel := new(m.Proposal)
 	has, err := s.db.GetDb().ID(id.Id).Get(proposalModel)
 	if err != nil {
+		fmt.Println("acaa?")
 		return nil, err
 	}
 	if !has {

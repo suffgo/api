@@ -13,6 +13,7 @@ func DomainToModel(proposal *domain.Proposal) *m.Proposal {
 		Archive:     &proposal.Archive().Archive,
 		Title:       proposal.Title().Title,
 		Description: &proposal.Description().Description,
+		RoomID:      proposal.ID().Id,
 	}
 }
 
@@ -37,5 +38,12 @@ func ModelToDomain(proposalModel *m.Proposal) (*domain.Proposal, error) {
 		return nil, err
 	}
 
-	return domain.NewProposal(id, archive, *title, description), nil
+	roomID, err := sv.NewID(proposalModel.RoomID)
+	if err != nil {
+		return nil, err
+	}
+
+	return domain.NewProposal(
+		id, archive, *title, description, roomID,
+	), nil
 }

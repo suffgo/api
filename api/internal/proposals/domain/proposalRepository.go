@@ -9,5 +9,5 @@ type ProposalRepository interface {
 	GetAll() ([]Proposal, error)
 	Delete(id sv.ID) error
 	//Edit()
-	Save(proposal Proposal) error
+	Save(proposal Proposal) (*Proposal, error)
 }

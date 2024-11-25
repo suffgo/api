@@ -80,8 +80,8 @@ func (u *UserEchoHandler) Login(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
-		"sucess": "autenticación exitosa",
-		"user":   userDTO,
+		"success": "autenticación exitosa",
+		"user":    userDTO,
 	}
 
 	// Devuelvo el id del usuario logueado
@@ -142,8 +142,8 @@ func (h *UserEchoHandler) CreateUser(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
-		"sucess": "usuario creado exitosamente",
-		"user":   userDTO,
+		"success": "usuario creado exitosamente",
+		"user":    userDTO,
 	}
 
 	return c.JSON(http.StatusCreated, response)
@@ -166,7 +166,7 @@ func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{"sucess": "user deleted succesfully"})
+	return c.JSON(http.StatusOK, map[string]string{"success": "user deleted succesfully"})
 }
 
 func (h *UserEchoHandler) GetAllUsers(c echo.Context) error {
@@ -226,5 +226,5 @@ func (h *UserEchoHandler) Logout(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{"sucess": "sesion cerrada exitosamente"})
+	return c.JSON(http.StatusOK, map[string]string{"success": "sesion cerrada exitosamente"})
 }
