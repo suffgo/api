@@ -107,8 +107,7 @@ func (h *SettingRoomEchoHandler) DeleteSettingRoom(c echo.Context) error {
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 
 	if err != nil {
-		invalidErr := &se.InvalidIDError{ID: idParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": invalidErr.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": se.ErrInvalidID.Error()})
 	}
 
 	id, _ := sv.NewID(uint(idInput))
@@ -151,8 +150,7 @@ func (h *SettingRoomEchoHandler) GetSettingRoomByID(c echo.Context) error {
 	idParam := c.Param("id")
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
-		invalidErr := &se.InvalidIDError{ID: idParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": invalidErr.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": se.ErrInvalidID.Error()})
 	}
 
 	id, _ := sv.NewID(uint(idInput))
