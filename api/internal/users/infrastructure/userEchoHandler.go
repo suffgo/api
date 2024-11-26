@@ -66,7 +66,7 @@ func (u *UserEchoHandler) Login(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
 	}
 
-	if err := createSession(user.ID(), c); err != nil {
+	if err := createSession(user.ID(), user.FullName().Name, c); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
