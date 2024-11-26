@@ -5,8 +5,8 @@ import (
 	"suffgo/cmd/config"
 	"sync"
 
-	"xorm.io/xorm"
 	_ "github.com/lib/pq"
+	"xorm.io/xorm"
 )
 
 type postgresDatabase struct {
