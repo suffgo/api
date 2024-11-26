@@ -1,7 +1,6 @@
 package infrastructure
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	u "suffgo/internal/proposals/application/useCases"
@@ -49,7 +48,6 @@ func (h *ProposalEchoHandler) CreateProposal(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "id de usuario inválido"})
 	}
 
-	fmt.Println("checkpoint 1")
 	userCreatorID, err := sv.NewID(uint(userCreatorIDUint))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -80,7 +78,6 @@ func (h *ProposalEchoHandler) CreateProposal(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	fmt.Println("checkpoint 2")
 	proposal := d.NewProposal(
 		nil,
 		archive,
@@ -97,11 +94,9 @@ func (h *ProposalEchoHandler) CreateProposal(c echo.Context) error {
 		} else if err.Error() == "invalid room id" {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
-		fmt.Println("checkpoint 3")
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	fmt.Println("checkpoint 4")
-
+	
 	proposalDTO := d.ProposalDTO{
 		ID: createdProp.ID().Id,
 		Archive: &createdProp.Archive().Archive,
