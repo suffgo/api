@@ -79,7 +79,7 @@ func MigrateOption(db database.Database) error {
 }
 
 func MigrateRoomSetting(db database.Database) error {
-	err := db.GetDb().Sync2(new(s.SettingRoom))
+	err := db.GetDb().Sync2(new(s.SettingsRoom))
 
 	if err != nil {
 		return err

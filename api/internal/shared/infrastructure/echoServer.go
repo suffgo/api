@@ -14,6 +14,9 @@ import (
 	voteUsecase "suffgo/internal/votes/application/useCases"
 	v "suffgo/internal/votes/infrastructure"
 
+	settingRoomUsecase "suffgo/internal/settingsRoom/application/useCases"
+	sr "suffgo/internal/settingsRoom/infrastructure"
+
 	proposalUsecase "suffgo/internal/proposals/application/useCases"
 	p "suffgo/internal/proposals/infrastructure"
 
@@ -22,7 +25,7 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
-  
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -50,16 +53,17 @@ func (s *EchoServer) Start() {
 	s.db.GetDb().ShowSQL(true)
 
 	// s.app.Pre(middleware.HTTPSNonWWWRedirect()) a tener en cuenta para el futuro en caso de despliegue
-	
+
 	authKey := []byte(s.conf.SecretKey)
-    store := sessions.NewCookieStore(authKey)
-    s.app.Use(session.Middleware(store))
+	store := sessions.NewCookieStore(authKey)
+	s.app.Use(session.Middleware(store))
 
 	s.InitializeUser()
 	roomRepo := s.InitializeRoom()
 	s.InitializeProposal(roomRepo)
 	s.InitializeVote()
 	s.InitializeOption()
+	s.InitializeSettingRoom()
 
 	s.app.GET("/v1/health", func(c echo.Context) error {
 		return c.String(200, "OK")
@@ -151,6 +155,21 @@ func (s *EchoServer) InitializeRoom() *r.RoomXormRepository {
 
 	return roomRepo
 
+}
+
+func (s *EchoServer) InitializeSettingRoom() {
+	settingRoomRepo := sr.NewSettingRoomXormRepository(s.db)
+	createSettingRoomUseCase := settingRoomUsecase.NewCreateUsecase(settingRoomRepo)
+	deleteSettingRoomUseCase := settingRoomUsecase.NewDeleteUsecase(settingRoomRepo)
+	getAllSettingRoomUseCase := settingRoomUsecase.NewGetAllUsecase(settingRoomRepo)
+	getSettingRoomByIDUseCase := settingRoomUsecase.NewGetByIDUsecase(settingRoomRepo)
+	settingRoomHandler := sr.NewSettingRoomEchoHandler(
+		createSettingRoomUseCase,
+		deleteSettingRoomUseCase,
+		getAllSettingRoomUseCase,
+		getSettingRoomByIDUseCase,
+	)
+	sr.InitializeSettingRoomEchoRouter(s.app, settingRoomHandler)
 }
 
 func (s *EchoServer) InitializeProposal(roomRepo *r.RoomXormRepository) {
