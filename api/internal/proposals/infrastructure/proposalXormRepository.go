@@ -72,13 +72,13 @@ func (s *ProposalXormRepository) GetById(id sv.ID) (*d.Proposal, error) {
 		return nil, err
 	}
 	if !has {
-		return nil, ue.ProposalNotFoundError
+		return nil, ue.ErrPropNotFound
 	}
 
 	proposalEnt, err := mappers.ModelToDomain(proposalModel)
 
 	if err != nil {
-		return nil, se.DataMappingError
+		return nil, se.ErrDataMap
 	}
 
 	return proposalEnt, nil
@@ -91,7 +91,7 @@ func (s *ProposalXormRepository) Delete(id sv.ID) error {
 	}
 
 	if affected == 0 {
-		return ue.ProposalNotFoundError
+		return ue.ErrPropNotFound
 	}
 
 	return nil

@@ -1,7 +1,9 @@
 package errors
 
-import "errors"
+type OptionNotFoundErrorConst string
 
-var (
-	OptionNotFoundError = errors.New("option not found")
-)
+const ErrOptNotFound OptionNotFoundErrorConst = "option not found."
+
+func (o OptionNotFoundErrorConst) Error() string {
+	return string(o)
+}

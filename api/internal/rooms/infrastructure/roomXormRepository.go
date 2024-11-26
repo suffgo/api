@@ -28,13 +28,13 @@ func (s *RoomXormRepository) GetByID(id sv.ID) (*d.Room, error) {
 		return nil, err
 	}
 	if !has {
-		return nil, re.RoomNotFoundError
+		return nil, re.ErrRoomNotFound
 	}
 
 	roomEnt, err := mappers.ModelToDomain(roomModel)
 
 	if err != nil {
-		return nil, se.DataMappingError
+		return nil, se.ErrDataMap
 	}
 
 	return roomEnt, nil
@@ -52,7 +52,7 @@ func (s *RoomXormRepository) GetAll() ([]d.Room, error) {
 	for _, room := range rooms {
 		roomDomain, err := mappers.ModelToDomain(&room)
 		if err != nil {
-			return nil, err
+			return nil, se.ErrDataMap
 		}
 
 		roomsDomain = append(roomsDomain, *roomDomain)
@@ -68,7 +68,7 @@ func (s *RoomXormRepository) Delete(id sv.ID) error {
 	}
 
 	if affected == 0 {
-		return re.RoomNotFoundError
+		return re.ErrRoomNotFound
 	}
 
 	return nil
@@ -86,7 +86,7 @@ func (r *RoomXormRepository) GetByAdminID(adminID sv.ID) ([]d.Room, error) {
 		roomDomain, err := mappers.ModelToDomain(&room)
 
 		if err != nil {
-			return nil, err
+			return nil, se.ErrDataMap
 		}
 
 		roomsDomain = append(roomsDomain, *roomDomain)
@@ -109,7 +109,7 @@ func (s *RoomXormRepository) Save(room d.Room) (*d.Room,error) {
 
 	roomDom, err := mappers.ModelToDomain(roomModel)
 	if err != nil {
-		return nil, err
+		return nil, se.ErrDataMap
 	}
 
 	return roomDom, nil

@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	u "suffgo/internal/rooms/application/useCases"
@@ -11,6 +12,8 @@ import (
 	sv "suffgo/internal/shared/domain/valueObjects"
 
 	se "suffgo/internal/shared/domain/errors"
+
+	rerrors "suffgo/internal/rooms/domain/errors"
 
 	"github.com/labstack/echo/v4"
 )
@@ -65,12 +68,12 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 
 	adminIDUint, err := strconv.ParseUint(userIDStr, 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "id de usuario inválido"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
 	}
 
 	adminID, err := sv.NewID(uint(adminIDUint))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
 	}
 
 	room := d.NewRoom(
@@ -106,14 +109,13 @@ func (h *RoomEchoHandler) DeleteRoom(c echo.Context) error {
 	idParam := c.Param("id")
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
-		invalidErr := &se.InvalidIDError{ID: idParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
 	}
 
 	id, _ := sv.NewID(uint(idInput))
 	err = h.DeleteRoomUsecase.Execute(*id)
 	if err != nil {
-		if err.Error() == "room not found" {
+		if errors.Is(err, rerrors.ErrRoomNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
@@ -145,14 +147,13 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 	idParam := c.Param("id")
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
-		invalidErr := &se.InvalidIDError{ID: idParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrDataMap.Error()})
 	}
 
 	id, _ := sv.NewID(uint(idInput))
 	room, err := h.GetRoomByIDUsecase.Execute(*id)
 	if err != nil {
-		if err.Error() == "room not found" {
+		if errors.Is(err, rerrors.ErrRoomNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
@@ -177,12 +178,12 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 
 	idInt, err := strconv.ParseUint(userIDStr, 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "id invalido"})
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": se.ErrInvalidID.Error()})
 	}
 
 	userID, err := sv.NewID(uint(idInt))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "error al crear ID de usuario"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
 	}
 
 	// id, _ := sv.NewID(uint(idInput))

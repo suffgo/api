@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	sv "suffgo/internal/shared/domain/valueObjects"
@@ -8,6 +9,8 @@ import (
 	d "suffgo/internal/votes/domain"
 
 	se "suffgo/internal/shared/domain/errors"
+
+	verrors "suffgo/internal/votes/domain/errors"
 
 	"github.com/labstack/echo/v4"
 )
@@ -68,21 +71,20 @@ func (h *VoteEchoHandler) DeleteVote(c echo.Context) error {
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 
 	if err != nil {
-		invalidErr := &se.InvalidIDError{ID: idParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
 	}
 
 	id, _ := sv.NewID(uint(idInput))
 	err = h.DeleteVoteUsecase.Execute(*id)
 
 	if err != nil {
-		if err.Error() == "vote not found" {
+		if errors.Is(err, verrors.ErrVoteNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{"success": "User deleted succesfully"})
+	return c.JSON(http.StatusOK, map[string]string{"success": "Vote deleted succesfully"})
 }
 
 func (h *VoteEchoHandler) GetAllVotes(c echo.Context) error {
@@ -110,15 +112,14 @@ func (h *VoteEchoHandler) GetVoteByID(c echo.Context) error {
 	idParam := c.Param("id")
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
-		invalidErr := &se.InvalidIDError{ID: idParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
 	}
 
 	id, _ := sv.NewID(uint(idInput))
 	vote, err := h.GetVoteByIDUsecase.Execute(*id)
 
 	if err != nil {
-		if err.Error() == "vote not found" {
+		if errors.Is(err, verrors.ErrVoteNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})

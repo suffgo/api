@@ -27,13 +27,13 @@ func (s *VoteXormRepository) GetByID(id sv.ID) (*d.Vote, error) {
 		return nil, err
 	}
 	if !has {
-		return nil, ve.VoteNotFoundError
+		return nil, ve.ErrVoteNotFound
 	}
 
 	voteEnt, err := mappers.ModelToDomain(voteModel)
 
 	if err != nil {
-		return nil, se.DataMappingError
+		return nil, se.ErrDataMap
 	}
 
 	return voteEnt, nil
@@ -67,7 +67,7 @@ func (s *VoteXormRepository) Delete(id sv.ID) error {
 	}
 
 	if affected == 0 {
-		return ve.VoteNotFoundError
+		return ve.ErrVoteNotFound
 	}
 	return nil
 }

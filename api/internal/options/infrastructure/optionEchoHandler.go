@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	u "suffgo/internal/options/application/useCases"
@@ -12,7 +13,7 @@ import (
 
 	sv "suffgo/internal/shared/domain/valueObjects"
 
-	e "suffgo/internal/options/domain/errors"
+	oerrors "suffgo/internal/options/domain/errors"
 	se "suffgo/internal/shared/domain/errors"
 )
 
@@ -76,15 +77,14 @@ func (h *OptionEchoHandler) DeleteOption(c echo.Context) error {
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 
 	if err != nil {
-		invalidErr := &se.InvalidIDError{ID: idParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
 	}
 
 	id, _ := sv.NewID(uint(idInput))
 	err = h.DeleteOptionUsecase.Execute(*id)
 
 	if err != nil {
-		if err.Error() == "option not found" {
+		if errors.Is(err, oerrors.ErrOptNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
 	}
@@ -117,15 +117,14 @@ func (h *OptionEchoHandler) GetOptionByID(c echo.Context) error {
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 
 	if err != nil {
-		invalidErr := &se.InvalidIDError{ID: idParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
 	}
 
 	id, _ := sv.NewID(uint(idInput))
 	option, err := h.GetOtionByIDUsecase.Execute(*id)
 
 	if err != nil {
-		if err.Error() == "option not found" {
+		if errors.Is(err, oerrors.ErrOptNotFound) {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
@@ -145,13 +144,12 @@ func (h *OptionEchoHandler) GetOptionByValue(c echo.Context) error {
 
 	value, err := v.NewValue(valueParam)
 	if err != nil {
-		invalidErr := &e.InvalidValueError{Value: valueParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
 	}
 	option, err := h.GetOptionByValueUsecase.Execute(*value)
 
 	if err != nil {
-		if err.Error() == "option not found" {
+		if errors.Is(err, oerrors.ErrOptNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
