@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	u "suffgo/internal/users/application/useCases"
@@ -11,6 +12,8 @@ import (
 	sv "suffgo/internal/shared/domain/valueObjects"
 
 	se "suffgo/internal/shared/domain/errors"
+
+	uerr "suffgo/internal/users/domain/errors"
 
 	"github.com/labstack/echo/v4"
 )
@@ -40,6 +43,7 @@ func NewUserEchoHandler(
 	}
 }
 
+
 func (u *UserEchoHandler) Login(c echo.Context) error {
 
 	var req d.LoginRequest
@@ -66,7 +70,7 @@ func (u *UserEchoHandler) Login(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
 	}
 
-	if err := createSession(user.ID(), c); err != nil {
+	if err := createSession(user.ID(), user.FullName().Name, c); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
@@ -153,14 +157,13 @@ func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
 	idParam := c.Param("id")
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
-		invalidErr := &se.InvalidIDError{ID: idParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
 	}
 
 	id, _ := sv.NewID(uint(idInput))
 	err = h.DeleteUserUsecase.Execute(*id)
 	if err != nil {
-		if err.Error() == "user not found" {
+		if errors.Is(err, uerr.ErrUserNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
@@ -195,14 +198,13 @@ func (h *UserEchoHandler) GetUserByID(c echo.Context) error {
 	idParam := c.Param("id")
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
-		invalidErr := &se.InvalidIDError{ID: idParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
 	}
 
 	id, _ := sv.NewID(uint(idInput))
 	user, err := h.GetUserByIDUsecase.Execute(*id)
 	if err != nil {
-		if err.Error() == "user not found" {
+		if errors.Is(err, uerr.ErrUserNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})

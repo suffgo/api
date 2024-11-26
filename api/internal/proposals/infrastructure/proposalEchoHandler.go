@@ -1,7 +1,7 @@
 package infrastructure
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 	"strconv"
 	u "suffgo/internal/proposals/application/useCases"
@@ -12,6 +12,8 @@ import (
 	v "suffgo/internal/proposals/domain/valueObjects"
 	se "suffgo/internal/shared/domain/errors"
 	sv "suffgo/internal/shared/domain/valueObjects"
+
+	perrors "suffgo/internal/proposals/domain/errors"
 )
 
 type ProposalEchoHandler struct {
@@ -49,7 +51,6 @@ func (h *ProposalEchoHandler) CreateProposal(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "id de usuario inválido"})
 	}
 
-	fmt.Println("checkpoint 1")
 	userCreatorID, err := sv.NewID(uint(userCreatorIDUint))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -80,7 +81,6 @@ func (h *ProposalEchoHandler) CreateProposal(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	fmt.Println("checkpoint 2")
 	proposal := d.NewProposal(
 		nil,
 		archive,
@@ -94,14 +94,12 @@ func (h *ProposalEchoHandler) CreateProposal(c echo.Context) error {
 
 		if err.Error() == "operación no autorizada para este usuario" {
 			return c.JSON(http.StatusMethodNotAllowed, map[string]string{"error": err.Error()})
-		} else if err.Error() == "invalid room id" {
+		} else if errors.Is(err, se.ErrInvalidID) {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
-		fmt.Println("checkpoint 3")
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	fmt.Println("checkpoint 4")
-
+	
 	proposalDTO := d.ProposalDTO{
 		ID: createdProp.ID().Id,
 		Archive: &createdProp.Archive().Archive,
@@ -148,15 +146,14 @@ func (h *ProposalEchoHandler) GetProposalByID(c echo.Context) error {
 	idParam := c.Param("id")
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
-		invalidErr := &se.InvalidIDError{ID: idParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
 	}
 
 	id, _ := sv.NewID(uint(idInput))
 	proposal, err := h.GetByIDProposalUseCase.Execute(*id)
 
 	if err != nil {
-		if err.Error() == "proposal not found" {
+		if errors.Is(err, perrors.ErrPropNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
@@ -176,15 +173,14 @@ func (h *ProposalEchoHandler) DeleteProposal(c echo.Context) error {
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 
 	if err != nil {
-		invalidErr := &se.InvalidIDError{ID: idParam}
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": invalidErr.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
 	}
 
 	id, _ := sv.NewID(uint(idInput))
 	err = h.DeleteProposalUseCase.Execute(*id)
 
 	if err != nil {
-		if err.Error() == "proposal not found" {
+		if errors.Is(err, perrors.ErrPropNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})

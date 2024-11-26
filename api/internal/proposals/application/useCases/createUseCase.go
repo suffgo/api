@@ -2,7 +2,6 @@ package usecases
 
 import (
 	"errors"
-	"fmt"
 	"suffgo/internal/proposals/domain"
 	roomDomain "suffgo/internal/rooms/domain"
 	sv "suffgo/internal/shared/domain/valueObjects"
@@ -25,9 +24,7 @@ func NewCreateUsecase(proposalRepo domain.ProposalRepository, roomRepo roomDomai
 func (s *CreateUsecase) Execute(proposal domain.Proposal, requesterUsr sv.ID) (*domain.Proposal, error) {
 
 	//verificar existencia de sala
-	fmt.Println("1..")
 	room, err := s.roomRepo.GetByID(proposal.RoomID())
-	fmt.Println("2")
 	if err != nil {
 		return nil, err
 	}
@@ -40,9 +37,9 @@ func (s *CreateUsecase) Execute(proposal domain.Proposal, requesterUsr sv.ID) (*
 	if room.AdminID().Id != requesterUsr.Id {
 		return nil, errors.New("operación no autorizada para este usuario")
 	}
-	fmt.Println("3")
+
 	createdProp, err := s.proposalRepo.Save(proposal)
-	fmt.Println("4")
+	
 	if err != nil {
 		return nil, err
 	}

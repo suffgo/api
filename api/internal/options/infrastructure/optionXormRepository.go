@@ -28,13 +28,13 @@ func (s *OptionXormRepository) GetByID(id sv.ID) (*d.Option, error) {
 		return nil, err
 	}
 	if !has {
-		return nil, oe.OptionNotFoundError
+		return nil, oe.ErrOptNotFound
 	}
 
 	userEnt, err := mappers.ModelToDomain(optionModel)
 
 	if err != nil {
-		return nil, se.DataMappingError
+		return nil, se.ErrDataMap
 	}
 
 	return userEnt, nil
@@ -53,7 +53,7 @@ func (s *OptionXormRepository) GetByValue(value v.Value) (*d.Option, error) {
 	optionEnt, err := mappers.ModelToDomain(optionModel)
 
 	if err != nil {
-		return nil, se.DataMappingError
+		return nil, se.ErrDataMap
 	}
 
 	return optionEnt, nil
@@ -71,8 +71,9 @@ func (s *OptionXormRepository) GetAll() ([]d.Option, error) {
 		optionDomain, err := mappers.ModelToDomain(&option)
 
 		if err != nil {
-			return nil, err
+			return nil, se.ErrDataMap
 		}
+
 		optionsDomain = append(optionsDomain, *optionDomain)
 	}
 	return optionsDomain, nil
@@ -86,7 +87,7 @@ func (s *OptionXormRepository) Delete(id sv.ID) error {
 	}
 
 	if affected == 0 {
-		return oe.OptionNotFoundError
+		return oe.ErrOptNotFound
 	}
 
 	return nil

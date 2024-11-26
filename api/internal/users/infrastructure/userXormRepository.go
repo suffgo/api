@@ -28,13 +28,13 @@ func (s *UserXormRepository) GetByID(id sv.ID) (*d.User, error) {
 		return nil, err
 	}
 	if !has {
-		return nil, ue.UserNotFoundError
+		return nil, ue.ErrUserNotFound
 	}
 
 	userEnt, err := mappers.ModelToDomain(userModel)
 
 	if err != nil {
-		return nil, se.DataMappingError
+		return nil, se.ErrDataMap
 	}
 
 	return userEnt, nil
@@ -68,7 +68,7 @@ func (s *UserXormRepository) Delete(id sv.ID) error {
 	}
 
 	if affected == 0 {
-		return ue.UserNotFoundError
+		return ue.ErrUserNotFound
 	}
 
 	return nil

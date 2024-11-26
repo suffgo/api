@@ -1,7 +1,9 @@
 package errors
 
-import "errors"
+type proposalNotFoundConst string
 
-var (
-	ProposalNotFoundError = errors.New("proposal not found")
-)
+const ErrPropNotFound proposalNotFoundConst = "proposal not found."
+
+func (p proposalNotFoundConst) Error() string {
+	return string(p)
+}

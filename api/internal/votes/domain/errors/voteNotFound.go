@@ -1,7 +1,9 @@
 package errors
 
-import "errors"
+type voteNotFoundConst string
 
-var (
-	VoteNotFoundError = errors.New("vote not found")
-)
+const ErrVoteNotFound voteNotFoundConst = "vote not found."
+
+func (v voteNotFoundConst) Error() string {
+	return string(v)
+}

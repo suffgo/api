@@ -1,11 +1,9 @@
 package errors
 
-import "fmt"
+type invalidIdConst string
 
-type InvalidIDError struct {
-	ID string
-}
+const ErrInvalidID invalidIdConst = "invalid id."
 
-func (e *InvalidIDError) Error() string {
-	return fmt.Sprintf("Invalid id %s", e.ID)
+func (u invalidIdConst) Error() string{
+	return string(u)
 }

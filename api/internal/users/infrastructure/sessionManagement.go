@@ -11,7 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func createSession(userID sv.ID, c echo.Context) error {
+func createSession(userID sv.ID, name string , c echo.Context) error {
 	// Crear la sesión
 	sess, err := session.Get("session", c)
 	if err != nil {
@@ -26,6 +26,7 @@ func createSession(userID sv.ID, c echo.Context) error {
 	}
 	// Convertir el userID a string antes de almacenarlo
 	sess.Values["user_id"] = strconv.FormatUint(uint64(userID.Id), 10)
+	sess.Values["name"] = name
 	err = sess.Save(c.Request(), c.Response())
 	if err != nil {
 		log.Printf("Error al guardar la sesión: %v", err)

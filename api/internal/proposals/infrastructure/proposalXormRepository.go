@@ -1,7 +1,6 @@
 package infrastructure
 
 import (
-	"fmt"
 	"suffgo/cmd/database"
 	d "suffgo/internal/proposals/domain"
 	ue "suffgo/internal/proposals/domain/errors"
@@ -23,7 +22,6 @@ func NewProposalXormRepository(db database.Database) *ProposalXormRepository {
 
 func (s *ProposalXormRepository) Save(proposal d.Proposal) (*d.Proposal, error) {
 
-	fmt.Println("a ver!")
 	proposalModel := &m.Proposal{
 		Archive:     &proposal.Archive().Archive,
 		Title:       proposal.Title().Title,
@@ -31,7 +29,6 @@ func (s *ProposalXormRepository) Save(proposal d.Proposal) (*d.Proposal, error) 
 		RoomID:      proposal.RoomID().Id,
 	}
 
-	fmt.Println("Antes de crear")
 	_, err := s.db.GetDb().Insert(proposalModel)
 	if err != nil {
 		return nil, err
@@ -72,17 +69,16 @@ func (s *ProposalXormRepository) GetById(id sv.ID) (*d.Proposal, error) {
 	proposalModel := new(m.Proposal)
 	has, err := s.db.GetDb().ID(id.Id).Get(proposalModel)
 	if err != nil {
-		fmt.Println("acaa?")
 		return nil, err
 	}
 	if !has {
-		return nil, ue.ProposalNotFoundError
+		return nil, ue.ErrPropNotFound
 	}
 
 	proposalEnt, err := mappers.ModelToDomain(proposalModel)
 
 	if err != nil {
-		return nil, se.DataMappingError
+		return nil, se.ErrDataMap
 	}
 
 	return proposalEnt, nil
@@ -95,7 +91,7 @@ func (s *ProposalXormRepository) Delete(id sv.ID) error {
 	}
 
 	if affected == 0 {
-		return ue.ProposalNotFoundError
+		return ue.ErrPropNotFound
 	}
 
 	return nil
