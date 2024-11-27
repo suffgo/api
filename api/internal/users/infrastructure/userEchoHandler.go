@@ -15,6 +15,7 @@ import (
 
 	uerr "suffgo/internal/users/domain/errors"
 
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 )
 
@@ -229,4 +230,14 @@ func (h *UserEchoHandler) Logout(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{"success": "sesion cerrada exitosamente"})
+}
+
+//handler para saber si esta autenticado
+func (h *UserEchoHandler) CheckAuth(c echo.Context) error {
+	_, err := session.Get("session", c)
+	if err != nil  {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"success": "usuario autenticado"})
 }
