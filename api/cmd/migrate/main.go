@@ -132,11 +132,11 @@ func MakeConstraints(db database.Database) error {
 		fmt.Printf("ALTER TABLE proposal ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id) success\n")
 	}
 
-	_, err = db.GetDb().Exec("ALTER TABLE setting_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id)")
+	_, err = db.GetDb().Exec("ALTER TABLE settings_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id)")
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("ALTER TABLE setting_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id) success\n")
+		fmt.Printf("ALTER TABLE settings_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id) success\n")
 	}
 
 	_, err = db.GetDb().Exec("ALTER TABLE option ADD CONSTRAINT fk_proposal FOREIGN KEY (proposal_id) REFERENCES proposal(id)")

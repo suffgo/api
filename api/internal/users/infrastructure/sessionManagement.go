@@ -41,15 +41,11 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		sess, err := session.Get("session", c)
 		if err != nil {
-			log.Printf("Error al obtener la sesión: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "error al obtener la sesión"})
 		}
 
-		log.Printf("Valores de la sesión: %#v", sess.Values)
-
 		userID, ok := sess.Values["user_id"].(string)
 		if !ok || userID == "" {
-			log.Println("Usuario no autenticado: user_id no encontrado en la sesión")
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
 		}
 

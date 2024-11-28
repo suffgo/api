@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"fmt"
+	"net/http"
 	"suffgo/cmd/config"
 	"suffgo/cmd/database"
 
@@ -51,6 +52,12 @@ func (s *EchoServer) Start() {
 	s.app.Use(middleware.Recover())
 	s.app.Use(middleware.Logger())
 	s.db.GetDb().ShowSQL(true)
+	s.app.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins:     []string{"http://localhost:4321"},
+		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
+		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+		AllowCredentials: true,
+	}))
 
 	// s.app.Pre(middleware.HTTPSNonWWWRedirect()) a tener en cuenta para el futuro en caso de despliegue
 
