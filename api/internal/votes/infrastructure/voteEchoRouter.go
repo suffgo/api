@@ -5,7 +5,7 @@ import (
 )
 
 func InitializeVoteEchoRouter(e *echo.Echo, handler *VoteEchoHandler) {
-	voteGroup := e.Group("/v1/vote")
+	voteGroup := e.Group("/v1/votes")
 
 	voteGroup.POST("", handler.CreateVote)
 	voteGroup.DELETE("/:id", handler.DeleteVote)
