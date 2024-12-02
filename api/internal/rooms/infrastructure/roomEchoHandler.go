@@ -60,7 +60,7 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	// Obtener el user_id del contexto
+	// Obtener el user_id de la sesion
 	userIDStr, ok := c.Get("user_id").(string)
 	if !ok || userIDStr == "" {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
