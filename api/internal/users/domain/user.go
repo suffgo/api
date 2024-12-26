@@ -24,7 +24,7 @@ type (
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
-	
+
 	//para no comprometer la pass
 	UserSafeDTO struct {
 		ID       uint   `json:"id"`

@@ -11,3 +11,7 @@ func NewID(id uint) (*ID, error) {
 		Id: id,
 	}, nil
 }
+
+func (i *ID) Value() uint {
+	return i.Id
+}
