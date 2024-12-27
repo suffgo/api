@@ -10,4 +10,5 @@ type RoomRepository interface {
 	Delete(id sv.ID) error
 	Save(room Room) (*Room, error)
 	GetByAdminID(adminID sv.ID) ([]Room, error)
+	Restore(id sv.ID) error
 }

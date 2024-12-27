@@ -42,17 +42,17 @@ func (s *RoomXormRepository) GetByID(id sv.ID) (*d.Room, error) {
 
 func (s *RoomXormRepository) GetAll() ([]d.Room, error) {
 	var rooms []m.Room
-	err := s.db.GetDb().Find(&rooms)
-
+	err := s.db.GetDb().Where("delete_a_t IS NULL").Find(&rooms)
 	if err != nil {
 		return nil, err
 	}
 
 	var roomsDomain []d.Room
-	for _, room := range rooms {
-		roomDomain, err := mappers.ModelToDomain(&room)
+	for _, rooms := range rooms {
+		roomDomain, err := mappers.ModelToDomain(&rooms)
+
 		if err != nil {
-			return nil, se.ErrDataMap
+			return nil, err
 		}
 
 		roomsDomain = append(roomsDomain, *roomDomain)
@@ -72,6 +72,21 @@ func (s *RoomXormRepository) Delete(id sv.ID) error {
 	}
 
 	return nil
+}
+
+func (s *RoomXormRepository) Restore(roomID sv.ID) error {
+	primitiveID := roomID.Value()
+
+	user := &m.Room{DeleteAT: nil}
+
+	affected, err := s.db.GetDb().Unscoped().ID(primitiveID).Cols("delete_a_t").Update(user)
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return re.ErrRoomNotFound
+	}
+	return err
 }
 
 func (r *RoomXormRepository) GetByAdminID(adminID sv.ID) ([]d.Room, error) {
@@ -94,7 +109,7 @@ func (r *RoomXormRepository) GetByAdminID(adminID sv.ID) ([]d.Room, error) {
 	return roomsDomain, nil
 }
 
-func (s *RoomXormRepository) Save(room d.Room) (*d.Room,error) {
+func (s *RoomXormRepository) Save(room d.Room) (*d.Room, error) {
 	roomModel := &m.Room{
 		LinkInvite: ptr(room.LinkInvite().LinkInvite),
 		IsFormal:   room.IsFormal().IsFormal,
