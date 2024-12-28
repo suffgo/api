@@ -72,7 +72,7 @@ func (s *VoteXormRepository) Delete(id sv.ID) error {
 	return nil
 }
 
-func (s *VoteXormRepository) Save(vote d.Vote) error {
+func (s *VoteXormRepository) Save(vote d.Vote) (*d.Vote, error) {
 	voteModel := &m.Vote{
 		UserID:   vote.UserID().Id,
 		OptionID: vote.OptionID().Id,
@@ -80,8 +80,13 @@ func (s *VoteXormRepository) Save(vote d.Vote) error {
 
 	_, err := s.db.GetDb().Insert(voteModel)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	voteDom, err := mappers.ModelToDomain(voteModel)
+	if err != nil {
+		return nil, se.ErrDataMap
+	}
+
+	return voteDom, nil
 }

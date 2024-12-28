@@ -58,12 +58,23 @@ func (h *VoteEchoHandler) CreateVote(c echo.Context) error {
 		optionID,
 	)
 
-	err = h.CreateVoteUsecase.Execute(*vote)
+	createVote, err := h.CreateVoteUsecase.Execute(*vote)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusCreated, req)
+	voteDTO := &d.VoteDTO{
+		ID:       createVote.ID().Id,
+		UserID:   createVote.UserID().Id,
+		OptionID: createVote.OptionID().Id,
+	}
+
+	response := map[string]interface{}{
+		"succes": "éxito al crear voto",
+		"vote":   voteDTO,
+	}
+
+	return c.JSON(http.StatusCreated, response)
 }
 
 func (h *VoteEchoHandler) DeleteVote(c echo.Context) error {
