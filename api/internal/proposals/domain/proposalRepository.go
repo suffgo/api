@@ -10,4 +10,5 @@ type ProposalRepository interface {
 	Delete(id sv.ID) error
 	//Edit()
 	Save(proposal Proposal) (*Proposal, error)
+	Restore(id sv.ID) error
 }

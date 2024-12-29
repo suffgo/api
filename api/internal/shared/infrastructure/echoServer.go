@@ -191,12 +191,14 @@ func (s *EchoServer) InitializeProposal(roomRepo *r.RoomXormRepository) {
 	deleteProposalUseCase := proposalUsecase.NewDeleteUseCase(proposalRepo)
 	getAllProposalsUseCase := proposalUsecase.NewGetAllUseCase(proposalRepo)
 	getProposalByIDUseCase := proposalUsecase.NewGetByIDUseCase(proposalRepo)
+	restoreProposalUseCase := proposalUsecase.NewRestoreUsecase(proposalRepo)
 
 	proposalHandler := p.NewProposalEchoHandler(
 		createProposalUseCase,
 		getAllProposalsUseCase,
 		getProposalByIDUseCase,
 		deleteProposalUseCase,
+		restoreProposalUseCase,
 	)
 
 	p.InitializeProposalEchoRouter(s.app, proposalHandler)

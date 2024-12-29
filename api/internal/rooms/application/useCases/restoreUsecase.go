@@ -6,15 +6,15 @@ import (
 )
 
 type RestoreUsecase struct {
-	userRestoreRepository domain.RoomRepository
+	roomRestoreRepository domain.RoomRepository
 }
 
 func NewRestoreUsecase(repository domain.RoomRepository) *RestoreUsecase {
 	return &RestoreUsecase{
-		userRestoreRepository: repository,
+		roomRestoreRepository: repository,
 	}
 }
 
 func (s *RestoreUsecase) Execute(id sv.ID) error {
-	return s.userRestoreRepository.Restore(id)
+	return s.roomRestoreRepository.Restore(id)
 }
