@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	sv "suffgo/internal/shared/domain/valueObjects"
@@ -58,11 +59,15 @@ func (h *VoteEchoHandler) CreateVote(c echo.Context) error {
 		optionID,
 	)
 
+	//falta recepcionar al voto creado
+	err = h.CreateVoteUsecase.Execute(*vote)
 	createVote, err := h.CreateVoteUsecase.Execute(*vote)
+
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-
+  
+	//mapear dto
 	voteDTO := &d.VoteDTO{
 		ID:       createVote.ID().Id,
 		UserID:   createVote.UserID().Id,
@@ -115,7 +120,16 @@ func (h *VoteEchoHandler) GetAllVotes(c echo.Context) error {
 		votesDTO = append(votesDTO, *voteDTO)
 	}
 
-	return c.JSON(http.StatusOK, votesDTO)
+	if votesDTO == nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": verrors.ErrVoteNotFound.Error()})
+	}
+
+	response := map[string]interface{}{
+		"success": "votos obtennidos correctamente.",
+		"votes":   votesDTO,
+	}
+
+	return c.JSON(http.StatusOK, response)
 }
 
 func (h *VoteEchoHandler) GetVoteByID(c echo.Context) error {
@@ -141,5 +155,12 @@ func (h *VoteEchoHandler) GetVoteByID(c echo.Context) error {
 		UserID:   vote.UserID().Id,
 		OptionID: vote.OptionID().Id,
 	}
-	return c.JSON(http.StatusOK, voteDTO)
+
+	msg := fmt.Sprintf("voto con id %d obtenido exitosamente.", id.Id)
+	response := map[string]interface{}{
+		"success": msg,
+		"votes":   voteDTO,
+	}
+
+	return c.JSON(http.StatusOK, response)
 }
