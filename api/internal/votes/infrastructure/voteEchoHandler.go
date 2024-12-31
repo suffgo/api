@@ -60,7 +60,6 @@ func (h *VoteEchoHandler) CreateVote(c echo.Context) error {
 	)
 
 	//falta recepcionar al voto creado
-	err = h.CreateVoteUsecase.Execute(*vote)
 	createVote, err := h.CreateVoteUsecase.Execute(*vote)
 
 	if err != nil {
