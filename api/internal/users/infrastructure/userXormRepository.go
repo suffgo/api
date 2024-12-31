@@ -42,7 +42,7 @@ func (s *UserXormRepository) GetByID(id sv.ID) (*d.User, error) {
 
 func (s *UserXormRepository) GetAll() ([]d.User, error) {
 	var users []m.Users
-	err := s.db.GetDb().Find(&users)
+	err := s.db.GetDb().Where("delete_a_t IS NULL").Find(&users)
 	if err != nil {
 		return nil, err
 	}
@@ -72,6 +72,21 @@ func (s *UserXormRepository) Delete(id sv.ID) error {
 	}
 
 	return nil
+}
+
+func (s *UserXormRepository) Restore(userID sv.ID) error {
+	primitiveID := userID.Value()
+
+	user := &m.Users{DeleteAT: nil}
+
+	affected, err := s.db.GetDb().Unscoped().ID(primitiveID).Cols("delete_a_t").Update(user)
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return ue.ErrUserNotFound
+	}
+	return err
 }
 
 func (s *UserXormRepository) GetByEmail(email v.Email) (*d.User, error) {

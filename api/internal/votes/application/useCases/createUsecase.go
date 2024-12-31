@@ -16,6 +16,11 @@ func NewCreateUsecase(repository domain.VoteRepository) *CreateUsecase {
 	}
 }
 
-func (s *CreateUsecase) Execute(vote domain.Vote) error {
-	return nil
+func (s *CreateUsecase) Execute(voteData domain.Vote) (*domain.Vote, error) {
+	createdVote, err := s.repository.Save(voteData)
+	if err != nil {
+		return nil, err
+	}
+
+	return createdVote, nil
 }

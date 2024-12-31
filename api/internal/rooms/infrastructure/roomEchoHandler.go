@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	u "suffgo/internal/rooms/application/useCases"
+	r "suffgo/internal/rooms/application/useCases"
 
 	d "suffgo/internal/rooms/domain"
 	v "suffgo/internal/rooms/domain/valueObjects"
@@ -13,25 +13,27 @@ import (
 
 	se "suffgo/internal/shared/domain/errors"
 
-	rerrors "suffgo/internal/rooms/domain/errors"
+	rerr "suffgo/internal/rooms/domain/errors"
 
 	"github.com/labstack/echo/v4"
 )
 
 type RoomEchoHandler struct {
-	CreateRoomUsecase  *u.CreateUsecase
-	DeleteRoomUsecase  *u.DeleteUsecase
-	GetAllUsecase      *u.GetAllUsecase
-	GetRoomByIDUsecase *u.GetByIDUsecase
-	GetByAdminUsecase  *u.GetByAdminUsecase
+	CreateRoomUsecase  *r.CreateUsecase
+	DeleteRoomUsecase  *r.DeleteUsecase
+	GetAllUsecase      *r.GetAllUsecase
+	GetRoomByIDUsecase *r.GetByIDUsecase
+	GetByAdminUsecase  *r.GetByAdminUsecase
+	RestoreUsecase     *r.RestoreUsecase
 }
 
 func NewRoomEchoHandler(
-	creatUC *u.CreateUsecase,
-	deleteUC *u.DeleteUsecase,
-	getAllUC *u.GetAllUsecase,
-	getByIDUC *u.GetByIDUsecase,
-	getByAdminUC *u.GetByAdminUsecase,
+	creatUC *r.CreateUsecase,
+	deleteUC *r.DeleteUsecase,
+	getAllUC *r.GetAllUsecase,
+	getByIDUC *r.GetByIDUsecase,
+	getByAdminUC *r.GetByAdminUsecase,
+	restoreUC *r.RestoreUsecase,
 ) *RoomEchoHandler {
 	return &RoomEchoHandler{
 		CreateRoomUsecase:  creatUC,
@@ -39,6 +41,7 @@ func NewRoomEchoHandler(
 		GetAllUsecase:      getAllUC,
 		GetRoomByIDUsecase: getByIDUC,
 		GetByAdminUsecase:  getByAdminUC,
+		RestoreUsecase:     restoreUC,
 	}
 }
 
@@ -115,7 +118,7 @@ func (h *RoomEchoHandler) DeleteRoom(c echo.Context) error {
 	id, _ := sv.NewID(uint(idInput))
 	err = h.DeleteRoomUsecase.Execute(*id)
 	if err != nil {
-		if errors.Is(err, rerrors.ErrRoomNotFound) {
+		if errors.Is(err, rerr.ErrRoomNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
@@ -153,7 +156,7 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 	id, _ := sv.NewID(uint(idInput))
 	room, err := h.GetRoomByIDUsecase.Execute(*id)
 	if err != nil {
-		if errors.Is(err, rerrors.ErrRoomNotFound) {
+		if errors.Is(err, rerr.ErrRoomNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
@@ -204,4 +207,25 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 		roomsDTO = append(roomsDTO, *roomDTO)
 	}
 	return c.JSON(http.StatusOK, roomsDTO)
+}
+
+func (h *RoomEchoHandler) Restore(c echo.Context) error {
+	idParam := c.Param("id")
+	idInput, err := strconv.ParseInt(idParam, 10, 64)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID format"})
+	}
+
+	id, _ := sv.NewID(uint(idInput))
+	err = h.RestoreUsecase.Execute(*id)
+	if err != nil {
+		if errors.Is(err, rerr.ErrRoomNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Room not found"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Internal server error"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"succes": "room restored succesfully"})
+
 }

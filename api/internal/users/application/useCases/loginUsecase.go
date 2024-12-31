@@ -29,6 +29,5 @@ func (s *LoginUsecase) Execute(username valueobjects.UserName, password valueobj
 		return nil, errors.New("Credenciales invalidas")
 	}
 
-
 	return user, nil
 }

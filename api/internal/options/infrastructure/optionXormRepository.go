@@ -95,7 +95,8 @@ func (s *OptionXormRepository) Delete(id sv.ID) error {
 
 func (s *OptionXormRepository) Save(option d.Option) error {
 	optionModel := &m.Option{
-		Value: option.Value().Value,
+		Value:      option.Value().Value,
+		ProposalID: option.ProposalID().Id,
 	}
 
 	_, err := s.db.GetDb().Insert(optionModel)

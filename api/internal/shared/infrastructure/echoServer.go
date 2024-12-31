@@ -93,6 +93,7 @@ func (s *EchoServer) InitializeUser() {
 	getAllUsersUseCase := userUsecase.NewGetAllUsecase(userRepo)
 	getUserByIDUseCase := userUsecase.NewGetByIDUsecase(userRepo)
 	loginUseCase := userUsecase.NewLoginUsecase(userRepo)
+	restoreUseCase := userUsecase.NewRestoreUsecase(userRepo)
 
 	// Initialize Handler
 	userHandler := u.NewUserEchoHandler(
@@ -101,6 +102,7 @@ func (s *EchoServer) InitializeUser() {
 		getAllUsersUseCase,
 		getUserByIDUseCase,
 		loginUseCase,
+		restoreUseCase,
 	)
 
 	// Initialize User Router
@@ -150,6 +152,7 @@ func (s *EchoServer) InitializeRoom() *r.RoomXormRepository {
 	getAllRoomUseCase := roomUsecase.NewGetAllUsecase(roomRepo)
 	getByIDRoomUseCase := roomUsecase.NewGetByIDUsecase(roomRepo)
 	getByAdminRoomUseCase := roomUsecase.NewGetByAdminUsecase(roomRepo)
+	restoreUseCase := roomUsecase.NewRestoreUsecase(roomRepo)
 
 	roomHandler := r.NewRoomEchoHandler(
 		createRoomUseCase,
@@ -157,6 +160,7 @@ func (s *EchoServer) InitializeRoom() *r.RoomXormRepository {
 		getAllRoomUseCase,
 		getByIDRoomUseCase,
 		getByAdminRoomUseCase,
+		restoreUseCase,
 	)
 	r.InitializeRoomEchoRouter(s.app, roomHandler)
 
@@ -187,12 +191,14 @@ func (s *EchoServer) InitializeProposal(roomRepo *r.RoomXormRepository) {
 	deleteProposalUseCase := proposalUsecase.NewDeleteUseCase(proposalRepo)
 	getAllProposalsUseCase := proposalUsecase.NewGetAllUseCase(proposalRepo)
 	getProposalByIDUseCase := proposalUsecase.NewGetByIDUseCase(proposalRepo)
+	restoreProposalUseCase := proposalUsecase.NewRestoreUsecase(proposalRepo)
 
 	proposalHandler := p.NewProposalEchoHandler(
 		createProposalUseCase,
 		getAllProposalsUseCase,
 		getProposalByIDUseCase,
 		deleteProposalUseCase,
+		restoreProposalUseCase,
 	)
 
 	p.InitializeProposalEchoRouter(s.app, proposalHandler)
