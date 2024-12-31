@@ -42,7 +42,7 @@ func (s *RoomXormRepository) GetByID(id sv.ID) (*d.Room, error) {
 
 func (s *RoomXormRepository) GetAll() ([]d.Room, error) {
 	var rooms []m.Room
-	err := s.db.GetDb().Where("delete_a_t IS NULL").Find(&rooms)
+	err := s.db.GetDb().Where("deleted_at IS NULL").Find(&rooms)
 	if err != nil {
 		return nil, err
 	}
@@ -77,9 +77,9 @@ func (s *RoomXormRepository) Delete(id sv.ID) error {
 func (s *RoomXormRepository) Restore(roomID sv.ID) error {
 	primitiveID := roomID.Value()
 
-	user := &m.Room{DeleteAT: nil}
+	user := &m.Room{DeletedAt: nil}
 
-	affected, err := s.db.GetDb().Unscoped().ID(primitiveID).Cols("delete_a_t").Update(user)
+	affected, err := s.db.GetDb().Unscoped().ID(primitiveID).Cols("deleted_at").Update(user)
 	if err != nil {
 		return err
 	}

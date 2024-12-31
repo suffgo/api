@@ -8,5 +8,5 @@ type Proposal struct {
 	Title       string     `xorm:"'title' not null"`
 	Description *string    `xorm:"'description' null"`
 	RoomID      uint       `xorm:"'room_id' index not null"`
-	DeleteAT    *time.Time `xorm:"deleted"`
+	DeletedAt   *time.Time `xorm:"deleted"`
 }
