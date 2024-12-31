@@ -25,6 +25,7 @@ type UserEchoHandler struct {
 	GetAllUsersUsecase *u.GetAllUsecase
 	GetUserByIDUsecase *u.GetByIDUsecase
 	LoginUsecase       *u.LoginUsecase
+	RestoreUsecase     *u.RestoreUsecase
 }
 
 // Constructor for UserEchoHandler
@@ -34,6 +35,7 @@ func NewUserEchoHandler(
 	getAllUC *u.GetAllUsecase,
 	getByIDUC *u.GetByIDUsecase,
 	loginUC *u.LoginUsecase,
+	restoreUC *u.RestoreUsecase,
 ) *UserEchoHandler {
 	return &UserEchoHandler{
 		CreateUserUsecase:  createUC,
@@ -41,9 +43,9 @@ func NewUserEchoHandler(
 		GetAllUsersUsecase: getAllUC,
 		GetUserByIDUsecase: getByIDUC,
 		LoginUsecase:       loginUC,
+		RestoreUsecase:     restoreUC,
 	}
 }
-
 
 func (u *UserEchoHandler) Login(c echo.Context) error {
 
@@ -232,12 +234,34 @@ func (h *UserEchoHandler) Logout(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"success": "sesion cerrada exitosamente"})
 }
 
-//handler para saber si esta autenticado
+// handler para saber si esta autenticado
 func (h *UserEchoHandler) CheckAuth(c echo.Context) error {
 	_, err := session.Get("session", c)
-	if err != nil  {
+	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{"success": "usuario autenticado"})
+}
+
+func (h *UserEchoHandler) Restore(c echo.Context) error {
+	idParam := c.Param("id")
+	idInput, err := strconv.ParseInt(idParam, 10, 64)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID format"})
+	}
+
+	id, _ := sv.NewID(uint(idInput))
+	err = h.RestoreUsecase.Execute(*id)
+
+	if err != nil {
+		if errors.Is(err, uerr.ErrUserNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Internal server error"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"succes": "user restored succesfully"})
+
 }

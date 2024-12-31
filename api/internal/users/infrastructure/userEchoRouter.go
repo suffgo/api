@@ -1,7 +1,6 @@
 package infrastructure
 
 import (
-
 	"github.com/labstack/echo/v4"
 )
 
@@ -17,5 +16,6 @@ func InitializeUserEchoRouter(e *echo.Echo, handler *UserEchoHandler) {
 	userGroup.Use(AuthMiddleware)
 	userGroup.POST("/logout", handler.Logout)
 	userGroup.DELETE("/:id", handler.DeleteUser)
+	userGroup.POST("/restore/:id", handler.Restore)
 	userGroup.GET("/auth", handler.CheckAuth) //200ok si esta autenticado
 }

@@ -21,6 +21,7 @@ type ProposalEchoHandler struct {
 	GetAllProposalUseCase  *u.GetAllUsecase
 	GetByIDProposalUseCase *u.GetByIDUsecase
 	DeleteProposalUseCase  *u.DeleteUseCase
+	RestoreUseCase         *u.RestoreUsecase
 }
 
 func NewProposalEchoHandler(
@@ -28,12 +29,14 @@ func NewProposalEchoHandler(
 	getAllUC *u.GetAllUsecase,
 	getByID *u.GetByIDUsecase,
 	deleteUC *u.DeleteUseCase,
+	restoreUC *u.RestoreUsecase,
 ) *ProposalEchoHandler {
 	return &ProposalEchoHandler{
 		CreateProposalUsecase:  createUC,
 		GetAllProposalUseCase:  getAllUC,
 		GetByIDProposalUseCase: getByID,
 		DeleteProposalUseCase:  deleteUC,
+		RestoreUseCase:         restoreUC,
 	}
 }
 
@@ -99,18 +102,18 @@ func (h *ProposalEchoHandler) CreateProposal(c echo.Context) error {
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	
+
 	proposalDTO := d.ProposalDTO{
-		ID: createdProp.ID().Id,
-		Archive: &createdProp.Archive().Archive,
-		Title: createdProp.Title().Title,
+		ID:          createdProp.ID().Id,
+		Archive:     &createdProp.Archive().Archive,
+		Title:       createdProp.Title().Title,
 		Description: &createdProp.Description().Description,
-		RoomID: createdProp.RoomID().Id,
+		RoomID:      createdProp.RoomID().Id,
 	}
 
 	response := map[string]interface{}{
-		"success": "éxito al crear propuesta",
-		"proposal": proposalDTO   ,
+		"success":  "éxito al crear propuesta",
+		"proposal": proposalDTO,
 	}
 
 	return c.JSON(http.StatusCreated, response)
@@ -187,4 +190,26 @@ func (h *ProposalEchoHandler) DeleteProposal(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{"success": "Proposal deleted succesfully"})
+}
+
+func (h *ProposalEchoHandler) RestoreProposal(c echo.Context) error {
+	idParam := c.Param("id")
+	idInput, err := strconv.ParseInt(idParam, 10, 64)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID format"})
+	}
+
+	id, _ := sv.NewID(uint(idInput))
+	err = h.RestoreUseCase.Execute(*id)
+
+	if err != nil {
+		if errors.Is(err, perrors.ErrPropNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Proposal not found"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Internal server error"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"succes": "proposal restored succesfully"})
+
 }

@@ -13,5 +13,6 @@ type UserRepository interface {
 	Save(user User) (*User, error)
 	GetByDni(dni v.Dni) (*User, error)
 	GetByUsername(username v.UserName) (*User, error)
+	Restore(id sv.ID) error
 	// Update(user User) error
 }
