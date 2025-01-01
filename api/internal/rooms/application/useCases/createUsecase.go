@@ -2,6 +2,9 @@ package usecases
 
 import (
 	"suffgo/internal/rooms/domain"
+	v "suffgo/internal/rooms/domain/valueObjects"
+
+	"github.com/google/uuid"
 )
 
 type (
@@ -23,6 +26,17 @@ func (s *CreateUsecase) Execute(roomData domain.Room) (*domain.Room, error) {
 		return nil, err
 	}
 
-	return createdRoom,nil
+	//Genero y guardo el codigo de invitacion
 
+	inviteCode, err := v.NewInviteCode(uuid.New().String())
+
+	if err != nil {
+		return nil, err
+	}
+
+	createdRoom.SetInviteCode(*inviteCode)
+
+	
+
+	return createdRoom,nil
 }

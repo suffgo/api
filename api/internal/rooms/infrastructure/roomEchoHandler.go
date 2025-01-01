@@ -98,6 +98,7 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 		IsFormal:   createdRoom.IsFormal().IsFormal,
 		Name:       createdRoom.Name().Name,
 		AdminID:    createdRoom.AdminID().Id,
+		InviteCode: createdRoom.InviteCode().Code,
 	}
 
 	response := map[string]interface{}{

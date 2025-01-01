@@ -12,6 +12,7 @@ type (
 		isFormal   v.IsFormal
 		name       v.Name
 		adminID    *sv.ID
+		inviteCode *v.InviteCode //es opcional porque al momento de creacion no existe
 	}
 
 	RoomDTO struct {
@@ -20,6 +21,7 @@ type (
 		IsFormal   bool   `json:"is_formal"`
 		Name       string `json:"name"`
 		AdminID    uint   `json:"admin_id"`
+		InviteCode string `json:"invite_code"`
 	}
 
 	RoomCreateRequest struct {
@@ -42,6 +44,7 @@ func NewRoom(
 		isFormal:   isFormal,
 		name:       name,
 		adminID:    adminID,
+		inviteCode: nil,
 	}
 }
 
@@ -63,4 +66,12 @@ func (r *Room) Name() v.Name {
 
 func (r *Room) AdminID() sv.ID {
 	return *r.adminID
+}
+
+func (r *Room) InviteCode() v.InviteCode {
+	return *r.inviteCode
+}
+
+func (r *Room) SetInviteCode(inviteCode v.InviteCode) {
+	r.inviteCode = &inviteCode
 }

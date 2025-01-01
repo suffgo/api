@@ -133,3 +133,18 @@ func (s *RoomXormRepository) Save(room d.Room) (*d.Room, error) {
 func ptr(s string) *string {
 	return &s
 }
+
+func (s *RoomXormRepository) SaveInviteCode(inviteCode string, roomID uint) error {
+	inviteCodeModel := &m.InviteCode{
+		RoomID: roomID,
+		Code:   inviteCode,
+	}
+
+	_, err := s.db.GetDb().Insert(inviteCodeModel)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
