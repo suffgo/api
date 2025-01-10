@@ -12,4 +12,5 @@ type RoomRepository interface {
 	GetByAdminID(adminID sv.ID) ([]Room, error)
 	Restore(id sv.ID) error
 	SaveInviteCode(inviteCode string, roomID uint) error
+	
 }

@@ -26,7 +26,7 @@ func (s *CreateUsecase) Execute(roomData domain.Room) (*domain.Room, error) {
 		return nil, err
 	}
 
-	//Genero y guardo el codigo de invitacion
+	//Genero el codigo de invitacion
 
 	inviteCode, err := v.NewInviteCode(uuid.New().String())
 
@@ -36,7 +36,9 @@ func (s *CreateUsecase) Execute(roomData domain.Room) (*domain.Room, error) {
 
 	createdRoom.SetInviteCode(*inviteCode)
 
-	
+	//guardo codigo
+
+	err = s.repository.SaveInviteCode(inviteCode.Code, createdRoom.ID().Id)
 
 	return createdRoom,nil
 }

@@ -21,7 +21,7 @@ type (
 		IsFormal   bool   `json:"is_formal"`
 		Name       string `json:"name"`
 		AdminID    uint   `json:"admin_id"`
-		InviteCode string `json:"invite_code"`
+		RoomCode string `json:"room_code"`
 	}
 
 	RoomCreateRequest struct {
