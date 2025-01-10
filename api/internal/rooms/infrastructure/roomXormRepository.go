@@ -148,7 +148,7 @@ func (s *RoomXormRepository) SaveInviteCode(inviteCode string, roomID uint) erro
 	return nil
 }
 
-func (s *RoomXormRepository) GetInviteCode(inviteCode string, roomID uint) (string, error) {
+func (s *RoomXormRepository) GetInviteCode(roomID uint) (string, error) {
 	var register []m.InviteCode
 	err := s.db.GetDb().Where("room_id = ?", roomID).Find(&register)
 
@@ -159,3 +159,13 @@ func (s *RoomXormRepository) GetInviteCode(inviteCode string, roomID uint) (stri
 	return register[0].Code, nil
 }
 
+func (s *RoomXormRepository) GetRoomByCode(inviteCode string) (uint, error) {
+	var register []m.InviteCode
+	err := s.db.GetDb().Where("code = ?", inviteCode).Find(&register)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return register[0].RoomID, nil
+}

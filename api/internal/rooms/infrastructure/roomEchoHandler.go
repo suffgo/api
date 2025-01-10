@@ -210,6 +210,11 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 	return c.JSON(http.StatusOK, roomsDTO)
 }
 
+
+func(h *RoomEchoHandler) JoinRoom(c echo.Context) error {
+	
+}
+
 func (h *RoomEchoHandler) Restore(c echo.Context) error {
 	idParam := c.Param("id")
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
