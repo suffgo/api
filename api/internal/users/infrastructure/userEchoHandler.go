@@ -62,7 +62,6 @@ func (u *UserEchoHandler) Login(c echo.Context) error {
 	}
 
 	pass, err := v.NewPassword(req.Password)
-
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -122,6 +121,11 @@ func (h *UserEchoHandler) CreateUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
+
+	hashed, err := v.HashPassword(password.Password)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
 	// Map DTO to domain entity
 
 	user := d.NewUser(
@@ -130,7 +134,7 @@ func (h *UserEchoHandler) CreateUser(c echo.Context) error {
 		*username,
 		*dni,
 		*email,
-		*password,
+		*hashed,
 	)
 
 	// Call the use case
