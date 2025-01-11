@@ -29,6 +29,10 @@ type (
 		IsFormal   bool   `json:"is_formal"`
 		Name       string `json:"name"`
 	}
+
+	JoinRoomRequest struct {
+		RoomCode string `json:"room_code"`
+	}
 )
 
 func NewRoom(

@@ -212,7 +212,15 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 
 
 func(h *RoomEchoHandler) JoinRoom(c echo.Context) error {
+	var req d.JoinRoomRequest
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
 	
+
+	return nil
 }
 
 func (h *RoomEchoHandler) Restore(c echo.Context) error {
