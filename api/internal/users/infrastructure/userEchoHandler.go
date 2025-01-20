@@ -20,12 +20,14 @@ import (
 )
 
 type UserEchoHandler struct {
-	CreateUserUsecase  *u.CreateUsecase
-	DeleteUserUsecase  *u.DeleteUsecase
-	GetAllUsersUsecase *u.GetAllUsecase
-	GetUserByIDUsecase *u.GetByIDUsecase
-	LoginUsecase       *u.LoginUsecase
-	RestoreUsecase     *u.RestoreUsecase
+	CreateUserUsecase     *u.CreateUsecase
+	DeleteUserUsecase     *u.DeleteUsecase
+	GetAllUsersUsecase    *u.GetAllUsecase
+	GetUserByIDUsecase    *u.GetByIDUsecase
+	GetUserByEmailUsecase *u.GetByEmailUsecase
+	LoginUsecase          *u.LoginUsecase
+	RestoreUsecase        *u.RestoreUsecase
+	ChangePasswordUsecase *u.ChangePassword
 }
 
 // Constructor for UserEchoHandler
@@ -34,16 +36,20 @@ func NewUserEchoHandler(
 	deleteUC *u.DeleteUsecase,
 	getAllUC *u.GetAllUsecase,
 	getByIDUC *u.GetByIDUsecase,
+	getByEmailUC *u.GetByEmailUsecase,
 	loginUC *u.LoginUsecase,
 	restoreUC *u.RestoreUsecase,
+	changePassUC *u.ChangePassword,
 ) *UserEchoHandler {
 	return &UserEchoHandler{
-		CreateUserUsecase:  createUC,
-		DeleteUserUsecase:  deleteUC,
-		GetAllUsersUsecase: getAllUC,
-		GetUserByIDUsecase: getByIDUC,
-		LoginUsecase:       loginUC,
-		RestoreUsecase:     restoreUC,
+		CreateUserUsecase:     createUC,
+		DeleteUserUsecase:     deleteUC,
+		GetAllUsersUsecase:    getAllUC,
+		GetUserByIDUsecase:    getByIDUC,
+		GetUserByEmailUsecase: getByEmailUC,
+		LoginUsecase:          loginUC,
+		RestoreUsecase:        restoreUC,
+		ChangePasswordUsecase: changePassUC,
 	}
 }
 
@@ -228,6 +234,52 @@ func (h *UserEchoHandler) GetUserByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, userDTO)
 }
 
+func (h *UserEchoHandler) GetUserByEmail(c echo.Context) error {
+	var request struct {
+		Email string `json:"email" validate:"required,email"`
+	}
+
+	if err := c.Bind(&request); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Invalid request format: " + err.Error(),
+		})
+	}
+
+	// Validar el formato del email
+	email, err := v.NewEmail(request.Email)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Invalid email format: " + err.Error(),
+		})
+	}
+
+	// Buscar el usuario por email
+	user, err := h.GetUserByEmailUsecase.Execute(*email)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Error retrieving user: " + err.Error(),
+		})
+	}
+
+	if user == nil {
+		return c.JSON(http.StatusNotFound, map[string]string{
+			"error": "User not found with email: " + request.Email,
+		})
+	}
+
+	userDTO := &d.UserSafeDTO{
+		ID:       user.ID().Id,
+		Name:     user.FullName().Name,
+		Lastname: user.FullName().Lastname,
+		Username: user.Username().Username,
+		Dni:      user.Dni().Dni,
+		Email:    user.Email().Email,
+	}
+
+	// Devolver el usuario si fue encontrado
+	return c.JSON(http.StatusOK, userDTO)
+}
+
 func (h *UserEchoHandler) Logout(c echo.Context) error {
 
 	err := logout(c)
@@ -268,4 +320,47 @@ func (h *UserEchoHandler) Restore(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]string{"succes": "user restored succesfully"})
 
+}
+
+func (h *UserEchoHandler) ChangePassword(c echo.Context) error {
+	var req d.ChangePasswordRequest
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Invalid request format: " + err.Error(),
+		})
+	}
+
+	email, err := v.NewEmail(req.Email)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Invalid email format: " + err.Error(),
+		})
+	}
+
+	newPassword, err := v.NewPassword(req.NewPassword)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Invalid password format: " + err.Error(),
+		})
+	}
+
+	err = h.ChangePasswordUsecase.Execute(*email, *newPassword)
+	if err != nil {
+		switch {
+		case errors.Is(err, uerr.ErrUserNotFound):
+			return c.JSON(http.StatusNotFound, map[string]string{
+				"error": "User not found with email: " + req.Email,
+			})
+		default:
+			// Devolvemos el error real para debug
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"error": "Failed to change password: " + err.Error(),
+			})
+		}
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"success": "Password changed successfully",
+	})
 }

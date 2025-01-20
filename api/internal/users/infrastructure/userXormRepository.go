@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"fmt"
 	"suffgo/cmd/database"
 	se "suffgo/internal/shared/domain/errors"
 	sv "suffgo/internal/shared/domain/valueObjects"
@@ -42,7 +43,7 @@ func (s *UserXormRepository) GetByID(id sv.ID) (*d.User, error) {
 
 func (s *UserXormRepository) GetAll() ([]d.User, error) {
 	var users []m.Users
-	err := s.db.GetDb().Where("delete_a_t IS NULL").Find(&users)
+	err := s.db.GetDb().Where("deleted IS NULL").Find(&users)
 	if err != nil {
 		return nil, err
 	}
@@ -77,9 +78,9 @@ func (s *UserXormRepository) Delete(id sv.ID) error {
 func (s *UserXormRepository) Restore(userID sv.ID) error {
 	primitiveID := userID.Value()
 
-	user := &m.Users{DeleteAT: nil}
+	user := &m.Users{DeleteAt: nil}
 
-	affected, err := s.db.GetDb().Unscoped().ID(primitiveID).Cols("delete_a_t").Update(user)
+	affected, err := s.db.GetDb().Unscoped().ID(primitiveID).Cols("deleted").Update(user)
 	if err != nil {
 		return err
 	}
@@ -171,4 +172,29 @@ func (s *UserXormRepository) Save(user d.User) (*d.User, error) {
 	}
 
 	return domusr, nil
+}
+
+func (s *UserXormRepository) Update(user *d.User) error {
+	userModel := mappers.DomainToModel(user)
+
+	// Verificar si el usuario existe
+	exists, err := s.db.GetDb().ID(user.ID()).Get(userModel)
+	if err != nil {
+		return fmt.Errorf("failed to check user existence: %w", err)
+	}
+	if !exists {
+		return fmt.Errorf("user not found with ID %d", user.ID().Id)
+	}
+
+	// Realizar la actualización
+	affected, err := s.db.GetDb().ID(user.ID().Id).Update(userModel)
+	if err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+
+	if affected == 0 {
+		return fmt.Errorf("no rows were affected when updating user %d", user.ID().Id)
+	}
+
+	return nil
 }

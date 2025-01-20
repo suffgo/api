@@ -92,17 +92,20 @@ func (s *EchoServer) InitializeUser() {
 	deleteUserUseCase := userUsecase.NewDeleteUsecase(userRepo)
 	getAllUsersUseCase := userUsecase.NewGetAllUsecase(userRepo)
 	getUserByIDUseCase := userUsecase.NewGetByIDUsecase(userRepo)
+	getUserByEmail := userUsecase.NewGetByEmailUsecase(userRepo)
 	loginUseCase := userUsecase.NewLoginUsecase(userRepo)
 	restoreUseCase := userUsecase.NewRestoreUsecase(userRepo)
-
+	changePasswordUseCase := userUsecase.NewChangePasswordUsecase(userRepo)
 	// Initialize Handler
 	userHandler := u.NewUserEchoHandler(
 		createUserUseCase,
 		deleteUserUseCase,
 		getAllUsersUseCase,
 		getUserByIDUseCase,
+		getUserByEmail,
 		loginUseCase,
 		restoreUseCase,
+		changePasswordUseCase,
 	)
 
 	// Initialize User Router

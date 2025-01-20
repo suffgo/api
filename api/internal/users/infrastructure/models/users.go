@@ -10,5 +10,5 @@ type Users struct {
 	Name     string     `xorm:"varchar(255) not null"`
 	Lastname string     `xorm:"'last_name' varchar(255) not null"`
 	Email    string     `xorm:"varchar(255) not null unique"`
-	DeleteAT *time.Time `xorm:"deleted"`
+	DeleteAt *time.Time `xorm:"'deleted' deleted"`
 }
