@@ -153,6 +153,7 @@ func (s *EchoServer) InitializeRoom() *r.RoomXormRepository {
 	getByIDRoomUseCase := roomUsecase.NewGetByIDUsecase(roomRepo)
 	getByAdminRoomUseCase := roomUsecase.NewGetByAdminUsecase(roomRepo)
 	restoreUseCase := roomUsecase.NewRestoreUsecase(roomRepo)
+	joinUsecase := roomUsecase.NewJoinRoomUsecase(roomRepo)
 
 	roomHandler := r.NewRoomEchoHandler(
 		createRoomUseCase,
@@ -161,6 +162,7 @@ func (s *EchoServer) InitializeRoom() *r.RoomXormRepository {
 		getByIDRoomUseCase,
 		getByAdminRoomUseCase,
 		restoreUseCase,
+		joinUsecase,
 	)
 	r.InitializeRoomEchoRouter(s.app, roomHandler)
 

@@ -73,6 +73,7 @@ func (r *Room) AdminID() sv.ID {
 }
 
 func (r *Room) InviteCode() v.InviteCode {
+	
 	return *r.inviteCode
 }
 

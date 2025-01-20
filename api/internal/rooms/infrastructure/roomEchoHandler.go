@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	r "suffgo/internal/rooms/application/useCases"
@@ -25,6 +26,7 @@ type RoomEchoHandler struct {
 	GetRoomByIDUsecase *r.GetByIDUsecase
 	GetByAdminUsecase  *r.GetByAdminUsecase
 	RestoreUsecase     *r.RestoreUsecase
+	JoinRoomUsecase    *r.JoinRoomUsecase
 }
 
 func NewRoomEchoHandler(
@@ -34,6 +36,7 @@ func NewRoomEchoHandler(
 	getByIDUC *r.GetByIDUsecase,
 	getByAdminUC *r.GetByAdminUsecase,
 	restoreUC *r.RestoreUsecase,
+	joinRoomUC *r.JoinRoomUsecase,
 ) *RoomEchoHandler {
 	return &RoomEchoHandler{
 		CreateRoomUsecase:  creatUC,
@@ -42,6 +45,7 @@ func NewRoomEchoHandler(
 		GetRoomByIDUsecase: getByIDUC,
 		GetByAdminUsecase:  getByAdminUC,
 		RestoreUsecase:     restoreUC,
+		JoinRoomUsecase:   joinRoomUC,
 	}
 }
 
@@ -218,9 +222,24 @@ func(h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	
+	room, err := h.JoinRoomUsecase.Execute(req.RoomCode)
 
-	return nil
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	fmt.Println("4..")
+	roomDTO := &d.RoomDTO{
+		ID: 	   room.ID().Id,
+		LinkInvite: room.LinkInvite().LinkInvite,
+		IsFormal:   room.IsFormal().IsFormal,
+		Name:       room.Name().Name,
+		AdminID:    room.AdminID().Id,
+		RoomCode:  room.InviteCode().Code,
+	}
+
+	
+	return c.JSON(http.StatusOK, roomDTO)
 }
 
 func (h *RoomEchoHandler) Restore(c echo.Context) error {
