@@ -267,13 +267,14 @@ func (h *UserEchoHandler) GetUserByEmail(c echo.Context) error {
 		})
 	}
 
-	userDTO := &d.UserSafeDTO{
+	userDTO := &d.UserDTO{
 		ID:       user.ID().Id,
 		Name:     user.FullName().Name,
 		Lastname: user.FullName().Lastname,
 		Username: user.Username().Username,
 		Dni:      user.Dni().Dni,
 		Email:    user.Email().Email,
+		Password: user.Password().Password,
 	}
 
 	// Devolver el usuario si fue encontrado

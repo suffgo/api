@@ -175,10 +175,9 @@ func (s *UserXormRepository) Save(user d.User) (*d.User, error) {
 }
 
 func (s *UserXormRepository) Update(user *d.User) error {
-	userModel := mappers.DomainToModel(user)
-
-	// Verificar si el usuario existe
-	exists, err := s.db.GetDb().ID(user.ID()).Get(userModel)
+	// Primero verificamos si existe el usuario
+	existingUser := new(m.Users)
+	exists, err := s.db.GetDb().ID(user.ID().Id).Get(existingUser)
 	if err != nil {
 		return fmt.Errorf("failed to check user existence: %w", err)
 	}
@@ -186,7 +185,8 @@ func (s *UserXormRepository) Update(user *d.User) error {
 		return fmt.Errorf("user not found with ID %d", user.ID().Id)
 	}
 
-	// Realizar la actualización
+	// Si existe, procedemos a actualizarlo
+	userModel := mappers.DomainToModel(user)
 	affected, err := s.db.GetDb().ID(user.ID().Id).Update(userModel)
 	if err != nil {
 		return fmt.Errorf("failed to update user: %w", err)
