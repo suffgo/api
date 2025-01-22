@@ -2,7 +2,6 @@ package infrastructure
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	r "suffgo/internal/rooms/application/useCases"
@@ -225,10 +224,13 @@ func(h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 	room, err := h.JoinRoomUsecase.Execute(req.RoomCode)
 
 	if err != nil {
+		if errors.Is(err, rerr.ErrRoomNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		}
+		
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	fmt.Println("4..")
 	roomDTO := &d.RoomDTO{
 		ID: 	   room.ID().Id,
 		LinkInvite: room.LinkInvite().LinkInvite,
@@ -238,8 +240,13 @@ func(h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 		RoomCode:  room.InviteCode().Code,
 	}
 
+
+	response := map[string]interface{}{
+		"success": "Ingreso a la sala exitoso",
+		"room":    roomDTO,
+	}
 	
-	return c.JSON(http.StatusOK, roomDTO)
+	return c.JSON(http.StatusOK, response)
 }
 
 func (h *RoomEchoHandler) Restore(c echo.Context) error {

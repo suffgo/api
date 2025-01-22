@@ -167,5 +167,9 @@ func (s *RoomXormRepository) GetRoomByCode(inviteCode string) (uint, error) {
 		return 0, err
 	}
 
+	if register == nil {
+		return 0, re.ErrRoomNotFound
+	}
+
 	return register[0].RoomID, nil
 }
