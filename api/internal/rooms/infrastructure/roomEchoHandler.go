@@ -15,6 +15,7 @@ import (
 	se "suffgo/internal/shared/domain/errors"
 
 	rerr "suffgo/internal/rooms/domain/errors"
+	uerr "suffgo/internal/users/domain/errors"
 
 	"github.com/labstack/echo/v4"
 )
@@ -250,23 +251,86 @@ func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
+func (h *RoomEchoHandler) AddSingleUser(c echo.Context) error {
+	var req d.AddSingleUserRequest
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	userID, err := GetUserIDFromSession(c)
+
+	if err != nil {
+		return err
+	}
+
+	roomIDint, err := strconv.ParseUint(req.RoomID, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
+	}
+
+	roomID, err := sv.NewID(uint(roomIDint))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
+	}
+
+	err = h.AddSingleUSerUsecase.Execute(req.UserData, *roomID, *userID)
+
+	if err != nil {
+		
+		if errors.Is(err, rerr.ErrUserNotAdmin) {
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
+		}
+
+		if errors.Is(err, uerr.ErrUserNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		}
+
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"success": "usuario agregado a la sala exitosamente"})
+}
+
+
 func (h *RoomEchoHandler) Restore(c echo.Context) error {
 	idParam := c.Param("id")
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID format"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
 	}
 
 	id, _ := sv.NewID(uint(idInput))
 	err = h.RestoreUsecase.Execute(*id)
 	if err != nil {
 		if errors.Is(err, rerr.ErrRoomNotFound) {
-			return c.JSON(http.StatusNotFound, map[string]string{"error": "Room not found"})
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "room not found"})
 		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Internal server error"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "internal server error"})
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{"succes": "room restored succesfully"})
 
+}
+
+
+func GetUserIDFromSession(c echo.Context) (*sv.ID, error) {
+		// Obtener el user_id de la sesion
+	userIDStr, ok := c.Get("user_id").(string)
+	if !ok || userIDStr == "" {
+		return nil, c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
+	}
+
+	adminIDUint, err := strconv.ParseUint(userIDStr, 10, 64)
+	if err != nil {
+		return nil, c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
+	}
+
+	adminID, err := sv.NewID(uint(adminIDUint))
+	if err != nil {
+		return nil, c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
+	}
+
+	return adminID, nil
 }

@@ -3,27 +3,26 @@ package addusers
 import (
 	"suffgo/internal/rooms/domain"
 	roomErrors "suffgo/internal/rooms/domain/errors"
-	userDomain "suffgo/internal/users/domain"
-	userDomainV "suffgo/internal/users/domain/valueObjects"
-	userErr "suffgo/internal/users/domain/errors"
 	sv "suffgo/internal/shared/domain/valueObjects"
+	userDomain "suffgo/internal/users/domain"
+	userErr "suffgo/internal/users/domain/errors"
+	userDomainV "suffgo/internal/users/domain/valueObjects"
 )
 
-
 type AddSingleUserUsecase struct {
-	repository domain.RoomRepository
+	repository     domain.RoomRepository
 	userRepository userDomain.UserRepository
 }
 
 func NewAddSingleUserUsecase(repository domain.RoomRepository, userRepository userDomain.UserRepository) *AddSingleUserUsecase {
 	return &AddSingleUserUsecase{
-		repository: repository,
-		userRepository:  userRepository,
+		repository:     repository,
+		userRepository: userRepository,
 	}
 }
 
 func (s *AddSingleUserUsecase) Execute(userData string, roomID, adminID sv.ID) error {
-	
+
 	//chequear que el administrador de la sala sea el que esta intentando agregar usuarios
 	room, err := s.repository.GetByID(roomID)
 
@@ -35,18 +34,22 @@ func (s *AddSingleUserUsecase) Execute(userData string, roomID, adminID sv.ID) e
 		return roomErrors.ErrUserNotAdmin
 	}
 
-	//Busco al usuario
-	user, err := s.lookForUser(userData) 
-	
+	user, err := s.lookForUser(userData)
+
 	if err != nil {
 		return err
 	}
 
 	//Si existe, lo agrego a la sala
-	err = s.repository.AddToWhitelist(roomID, user.ID())
+	//TODO, verificar que no este ya en la whitelist
+	if user != nil {
 
-	if err != nil {
-		return nil
+		err = s.repository.AddToWhitelist(roomID, user.ID())
+
+		if err != nil {
+			return nil
+		}
+
 	}
 
 	return nil
@@ -68,7 +71,7 @@ func (s *AddSingleUserUsecase) lookForUser(userData string) (*userDomain.User, e
 			return user, nil
 		}
 	}
-	
+
 	//Si es nombre de usuario
 	username, err := userDomainV.NewUserName(userData)
 	if err == nil {
@@ -81,7 +84,7 @@ func (s *AddSingleUserUsecase) lookForUser(userData string) (*userDomain.User, e
 			return user, nil
 		}
 	}
-	
+
 	dni, err := userDomainV.NewDni(userData)
 	if err == nil {
 		//Obtengo user por dni

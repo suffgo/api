@@ -33,6 +33,11 @@ type (
 	JoinRoomRequest struct {
 		RoomCode string `json:"room_code"`
 	}
+
+	AddSingleUserRequest struct {
+		UserData string `json:"user_data"`
+		RoomID string `json:"room_id"`
+	}
 )
 
 func NewRoom(
