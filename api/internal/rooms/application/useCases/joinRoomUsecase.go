@@ -9,6 +9,7 @@ import (
 
 type JoinRoomUsecase struct {
 	joinRoomUsecaseRepository domain.RoomRepository
+	
 }
 
 func NewJoinRoomUsecase(repository domain.RoomRepository) *JoinRoomUsecase {
@@ -41,6 +42,11 @@ func (s *JoinRoomUsecase) Execute(roomCode string) (*domain.Room, error) {
 		return nil, errors.New("error al obtener la sala")
 	}
 	//Si la sala es formal verificar si el usuario puede unirse a la misma (tiene permiso, cantidad maxima, etc )
+
+	if room.IsFormal().IsFormal {
+		//check whitelist en user_room
+
+	}
 
 	code := sr.InviteCode{Code: roomCode}
 	room.SetInviteCode(code)

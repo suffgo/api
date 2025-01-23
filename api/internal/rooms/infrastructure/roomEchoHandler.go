@@ -44,7 +44,7 @@ func NewRoomEchoHandler(
 		GetRoomByIDUsecase: getByIDUC,
 		GetByAdminUsecase:  getByAdminUC,
 		RestoreUsecase:     restoreUC,
-		JoinRoomUsecase:   joinRoomUC,
+		JoinRoomUsecase:    joinRoomUC,
 	}
 }
 
@@ -193,7 +193,6 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
 	}
 
-	// id, _ := sv.NewID(uint(idInput))
 	rooms, err := h.GetByAdminUsecase.Execute(*userID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
@@ -213,8 +212,7 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 	return c.JSON(http.StatusOK, roomsDTO)
 }
 
-
-func(h *RoomEchoHandler) JoinRoom(c echo.Context) error {
+func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 	var req d.JoinRoomRequest
 
 	if err := c.Bind(&req); err != nil {
@@ -227,25 +225,24 @@ func(h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 		if errors.Is(err, rerr.ErrRoomNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
-		
+
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
 	roomDTO := &d.RoomDTO{
-		ID: 	   room.ID().Id,
+		ID:         room.ID().Id,
 		LinkInvite: room.LinkInvite().LinkInvite,
 		IsFormal:   room.IsFormal().IsFormal,
 		Name:       room.Name().Name,
 		AdminID:    room.AdminID().Id,
-		RoomCode:  room.InviteCode().Code,
+		RoomCode:   room.InviteCode().Code,
 	}
-
 
 	response := map[string]interface{}{
 		"success": "Ingreso a la sala exitoso",
 		"room":    roomDTO,
 	}
-	
+
 	return c.JSON(http.StatusOK, response)
 }
 

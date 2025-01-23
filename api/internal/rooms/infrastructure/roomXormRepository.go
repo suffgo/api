@@ -8,6 +8,7 @@ import (
 	m "suffgo/internal/rooms/infrastructure/models"
 	se "suffgo/internal/shared/domain/errors"
 	sv "suffgo/internal/shared/domain/valueObjects"
+	um"suffgo/internal/userRooms/infrastructure/models"
 )
 
 type RoomXormRepository struct {
@@ -160,6 +161,7 @@ func (s *RoomXormRepository) GetInviteCode(roomID uint) (string, error) {
 }
 
 func (s *RoomXormRepository) GetRoomByCode(inviteCode string) (uint, error) {
+	//its only one room per code
 	var register []m.InviteCode
 	err := s.db.GetDb().Where("code = ?", inviteCode).Find(&register)
 
@@ -172,4 +174,21 @@ func (s *RoomXormRepository) GetRoomByCode(inviteCode string) (uint, error) {
 	}
 
 	return register[0].RoomID, nil
+}
+
+//agrego un registro a user_room (para usuario registrado)
+func (s *RoomXormRepository) AddToWhitelist(roomID sv.ID, userID sv.ID) error {
+	
+	reg := um.UserRoom{
+		UserID: userID.Id,
+		RoomID: roomID.Id,
+	}
+
+	_, err := s.db.GetDb().Insert(&reg)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
