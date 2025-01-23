@@ -22,6 +22,8 @@ import (
 	p "suffgo/internal/proposals/infrastructure"
 
 	roomUsecase "suffgo/internal/rooms/application/useCases"
+	roomUsecaseAddUsers "suffgo/internal/rooms/application/useCases/addUsers"
+
 	r "suffgo/internal/rooms/infrastructure"
 
 	"github.com/gorilla/sessions"
@@ -65,8 +67,8 @@ func (s *EchoServer) Start() {
 	store := sessions.NewCookieStore(authKey)
 	s.app.Use(session.Middleware(store))
 
-	s.InitializeUser()
-	roomRepo := s.InitializeRoom()
+	userRepo := s.InitializeUser()
+	roomRepo := s.InitializeRoom(userRepo)
 	s.InitializeProposal(roomRepo)
 	s.InitializeVote()
 	s.InitializeOption()
@@ -84,7 +86,7 @@ func (s *EchoServer) Start() {
 	s.app.Logger.Fatal(s.app.Start(serverUrl))
 }
 
-func (s *EchoServer) InitializeUser() {
+func (s *EchoServer) InitializeUser() *u.UserXormRepository {
 	userRepo := u.NewUserXormRepository(s.db)
 
 	// Initialize Use Cases
@@ -107,6 +109,8 @@ func (s *EchoServer) InitializeUser() {
 
 	// Initialize User Router
 	u.InitializeUserEchoRouter(s.app, userHandler)
+
+	return userRepo
 }
 
 func (s *EchoServer) InitializeOption() {
@@ -145,7 +149,7 @@ func (s *EchoServer) InitializeVote() {
 	v.InitializeVoteEchoRouter(s.app, voteHandler)
 }
 
-func (s *EchoServer) InitializeRoom() *r.RoomXormRepository {
+func (s *EchoServer) InitializeRoom(userRepo *u.UserXormRepository) *r.RoomXormRepository {
 	roomRepo := r.NewRoomXormRepository(s.db)
 	createRoomUseCase := roomUsecase.NewCreateUsecase(roomRepo)
 	deleteRoomUseCase := roomUsecase.NewDeleteUsecase(roomRepo)
@@ -154,6 +158,7 @@ func (s *EchoServer) InitializeRoom() *r.RoomXormRepository {
 	getByAdminRoomUseCase := roomUsecase.NewGetByAdminUsecase(roomRepo)
 	restoreUseCase := roomUsecase.NewRestoreUsecase(roomRepo)
 	joinUsecase := roomUsecase.NewJoinRoomUsecase(roomRepo)
+	AddSingleUserUsecase := roomUsecaseAddUsers.NewAddSingleUserUsecase(roomRepo, userRepo)
 
 	roomHandler := r.NewRoomEchoHandler(
 		createRoomUseCase,
@@ -163,6 +168,7 @@ func (s *EchoServer) InitializeRoom() *r.RoomXormRepository {
 		getByAdminRoomUseCase,
 		restoreUseCase,
 		joinUsecase,
+		AddSingleUserUsecase,
 	)
 	r.InitializeRoomEchoRouter(s.app, roomHandler)
 

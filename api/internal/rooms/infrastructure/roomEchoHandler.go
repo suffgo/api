@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	r "suffgo/internal/rooms/application/useCases"
+	addUsers "suffgo/internal/rooms/application/useCases/addUsers"
 
 	d "suffgo/internal/rooms/domain"
 	v "suffgo/internal/rooms/domain/valueObjects"
@@ -19,13 +20,14 @@ import (
 )
 
 type RoomEchoHandler struct {
-	CreateRoomUsecase  *r.CreateUsecase
-	DeleteRoomUsecase  *r.DeleteUsecase
-	GetAllUsecase      *r.GetAllUsecase
-	GetRoomByIDUsecase *r.GetByIDUsecase
-	GetByAdminUsecase  *r.GetByAdminUsecase
-	RestoreUsecase     *r.RestoreUsecase
-	JoinRoomUsecase    *r.JoinRoomUsecase
+	CreateRoomUsecase    *r.CreateUsecase
+	DeleteRoomUsecase    *r.DeleteUsecase
+	GetAllUsecase        *r.GetAllUsecase
+	GetRoomByIDUsecase   *r.GetByIDUsecase
+	GetByAdminUsecase    *r.GetByAdminUsecase
+	RestoreUsecase       *r.RestoreUsecase
+	JoinRoomUsecase      *r.JoinRoomUsecase
+	AddSingleUSerUsecase *addUsers.AddSingleUserUsecase
 }
 
 func NewRoomEchoHandler(
@@ -36,15 +38,17 @@ func NewRoomEchoHandler(
 	getByAdminUC *r.GetByAdminUsecase,
 	restoreUC *r.RestoreUsecase,
 	joinRoomUC *r.JoinRoomUsecase,
+	addSingleUserUC *addUsers.AddSingleUserUsecase,
 ) *RoomEchoHandler {
 	return &RoomEchoHandler{
-		CreateRoomUsecase:  creatUC,
-		DeleteRoomUsecase:  deleteUC,
-		GetAllUsecase:      getAllUC,
-		GetRoomByIDUsecase: getByIDUC,
-		GetByAdminUsecase:  getByAdminUC,
-		RestoreUsecase:     restoreUC,
-		JoinRoomUsecase:    joinRoomUC,
+		CreateRoomUsecase:    creatUC,
+		DeleteRoomUsecase:    deleteUC,
+		GetAllUsecase:        getAllUC,
+		GetRoomByIDUsecase:   getByIDUC,
+		GetByAdminUsecase:    getByAdminUC,
+		RestoreUsecase:       restoreUC,
+		JoinRoomUsecase:      joinRoomUC,
+		AddSingleUSerUsecase: addSingleUserUC,
 	}
 }
 

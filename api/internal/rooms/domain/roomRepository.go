@@ -14,4 +14,5 @@ type RoomRepository interface {
 	SaveInviteCode(inviteCode string, roomID uint) error
 	GetInviteCode(roomID uint) (string, error)
 	GetRoomByCode(inviteCode string) (uint, error)
+	AddToWhitelist(roomID sv.ID, userID sv.ID) error
 }
