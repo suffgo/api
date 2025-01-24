@@ -192,3 +192,18 @@ func (s *RoomXormRepository) AddToWhitelist(roomID sv.ID, userID sv.ID) error {
 
 	return nil
 }
+
+func (s * RoomXormRepository) UserInWhitelist(roomID sv.ID, userID sv.ID) (bool, error) {
+	var register []um.UserRoom
+	err := s.db.GetDb().Where("room_id = ? and user_id = ?", roomID.Id, userID.Id).Find(&register)
+
+	if err != nil {
+		return false, err
+	}
+
+	if register == nil {
+		return false, nil
+	}
+
+	return true, nil
+}
