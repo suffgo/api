@@ -40,8 +40,6 @@ func (s *AddSingleUserUsecase) Execute(userData string, roomID, adminID sv.ID) e
 		return err
 	}
 
-	//Si existe, lo agrego a la sala
-	//TODO, verificar que no este en la whitelist
 	already, err := s.repository.UserInWhitelist(roomID, user.ID())
 
 	if already {
