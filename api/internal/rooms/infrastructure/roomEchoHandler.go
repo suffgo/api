@@ -224,7 +224,13 @@ func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	room, err := h.JoinRoomUsecase.Execute(req.RoomCode)
+	userID, err := GetUserIDFromSession(c)
+
+	if err != nil {
+		return err
+	}
+
+	room, err := h.JoinRoomUsecase.Execute(req.RoomCode, *userID)
 
 	if err != nil {
 		if errors.Is(err, rerr.ErrRoomNotFound) {
