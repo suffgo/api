@@ -79,6 +79,7 @@ func (s *SettingRoomXormRepository) Save(settingRoom domain.SettingRoom) error {
 		Time:          settingRoom.TimeAndDate().Time,
 		Date:          settingRoom.TimeAndDate().Date,
 		VoterLimit:    settingRoom.VoterLimit().VoterLimit,
+		RoomID:        settingRoom.RoomID().Id,
 	}
 	_, err := s.db.GetDb().Insert(settingRoomModel)
 	if err != nil {
@@ -86,4 +87,22 @@ func (s *SettingRoomXormRepository) Save(settingRoom domain.SettingRoom) error {
 	}
 
 	return nil
+}
+
+func (s *SettingRoomXormRepository) GetByRoom(roomID sv.ID) (*d.SettingRoom, error) {
+	
+	settingRoomModel := new(m.SettingsRoom)
+	has, err := s.db.GetDb().Where("room_id = ?", roomID.Id).Get(settingRoomModel)
+	if err != nil {
+		return nil, err
+	}
+	if !has {
+		return nil, se.SettingRoomNotFoundError
+	}
+	userEnt, err := mappers.ModelToDomain(settingRoomModel)
+
+	if err != nil {
+		return nil, se.DataMappingError
+	}
+	return userEnt, nil
 }
