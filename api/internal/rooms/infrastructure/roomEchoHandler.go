@@ -2,6 +2,8 @@ package infrastructure
 
 import (
 	"errors"
+	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	r "suffgo/internal/rooms/application/useCases"
@@ -17,6 +19,7 @@ import (
 	rerr "suffgo/internal/rooms/domain/errors"
 	uerr "suffgo/internal/users/domain/errors"
 
+	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 )
 
@@ -141,6 +144,8 @@ func (h *RoomEchoHandler) GetAllRooms(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
+	fmt.Println("macaco")
+
 	var roomsDTO []d.RoomDTO
 	for _, room := range rooms {
 		roomDTO := &d.RoomDTO{
@@ -149,7 +154,9 @@ func (h *RoomEchoHandler) GetAllRooms(c echo.Context) error {
 			IsFormal:   room.IsFormal().IsFormal,
 			Name:       room.Name().Name,
 			AdminID:    room.AdminID().Id,
+			RoomCode:   room.InviteCode().Code,
 		}
+		fmt.Println("Hola")
 		roomsDTO = append(roomsDTO, *roomDTO)
 	}
 	return c.JSON(http.StatusOK, roomsDTO)
@@ -177,6 +184,7 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 		IsFormal:   room.IsFormal().IsFormal,
 		Name:       room.Name().Name,
 		AdminID:    room.AdminID().Id,
+		RoomCode:   room.InviteCode().Code,
 	}
 	return c.JSON(http.StatusOK, roomDTO)
 }
@@ -211,6 +219,7 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 			IsFormal:   room.IsFormal().IsFormal,
 			Name:       room.Name().Name,
 			AdminID:    room.AdminID().Id,
+			RoomCode:   room.InviteCode().Code,
 		}
 		roomsDTO = append(roomsDTO, *roomDTO)
 	}
@@ -283,7 +292,7 @@ func (h *RoomEchoHandler) AddSingleUser(c echo.Context) error {
 	err = h.AddSingleUSerUsecase.Execute(req.UserData, *roomID, *userID)
 
 	if err != nil {
-		
+
 		if errors.Is(err, rerr.ErrUserNotAdmin) {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
 		}
@@ -306,7 +315,6 @@ func (h *RoomEchoHandler) AddSingleUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"success": "usuario agregado a la sala exitosamente"})
 }
 
-
 func (h *RoomEchoHandler) Restore(c echo.Context) error {
 	idParam := c.Param("id")
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
@@ -328,9 +336,8 @@ func (h *RoomEchoHandler) Restore(c echo.Context) error {
 
 }
 
-
 func GetUserIDFromSession(c echo.Context) (*sv.ID, error) {
-		// Obtener el user_id de la sesion
+	// Obtener el user_id de la sesion
 	userIDStr, ok := c.Get("user_id").(string)
 	if !ok || userIDStr == "" {
 		return nil, c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
@@ -347,4 +354,54 @@ func GetUserIDFromSession(c echo.Context) (*sv.ID, error) {
 	}
 
 	return adminID, nil
+}
+
+var (
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			// Permitir conexiones desde http://localhost:3000 (ajusta según tu frontend)
+			origin := r.Header.Get("Origin")
+			return origin == "http://localhost:4321"
+		},
+	}
+)
+
+func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
+	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		log.Println("Error al actualizar a WebSocket:", err)
+		return err
+	}
+	defer ws.Close()
+
+	// Enviar un mensaje de bienvenida al cliente
+	if err := ws.WriteMessage(websocket.TextMessage, []byte("Hola, Cliente!")); err != nil {
+		log.Println("Error al enviar mensaje de bienvenida:", err)
+		return err
+	}
+
+	// Escuchar mensajes del cliente
+	for {
+		messageType, msg, err := ws.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("Error inesperado de cierre de WebSocket: %v", err)
+			}
+			break
+		}
+
+		// Imprimir el mensaje recibido en el servidor
+		fmt.Printf("Mensaje recibido del cliente!!!: %s\n", msg)
+
+		// Responder al cliente
+		response := fmt.Sprintf("Servidor recibió: %s", msg)
+		if err := ws.WriteMessage(messageType, []byte(response)); err != nil {
+			log.Println("Error al enviar respuesta:", err)
+			break
+		}
+	}
+
+	return nil
 }
