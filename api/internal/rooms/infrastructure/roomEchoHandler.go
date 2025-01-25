@@ -286,6 +286,10 @@ func (h *RoomEchoHandler) AddSingleUser(c echo.Context) error {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
 
+		if errors.Is(err, rerr.ErrRoomNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		}
+
 		if errors.Is(err, rerr.ErrAlreadyInWhitelist) {
 			return c.JSON(http.StatusConflict, map[string]string{"error": err.Error()})
 		}

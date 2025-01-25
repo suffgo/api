@@ -30,6 +30,10 @@ func (s *AddSingleUserUsecase) Execute(userData string, roomID, adminID sv.ID) e
 		return err
 	}
 
+	if room == nil {
+		return roomErrors.ErrRoomNotFound
+	}
+	
 	if room.AdminID().Id != adminID.Id {
 		return roomErrors.ErrUserNotAdmin
 	}
