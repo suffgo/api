@@ -23,6 +23,7 @@ func main() {
 	MigrateOption(db)
 	MigrateRoomSetting(db)
 	MigrateVote(db)
+	InviteCode(db)
 
 	err := MakeConstraints(db)
 	if err != nil {
@@ -97,6 +98,18 @@ func MigrateVote(db database.Database) error {
 		return err
 	} else {
 		fmt.Printf("Se ha migrado Election con exito\n")
+	}
+
+	return nil
+}
+
+func InviteCode(db database.Database) error {
+	err := db.GetDb().Sync2(new(r.InviteCode))
+
+	if err != nil {
+		return err
+	} else {
+		fmt.Printf("Se ha migrado InviteCode con exito\n")
 	}
 
 	return nil

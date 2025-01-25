@@ -8,6 +8,7 @@ import (
 	m "suffgo/internal/rooms/infrastructure/models"
 	se "suffgo/internal/shared/domain/errors"
 	sv "suffgo/internal/shared/domain/valueObjects"
+	um"suffgo/internal/userRooms/infrastructure/models"
 )
 
 type RoomXormRepository struct {
@@ -132,4 +133,77 @@ func (s *RoomXormRepository) Save(room d.Room) (*d.Room, error) {
 
 func ptr(s string) *string {
 	return &s
+}
+
+func (s *RoomXormRepository) SaveInviteCode(inviteCode string, roomID uint) error {
+	inviteCodeModel := &m.InviteCode{
+		RoomID: roomID,
+		Code:   inviteCode,
+	}
+
+	_, err := s.db.GetDb().Insert(inviteCodeModel)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *RoomXormRepository) GetInviteCode(roomID uint) (string, error) {
+	var register []m.InviteCode
+	err := s.db.GetDb().Where("room_id = ?", roomID).Find(&register)
+
+	if err != nil {
+		return "", err
+	}
+
+	return register[0].Code, nil
+}
+
+func (s *RoomXormRepository) GetRoomByCode(inviteCode string) (uint, error) {
+	//its only one room per code
+	var register []m.InviteCode
+	err := s.db.GetDb().Where("code = ?", inviteCode).Find(&register)
+
+	if err != nil {
+		return 0, err
+	}
+
+	if register == nil {
+		return 0, re.ErrRoomNotFound
+	}
+
+	return register[0].RoomID, nil
+}
+
+//agrego un registro a user_room (para usuario registrado)
+func (s *RoomXormRepository) AddToWhitelist(roomID sv.ID, userID sv.ID) error {
+	
+	reg := um.UserRoom{
+		UserID: userID.Id,
+		RoomID: roomID.Id,
+	}
+
+	_, err := s.db.GetDb().Insert(&reg)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s * RoomXormRepository) UserInWhitelist(roomID sv.ID, userID sv.ID) (bool, error) {
+	var register []um.UserRoom
+	err := s.db.GetDb().Where("room_id = ? and user_id = ?", roomID.Id, userID.Id).Find(&register)
+
+	if err != nil {
+		return false, err
+	}
+
+	if register == nil {
+		return false, nil
+	}
+
+	return true, nil
 }

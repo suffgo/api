@@ -164,6 +164,7 @@ func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
 	}
 
 	id, _ := sv.NewID(uint(idInput))
+	//TODO: AGREGAR MIDDLEWARE PARA VERIFICAR QUE EL USUARIO QUE INTENTA BORRAR ES EL MISMO QUE EL QUE ESTA LOGUEADO
 	err = h.DeleteUserUsecase.Execute(*id)
 	if err != nil {
 		if errors.Is(err, uerr.ErrUserNotFound) {
