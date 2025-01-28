@@ -47,7 +47,7 @@ func (s *ProposalXormRepository) Save(proposal d.Proposal) (*d.Proposal, error) 
 func (s *ProposalXormRepository) GetAll() ([]d.Proposal, error) {
 	var proposals []m.Proposal
 
-	err := s.db.GetDb().Where("delete_a_t IS NULL").Find(&proposals)
+	err := s.db.GetDb().Where("deleted_at IS NULL").Find(&proposals)
 	if err != nil {
 		return nil, err
 	}
@@ -100,9 +100,9 @@ func (s *ProposalXormRepository) Delete(id sv.ID) error {
 func (s *ProposalXormRepository) Restore(proposalID sv.ID) error {
 	primitiveID := proposalID.Value()
 
-	proposal := &m.Proposal{DeleteAT: nil}
+	proposal := &m.Proposal{DeletedAt: nil}
 
-	affected, err := s.db.GetDb().Unscoped().ID(primitiveID).Cols("delete_a_t").Update(proposal)
+	affected, err := s.db.GetDb().Unscoped().ID(primitiveID).Cols("deleted_at").Update(proposal)
 	if err != nil {
 		return err
 	}

@@ -18,5 +18,8 @@ func InitializeUserEchoRouter(e *echo.Echo, handler *UserEchoHandler) {
 	userGroup.POST("/logout", handler.Logout)
 	userGroup.DELETE("/:id", handler.DeleteUser)
 	userGroup.POST("/restore/:id", handler.Restore)
+
+	userGroup.Use(AuthMiddleware)
+	userGroup.POST("/logout", handler.Logout)
 	userGroup.GET("/auth", handler.CheckAuth) //200ok si esta autenticado
 }
