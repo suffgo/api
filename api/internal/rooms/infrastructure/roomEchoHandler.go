@@ -75,19 +75,16 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 	}
 
 	// Obtener el user_id de la sesion
-	userIDStr, ok := c.Get("user_id").(string)
-	if !ok || userIDStr == "" {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
+	adminID, err := GetUserIDFromSession(c)
+
+	if err != nil {
+		return err
 	}
 
-	adminIDUint, err := strconv.ParseUint(userIDStr, 10, 64)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
-	}
 
-	adminID, err := sv.NewID(uint(adminIDUint))
+	description, err := v.NewDescription(req.Description)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
 	room := d.NewRoom(
@@ -96,6 +93,7 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 		*isFormal,
 		*name,
 		adminID,
+		*description,
 	)
 
 	createdRoom, err := h.CreateRoomUsecase.Execute(*room)
@@ -109,6 +107,7 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 		IsFormal:   createdRoom.IsFormal().IsFormal,
 		Name:       createdRoom.Name().Name,
 		AdminID:    createdRoom.AdminID().Id,
+		Description: createdRoom.Description().Description,
 		RoomCode:   createdRoom.InviteCode().Code,
 	}
 
@@ -154,6 +153,7 @@ func (h *RoomEchoHandler) GetAllRooms(c echo.Context) error {
 			IsFormal:   room.IsFormal().IsFormal,
 			Name:       room.Name().Name,
 			AdminID:    room.AdminID().Id,
+			Description: room.Description().Description,
 			RoomCode:   room.InviteCode().Code,
 		}
 		fmt.Println("Hola")
@@ -184,6 +184,7 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 		IsFormal:   room.IsFormal().IsFormal,
 		Name:       room.Name().Name,
 		AdminID:    room.AdminID().Id,
+		Description: room.Description().Description,
 		RoomCode:   room.InviteCode().Code,
 	}
 	return c.JSON(http.StatusOK, roomDTO)
@@ -229,6 +230,7 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 	var req d.JoinRoomRequest
 
+	fmt.Println("Hola")
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -255,6 +257,7 @@ func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 		IsFormal:   room.IsFormal().IsFormal,
 		Name:       room.Name().Name,
 		AdminID:    room.AdminID().Id,
+		Description: room.Description().Description,
 		RoomCode:   room.InviteCode().Code,
 	}
 
