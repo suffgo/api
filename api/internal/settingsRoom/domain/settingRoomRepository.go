@@ -9,5 +9,6 @@ type SettingRoomRepository interface {
 	GetAll() ([]SettingRoom, error)
 	Delete(id sv.ID) error
 	Save(settingRoom SettingRoom) error
+	GetByRoom(roomID sv.ID) (*SettingRoom, error)
 	//Update(settingRoom SettingRoom) error
 }

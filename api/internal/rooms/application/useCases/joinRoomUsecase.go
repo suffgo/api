@@ -19,7 +19,7 @@ func NewJoinRoomUsecase(repository domain.RoomRepository) *JoinRoomUsecase {
 }
 
 //Metodo importante, gestiona la union del usuario a la sala
-func (s *JoinRoomUsecase) Execute(roomCode string) (*domain.Room, error) {
+func (s *JoinRoomUsecase) Execute(roomCode string, userID sv.ID) (*domain.Room, error) {
 	//Obtener sala a traves de codigo
 	roomID, err := s.joinRoomUsecaseRepository.GetRoomByCode(roomCode)
 	
@@ -42,10 +42,17 @@ func (s *JoinRoomUsecase) Execute(roomCode string) (*domain.Room, error) {
 		return nil, errors.New("error al obtener la sala")
 	}
 	//Si la sala es formal verificar si el usuario puede unirse a la misma (tiene permiso, cantidad maxima, etc )
-
 	if room.IsFormal().IsFormal {
-		//check whitelist en user_room
+		//check whitelist en user_room. Aca estoy asumiendo que todas las salas formales usan whitelist
+		can, err := s.joinRoomUsecaseRepository.UserInWhitelist(room.ID(), userID)
 
+		if err != nil {
+			return nil, err
+		}
+
+		if !can {
+			return nil, errors.New("user not in whitelist")
+		}
 	}
 
 	code := sr.InviteCode{Code: roomCode}

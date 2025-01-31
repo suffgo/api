@@ -18,6 +18,7 @@ require (
 	github.com/gorilla/context v1.1.2 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/gorilla/sessions v1.4.0 // indirect
+	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/labstack/echo-contrib v0.17.1 // indirect
 	github.com/labstack/echo-jwt/v4 v4.2.0 // indirect

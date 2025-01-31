@@ -7,27 +7,30 @@ import (
 
 type (
 	Room struct {
-		id         *sv.ID
-		linkInvite v.LinkInvite
-		isFormal   v.IsFormal
-		name       v.Name
-		adminID    *sv.ID
-		inviteCode *v.InviteCode //es opcional porque al momento de creacion no existe
+		id          *sv.ID
+		linkInvite  v.LinkInvite
+		isFormal    v.IsFormal
+		name        v.Name
+		adminID     *sv.ID
+		inviteCode  *v.InviteCode //es opcional porque al momento de creacion no existe
+		description v.Description
 	}
 
 	RoomDTO struct {
-		ID         uint   `json:"id"`
-		LinkInvite string `json:"link_invite"`
-		IsFormal   bool   `json:"is_formal"`
-		Name       string `json:"name"`
-		AdminID    uint   `json:"admin_id"`
-		RoomCode string `json:"room_code"`
+		ID          uint   `json:"id"`
+		LinkInvite  string `json:"link_invite"`
+		IsFormal    bool   `json:"is_formal"`
+		Name        string `json:"name"`
+		AdminID     uint   `json:"admin_id"`
+		Description string `json:"description"`
+		RoomCode    string `json:"room_code"`
 	}
 
 	RoomCreateRequest struct {
-		LinkInvite string `json:"link_invite"`
-		IsFormal   bool   `json:"is_formal"`
-		Name       string `json:"name"`
+		LinkInvite  string `json:"link_invite"`
+		IsFormal    bool   `json:"is_formal"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
 	}
 
 	JoinRoomRequest struct {
@@ -36,7 +39,7 @@ type (
 
 	AddSingleUserRequest struct {
 		UserData string `json:"user_data"`
-		RoomID string `json:"room_id"`
+		RoomID   string `json:"room_id"`
 	}
 )
 
@@ -46,6 +49,7 @@ func NewRoom(
 	isFormal v.IsFormal,
 	name v.Name,
 	adminID *sv.ID,
+	description v.Description,
 ) *Room {
 	return &Room{
 		id:         id,
@@ -54,6 +58,7 @@ func NewRoom(
 		name:       name,
 		adminID:    adminID,
 		inviteCode: nil,
+		description: description,
 	}
 }
 
@@ -69,8 +74,16 @@ func (r *Room) IsFormal() v.IsFormal {
 	return r.isFormal
 }
 
+func (r *Room) SetIsFormal(isFormal v.IsFormal) {
+	r.isFormal = isFormal
+}
+
 func (r *Room) Name() v.Name {
 	return r.name
+}
+
+func (r *Room) SetName(name v.Name) {
+	r.name = name
 }
 
 func (r *Room) AdminID() sv.ID {
@@ -78,10 +91,18 @@ func (r *Room) AdminID() sv.ID {
 }
 
 func (r *Room) InviteCode() v.InviteCode {
-	
+
 	return *r.inviteCode
 }
 
 func (r *Room) SetInviteCode(inviteCode v.InviteCode) {
 	r.inviteCode = &inviteCode
+}
+
+func (r *Room) Description() v.Description {
+	return r.description
+}
+
+func (r *Room) SetDescription(description v.Description) {
+	r.description = description
 }

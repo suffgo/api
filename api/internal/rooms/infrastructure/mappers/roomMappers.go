@@ -39,7 +39,12 @@ func ModelToDomain(roomModel *m.Room) (*domain.Room, error) {
 		return nil, err
 	}
 
-	return domain.NewRoom(id, *linkInvite, *isFormal, *name, adminID), nil
+	description, err := v.NewDescription(roomModel.Description)
+	if err != nil {
+		return nil, err
+	}
+
+	return domain.NewRoom(id, *linkInvite, *isFormal, *name, adminID, *description), nil
 }
 
 func ptr(s string) *string {
