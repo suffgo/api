@@ -1,10 +1,12 @@
 package infrastructure
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	s "suffgo/internal/settingsRoom/application/useCases"
 	d "suffgo/internal/settingsRoom/domain"
+	seterr "suffgo/internal/settingsRoom/domain/errors"
 	v "suffgo/internal/settingsRoom/domain/valueObjects"
 	se "suffgo/internal/shared/domain/errors"
 	sv "suffgo/internal/shared/domain/valueObjects"
@@ -35,6 +37,7 @@ func NewSettingRoomEchoHandler(
 
 func (h *SettingRoomEchoHandler) CreateSettingRoom(c echo.Context) error {
 	var req d.SettingRoomCreateRequest
+
 
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -96,6 +99,10 @@ func (h *SettingRoomEchoHandler) CreateSettingRoom(c echo.Context) error {
 
 	err = h.CreateSettingRoomUsecase.Execute(*settingRoom)
 	if err != nil {
+
+		if errors.Is(err, seterr.ErrAlreadyExists) {
+			return c.JSON(http.StatusConflict, map[string]string{"message": err.Error()})
+		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
 
@@ -116,6 +123,7 @@ func (h *SettingRoomEchoHandler) DeleteSettingRoom(c echo.Context) error {
 		if err.Error() == "setting room not found" {
 			return c.JSON(http.StatusNotFound, map[string]string{"message": err.Error()})
 		}
+
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
 
