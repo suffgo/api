@@ -19,6 +19,7 @@ type SettingRoomEchoHandler struct {
 	DeleteSettingRoomUsecase  *s.DeleteUsecase
 	GetAllSettingRoomUsecase  *s.GetAllUsecase
 	GetSettingRoomByIDUsecase *s.GetByIDUsecase
+	GetByRoomIDUsecase        *s.GetByRoomIDUsecase
 }
 
 func NewSettingRoomEchoHandler(
@@ -26,18 +27,19 @@ func NewSettingRoomEchoHandler(
 	deleteUC *s.DeleteUsecase,
 	getAllUC *s.GetAllUsecase,
 	getByIDUC *s.GetByIDUsecase,
+	getByRoomUC *s.GetByRoomIDUsecase,
 ) *SettingRoomEchoHandler {
 	return &SettingRoomEchoHandler{
 		CreateSettingRoomUsecase:  createUC,
 		DeleteSettingRoomUsecase:  deleteUC,
 		GetAllSettingRoomUsecase:  getAllUC,
 		GetSettingRoomByIDUsecase: getByIDUC,
+		GetByRoomIDUsecase:        getByRoomUC,
 	}
 }
 
 func (h *SettingRoomEchoHandler) CreateSettingRoom(c echo.Context) error {
 	var req d.SettingRoomCreateRequest
-
 
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -58,7 +60,7 @@ func (h *SettingRoomEchoHandler) CreateSettingRoom(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	timeAndDate, err := v.NewTimeAndDate(req.Time, req.Date)
+	timeAndDate, err := v.NewDateTime(req.DateTime)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -77,6 +79,7 @@ func (h *SettingRoomEchoHandler) CreateSettingRoom(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
+
 	// asegurarnos de que newID no sea nil antes de crear el SettingRoom
 	if newID == nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "could not generate new ID"})
@@ -92,7 +95,6 @@ func (h *SettingRoomEchoHandler) CreateSettingRoom(c echo.Context) error {
 		roomID,
 	)
 
-	// Verificar que el settingRoom no sea nil antes de ejecutar
 	if settingRoom == nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "could not create setting room"})
 	}
@@ -103,6 +105,7 @@ func (h *SettingRoomEchoHandler) CreateSettingRoom(c echo.Context) error {
 		if errors.Is(err, seterr.ErrAlreadyExists) {
 			return c.JSON(http.StatusConflict, map[string]string{"message": err.Error()})
 		}
+
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
 
@@ -143,8 +146,7 @@ func (h *SettingRoomEchoHandler) GetAllSettingRoom(c echo.Context) error {
 			Privacy:       settingRoom.Privacy().Privacy,
 			ProposalTimer: settingRoom.ProposalTimer().ProposalTimer,
 			Quorum:        settingRoom.Quorum().Quorum,
-			Time:          settingRoom.TimeAndDate().Time,
-			Date:          settingRoom.TimeAndDate().Date,
+			StartTime:     settingRoom.StartTime().DateTime,
 			VoterLimit:    settingRoom.VoterLimit().VoterLimit,
 			RoomID:        settingRoom.RoomID().Id,
 		}
@@ -176,8 +178,7 @@ func (h *SettingRoomEchoHandler) GetSettingRoomByID(c echo.Context) error {
 		Privacy:       settingRoom.Privacy().Privacy,
 		ProposalTimer: settingRoom.ProposalTimer().ProposalTimer,
 		Quorum:        settingRoom.Quorum().Quorum,
-		Time:          settingRoom.TimeAndDate().Time,
-		Date:          settingRoom.TimeAndDate().Date,
+		StartTime:     settingRoom.StartTime().DateTime,
 		VoterLimit:    settingRoom.VoterLimit().VoterLimit,
 		RoomID:        settingRoom.RoomID().Id,
 	}
