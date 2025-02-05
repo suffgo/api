@@ -38,7 +38,6 @@ func NewSettingRoomEchoHandler(
 func (h *SettingRoomEchoHandler) CreateSettingRoom(c echo.Context) error {
 	var req d.SettingRoomCreateRequest
 
-
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -58,10 +57,10 @@ func (h *SettingRoomEchoHandler) CreateSettingRoom(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	timeAndDate, err := v.NewTimeAndDate(req.Time, req.Date)
+	timeAndDate, err := v.NewDateTime(req.DateTime)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
-	}
+	}	
 
 	voterLimit, err := v.NewVoterLimit(req.VoterLimit)
 	if err != nil {
@@ -144,8 +143,7 @@ func (h *SettingRoomEchoHandler) GetAllSettingRoom(c echo.Context) error {
 			Privacy:       settingRoom.Privacy().Privacy,
 			ProposalTimer: settingRoom.ProposalTimer().ProposalTimer,
 			Quorum:        settingRoom.Quorum().Quorum,
-			Time:          settingRoom.TimeAndDate().Time,
-			Date:          settingRoom.TimeAndDate().Date,
+			StartTime:     settingRoom.StartTime().DateTime,
 			VoterLimit:    settingRoom.VoterLimit().VoterLimit,
 			RoomID:        settingRoom.RoomID().Id,
 		}
@@ -177,8 +175,7 @@ func (h *SettingRoomEchoHandler) GetSettingRoomByID(c echo.Context) error {
 		Privacy:       settingRoom.Privacy().Privacy,
 		ProposalTimer: settingRoom.ProposalTimer().ProposalTimer,
 		Quorum:        settingRoom.Quorum().Quorum,
-		Time:          settingRoom.TimeAndDate().Time,
-		Date:          settingRoom.TimeAndDate().Date,
+		StartTime:     settingRoom.StartTime().DateTime,
 		VoterLimit:    settingRoom.VoterLimit().VoterLimit,
 		RoomID:        settingRoom.RoomID().Id,
 	}

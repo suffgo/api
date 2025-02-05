@@ -13,8 +13,7 @@ func DomainToModel(settingRoom *domain.SettingRoom) *m.SettingsRoom {
 		Privacy:       settingRoom.Privacy().Privacy,
 		ProposalTimer: settingRoom.ProposalTimer().ProposalTimer,
 		Quorum:        settingRoom.Quorum().Quorum,
-		Time:          settingRoom.TimeAndDate().Time,
-		Date:          settingRoom.TimeAndDate().Date,
+		StartTime:     settingRoom.StartTime().DateTime,
 		VoterLimit:    settingRoom.VoterLimit().VoterLimit,
 		RoomID:        settingRoom.RoomID().Id,
 	}
@@ -38,7 +37,7 @@ func ModelToDomain(settingRoomModel *m.SettingsRoom) (*domain.SettingRoom, error
 	if err != nil {
 		return nil, err
 	}
-	timeAndDate, err := v.NewTimeAndDate(settingRoomModel.Time, settingRoomModel.Date)
+	startTime, err := v.NewDateTime(settingRoomModel.StartTime)
 	if err != nil {
 		return nil, err
 	}
@@ -51,5 +50,5 @@ func ModelToDomain(settingRoomModel *m.SettingsRoom) (*domain.SettingRoom, error
 	if err != nil {
 		return nil, err
 	}
-	return domain.NewSettingRoom(id, privacy, proposalTimer, *quorum, *timeAndDate, voterLimit, room), nil
+	return domain.NewSettingRoom(id, privacy, proposalTimer, *quorum, *startTime, voterLimit, room), nil
 }
