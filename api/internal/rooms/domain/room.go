@@ -26,6 +26,15 @@ type (
 		RoomCode    string `json:"room_code"`
 	}
 
+	RoomDetailedDTO struct {
+		ID          uint   `json:"id"`
+		LinkInvite  string `json:"link_invite"`
+		RoomTitle   string `json:"room_title"` //es el nombre
+		AdminName   string `json:"admin_name"`
+		Description string `json:"description"`
+		RoomCode    string `json:"room_code"`
+	}
+
 	RoomCreateRequest struct {
 		LinkInvite  string `json:"link_invite"`
 		IsFormal    bool   `json:"is_formal"`
@@ -52,12 +61,12 @@ func NewRoom(
 	description v.Description,
 ) *Room {
 	return &Room{
-		id:         id,
-		linkInvite: linkInvite,
-		isFormal:   isFormal,
-		name:       name,
-		adminID:    adminID,
-		inviteCode: nil,
+		id:          id,
+		linkInvite:  linkInvite,
+		isFormal:    isFormal,
+		name:        name,
+		adminID:     adminID,
+		inviteCode:  nil,
 		description: description,
 	}
 }
