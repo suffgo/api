@@ -19,6 +19,7 @@ type SettingRoomEchoHandler struct {
 	DeleteSettingRoomUsecase  *s.DeleteUsecase
 	GetAllSettingRoomUsecase  *s.GetAllUsecase
 	GetSettingRoomByIDUsecase *s.GetByIDUsecase
+	GetByRoomIDUsecase        *s.GetByRoomIDUsecase
 }
 
 func NewSettingRoomEchoHandler(
@@ -26,12 +27,14 @@ func NewSettingRoomEchoHandler(
 	deleteUC *s.DeleteUsecase,
 	getAllUC *s.GetAllUsecase,
 	getByIDUC *s.GetByIDUsecase,
+	getByRoomUC *s.GetByRoomIDUsecase,
 ) *SettingRoomEchoHandler {
 	return &SettingRoomEchoHandler{
 		CreateSettingRoomUsecase:  createUC,
 		DeleteSettingRoomUsecase:  deleteUC,
 		GetAllSettingRoomUsecase:  getAllUC,
 		GetSettingRoomByIDUsecase: getByIDUC,
+		GetByRoomIDUsecase:        getByRoomUC,
 	}
 }
 
@@ -60,7 +63,7 @@ func (h *SettingRoomEchoHandler) CreateSettingRoom(c echo.Context) error {
 	timeAndDate, err := v.NewDateTime(req.DateTime)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
-	}	
+	}
 
 	voterLimit, err := v.NewVoterLimit(req.VoterLimit)
 	if err != nil {

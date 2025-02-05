@@ -9,11 +9,12 @@ import (
 
 func DomainToModel(room *domain.Room) *m.Room {
 	return &m.Room{
-		ID:         room.ID().Id,
-		LinkInvite: ptr(room.LinkInvite().LinkInvite),
-		IsFormal:   room.IsFormal().IsFormal,
-		Name:       room.Name().Name,
-		AdminID:    room.AdminID().Id,
+		ID:          room.ID().Id,
+		LinkInvite:  ptr(room.LinkInvite().LinkInvite),
+		IsFormal:    room.IsFormal().IsFormal,
+		Name:        room.Name().Name,
+		Description: room.Description().Description,
+		AdminID:     room.AdminID().Id,
 	}
 }
 

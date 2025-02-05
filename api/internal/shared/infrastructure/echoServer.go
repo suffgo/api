@@ -67,12 +67,13 @@ func (s *EchoServer) Start() {
 	store := sessions.NewCookieStore(authKey)
 	s.app.Use(session.Middleware(store))
 
+	s.InitializeSettingRoom()
 	userRepo := s.InitializeUser()
 	roomRepo := s.InitializeRoom(userRepo)
 	s.InitializeProposal(roomRepo)
 	s.InitializeVote()
 	s.InitializeOption()
-	s.InitializeSettingRoom()
+	
 
 	s.app.GET("/v1/health", func(c echo.Context) error {
 		return c.String(200, "OK")
@@ -172,6 +173,7 @@ func (s *EchoServer) InitializeRoom(userRepo *u.UserXormRepository) *r.RoomXormR
 		joinUsecase,
 		AddSingleUserUsecase,
 		getUserByIDUseCase,
+		getByRoomIdUsecase,
 	)
 	r.InitializeRoomEchoRouter(s.app, roomHandler)
 
@@ -179,17 +181,21 @@ func (s *EchoServer) InitializeRoom(userRepo *u.UserXormRepository) *r.RoomXormR
 
 }
 
+var getByRoomIdUsecase *settingRoomUsecase.GetByRoomIDUsecase
+
 func (s *EchoServer) InitializeSettingRoom() {
 	settingRoomRepo := sr.NewSettingRoomXormRepository(s.db)
 	createSettingRoomUseCase := settingRoomUsecase.NewCreateUsecase(settingRoomRepo)
 	deleteSettingRoomUseCase := settingRoomUsecase.NewDeleteUsecase(settingRoomRepo)
 	getAllSettingRoomUseCase := settingRoomUsecase.NewGetAllUsecase(settingRoomRepo)
 	getSettingRoomByIDUseCase := settingRoomUsecase.NewGetByIDUsecase(settingRoomRepo)
+	getByRoomIdUsecase = settingRoomUsecase.NewGetByRoomID(settingRoomRepo)
 	settingRoomHandler := sr.NewSettingRoomEchoHandler(
 		createSettingRoomUseCase,
 		deleteSettingRoomUseCase,
 		getAllSettingRoomUseCase,
 		getSettingRoomByIDUseCase,
+		getByRoomIdUsecase,
 	)
 	sr.InitializeSettingRoomEchoRouter(s.app, settingRoomHandler)
 }
