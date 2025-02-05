@@ -77,6 +77,7 @@ func (h *SettingRoomEchoHandler) CreateSettingRoom(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
+
 	// asegurarnos de que newID no sea nil antes de crear el SettingRoom
 	if newID == nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "could not generate new ID"})
@@ -92,7 +93,6 @@ func (h *SettingRoomEchoHandler) CreateSettingRoom(c echo.Context) error {
 		roomID,
 	)
 
-	// Verificar que el settingRoom no sea nil antes de ejecutar
 	if settingRoom == nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "could not create setting room"})
 	}
@@ -103,6 +103,7 @@ func (h *SettingRoomEchoHandler) CreateSettingRoom(c echo.Context) error {
 		if errors.Is(err, seterr.ErrAlreadyExists) {
 			return c.JSON(http.StatusConflict, map[string]string{"message": err.Error()})
 		}
+
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
 

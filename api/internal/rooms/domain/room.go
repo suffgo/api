@@ -26,9 +26,11 @@ type (
 		RoomCode    string `json:"room_code"`
 	}
 
+	//Dto para informacion util al frontend
 	RoomDetailedDTO struct {
 		ID          uint   `json:"id"`
 		LinkInvite  string `json:"link_invite"`
+		IsFormal    bool   `json:"is_formal"`
 		RoomTitle   string `json:"room_title"` //es el nombre
 		AdminName   string `json:"admin_name"`
 		Description string `json:"description"`

@@ -86,6 +86,8 @@ func (s *EchoServer) Start() {
 	s.app.Logger.Fatal(s.app.Start(serverUrl))
 }
 
+var getUserByIDUseCase *userUsecase.GetByIDUsecase
+
 func (s *EchoServer) InitializeUser() *u.UserXormRepository {
 	userRepo := u.NewUserXormRepository(s.db)
 
@@ -93,7 +95,7 @@ func (s *EchoServer) InitializeUser() *u.UserXormRepository {
 	createUserUseCase := userUsecase.NewCreateUsecase(userRepo)
 	deleteUserUseCase := userUsecase.NewDeleteUsecase(userRepo)
 	getAllUsersUseCase := userUsecase.NewGetAllUsecase(userRepo)
-	getUserByIDUseCase := userUsecase.NewGetByIDUsecase(userRepo)
+	getUserByIDUseCase = userUsecase.NewGetByIDUsecase(userRepo)
 	loginUseCase := userUsecase.NewLoginUsecase(userRepo)
 	restoreUseCase := userUsecase.NewRestoreUsecase(userRepo)
 
@@ -169,6 +171,7 @@ func (s *EchoServer) InitializeRoom(userRepo *u.UserXormRepository) *r.RoomXormR
 		restoreUseCase,
 		joinUsecase,
 		AddSingleUserUsecase,
+		getUserByIDUseCase,
 	)
 	r.InitializeRoomEchoRouter(s.app, roomHandler)
 

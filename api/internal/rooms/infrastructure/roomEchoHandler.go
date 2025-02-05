@@ -26,7 +26,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-
 type RoomEchoHandler struct {
 	CreateRoomUsecase    *r.CreateUsecase
 	DeleteRoomUsecase    *r.DeleteUsecase
@@ -48,6 +47,7 @@ func NewRoomEchoHandler(
 	restoreUC *r.RestoreUsecase,
 	joinRoomUC *r.JoinRoomUsecase,
 	addSingleUserUC *addUsers.AddSingleUserUsecase,
+	getUserByIDUC *useruc.GetByIDUsecase,
 ) *RoomEchoHandler {
 	return &RoomEchoHandler{
 		CreateRoomUsecase:    creatUC,
@@ -58,6 +58,7 @@ func NewRoomEchoHandler(
 		RestoreUsecase:       restoreUC,
 		JoinRoomUsecase:      joinRoomUC,
 		AddSingleUSerUsecase: addSingleUserUC,
+		GetUserByIDUsecase:   getUserByIDUC,
 	}
 }
 
@@ -147,14 +148,21 @@ func (h *RoomEchoHandler) GetAllRooms(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	var roomsDTO []d.RoomDTO
+	var roomsDTO []d.RoomDetailedDTO
 	for _, room := range rooms {
-		roomDTO := &d.RoomDTO{
+
+		admin, err := h.GetUserByIDUsecase.Execute(room.AdminID())
+
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+
+		roomDTO := &d.RoomDetailedDTO{
 			ID:          room.ID().Id,
 			LinkInvite:  room.LinkInvite().LinkInvite,
 			IsFormal:    room.IsFormal().IsFormal,
-			Name:        room.Name().Name,
-			AdminID:     room.AdminID().Id,
+			RoomTitle:   room.Name().Name,
+			AdminName:   admin.FullName().Lastname + " " + admin.FullName().Name,
 			Description: room.Description().Description,
 			RoomCode:    room.InviteCode().Code,
 		}
@@ -179,12 +187,17 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	roomDTO := &d.RoomDTO{
+	admin, err := h.GetUserByIDUsecase.Execute(room.AdminID())
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	roomDTO := &d.RoomDetailedDTO{
 		ID:          room.ID().Id,
 		LinkInvite:  room.LinkInvite().LinkInvite,
-		IsFormal:    room.IsFormal().IsFormal,
-		Name:        room.Name().Name,
-		AdminID:     room.AdminID().Id,
+		RoomTitle:   room.Name().Name,
+		AdminName:   admin.FullName().Lastname + " " + admin.FullName().Name,
 		Description: room.Description().Description,
 		RoomCode:    room.InviteCode().Code,
 	}
@@ -213,14 +226,20 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	var roomsDTO []d.RoomDTO
+	admin, err := h.GetUserByIDUsecase.Execute(*userID)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	var roomsDTO []d.RoomDetailedDTO
 	for _, room := range rooms {
-		roomDTO := &d.RoomDTO{
+		roomDTO := &d.RoomDetailedDTO{
 			ID:         room.ID().Id,
 			LinkInvite: room.LinkInvite().LinkInvite,
 			IsFormal:   room.IsFormal().IsFormal,
-			Name:       room.Name().Name,
-			AdminID:    room.AdminID().Id,
+			RoomTitle:  room.Name().Name,
+			AdminName:  admin.FullName().Name + " " + admin.FullName().Lastname,
 			RoomCode:   room.InviteCode().Code,
 		}
 		roomsDTO = append(roomsDTO, *roomDTO)
@@ -251,7 +270,7 @@ func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	admin, err := userHandler.Execute(room.AdminID())
+	admin, err := h.GetUserByIDUsecase.Execute(room.AdminID())
 
 	if err != nil {
 		if errors.Is(err, uerr.ErrUserNotFound) {
