@@ -98,6 +98,7 @@ func (s *EchoServer) InitializeUser() *u.UserXormRepository {
 	loginUseCase := userUsecase.NewLoginUsecase(userRepo)
 	restoreUseCase := userUsecase.NewRestoreUsecase(userRepo)
 	changePasswordUseCase := userUsecase.NewChangePasswordUsecase(userRepo)
+	updateUseCase := userUsecase.NewUpdateUsecase(userRepo)
 	// Initialize Handler
 	userHandler := u.NewUserEchoHandler(
 		createUserUseCase,
@@ -108,6 +109,7 @@ func (s *EchoServer) InitializeUser() *u.UserXormRepository {
 		loginUseCase,
 		restoreUseCase,
 		changePasswordUseCase,
+		updateUseCase,
 	)
 
 	// Initialize User Router
@@ -162,6 +164,7 @@ func (s *EchoServer) InitializeRoom(userRepo *u.UserXormRepository) *r.RoomXormR
 	restoreUseCase := roomUsecase.NewRestoreUsecase(roomRepo)
 	joinUsecase := roomUsecase.NewJoinRoomUsecase(roomRepo)
 	AddSingleUserUsecase := roomUsecaseAddUsers.NewAddSingleUserUsecase(roomRepo, userRepo)
+	UpdateRoomUseCase := roomUsecase.NewUpdateRoomUsecase(roomRepo)
 
 	roomHandler := r.NewRoomEchoHandler(
 		createRoomUseCase,
@@ -172,6 +175,7 @@ func (s *EchoServer) InitializeRoom(userRepo *u.UserXormRepository) *r.RoomXormR
 		restoreUseCase,
 		joinUsecase,
 		AddSingleUserUsecase,
+		UpdateRoomUseCase,
 	)
 	r.InitializeRoomEchoRouter(s.app, roomHandler)
 

@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"errors"
 	"suffgo/cmd/database"
 	d "suffgo/internal/rooms/domain"
 	re "suffgo/internal/rooms/domain/errors"
@@ -8,7 +9,7 @@ import (
 	m "suffgo/internal/rooms/infrastructure/models"
 	se "suffgo/internal/shared/domain/errors"
 	sv "suffgo/internal/shared/domain/valueObjects"
-	um"suffgo/internal/userRooms/infrastructure/models"
+	um "suffgo/internal/userRooms/infrastructure/models"
 )
 
 type RoomXormRepository struct {
@@ -176,9 +177,9 @@ func (s *RoomXormRepository) GetRoomByCode(inviteCode string) (uint, error) {
 	return register[0].RoomID, nil
 }
 
-//agrego un registro a user_room (para usuario registrado)
+// agrego un registro a user_room (para usuario registrado)
 func (s *RoomXormRepository) AddToWhitelist(roomID sv.ID, userID sv.ID) error {
-	
+
 	reg := um.UserRoom{
 		UserID: userID.Id,
 		RoomID: roomID.Id,
@@ -193,7 +194,7 @@ func (s *RoomXormRepository) AddToWhitelist(roomID sv.ID, userID sv.ID) error {
 	return nil
 }
 
-func (s * RoomXormRepository) UserInWhitelist(roomID sv.ID, userID sv.ID) (bool, error) {
+func (s *RoomXormRepository) UserInWhitelist(roomID sv.ID, userID sv.ID) (bool, error) {
 	var register []um.UserRoom
 	err := s.db.GetDb().Where("room_id = ? and user_id = ?", roomID.Id, userID.Id).Find(&register)
 
@@ -206,4 +207,42 @@ func (s * RoomXormRepository) UserInWhitelist(roomID sv.ID, userID sv.ID) (bool,
 	}
 
 	return true, nil
+}
+
+func (r *RoomXormRepository) Update(room *d.Room) (*d.Room, error) {
+	// Extraer el ID
+	roomID := room.ID().Id
+
+	// Verificar si el ID existe antes de actualizar
+	var existingRoom m.Room
+	found, err := r.db.GetDb().ID(roomID).Get(&existingRoom)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, errors.New("room not found")
+	}
+
+	// Convertir `room` al modelo de base de datos
+	updateRoom := mappers.DomainToModel(room)
+
+	// Ejecutar la actualización
+	affected, err := r.db.GetDb().
+		ID(roomID).
+		Update(updateRoom)
+
+	if err != nil {
+		return nil, err
+	}
+	if affected == 0 {
+		return nil, errors.New("no rows were updated")
+	}
+
+	// Convertir de modelo a dominio antes de retornar
+	updatedRoom, err := mappers.ModelToDomain(updateRoom)
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedRoom, nil
 }

@@ -32,6 +32,7 @@ type RoomEchoHandler struct {
 	RestoreUsecase       *r.RestoreUsecase
 	JoinRoomUsecase      *r.JoinRoomUsecase
 	AddSingleUSerUsecase *addUsers.AddSingleUserUsecase
+	UpdateRoomUsecase    *r.UpdateRoomUsecase
 }
 
 func NewRoomEchoHandler(
@@ -43,6 +44,7 @@ func NewRoomEchoHandler(
 	restoreUC *r.RestoreUsecase,
 	joinRoomUC *r.JoinRoomUsecase,
 	addSingleUserUC *addUsers.AddSingleUserUsecase,
+	updateUC *r.UpdateRoomUsecase,
 ) *RoomEchoHandler {
 	return &RoomEchoHandler{
 		CreateRoomUsecase:    creatUC,
@@ -53,6 +55,7 @@ func NewRoomEchoHandler(
 		RestoreUsecase:       restoreUC,
 		JoinRoomUsecase:      joinRoomUC,
 		AddSingleUSerUsecase: addSingleUserUC,
+		UpdateRoomUsecase:    updateUC,
 	}
 }
 
@@ -81,7 +84,6 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 		return err
 	}
 
-
 	description, err := v.NewDescription(req.Description)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -102,13 +104,13 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 	}
 
 	roomDTO := &d.RoomDTO{
-		ID:         createdRoom.ID().Id,
-		LinkInvite: createdRoom.LinkInvite().LinkInvite,
-		IsFormal:   createdRoom.IsFormal().IsFormal,
-		Name:       createdRoom.Name().Name,
-		AdminID:    createdRoom.AdminID().Id,
+		ID:          createdRoom.ID().Id,
+		LinkInvite:  createdRoom.LinkInvite().LinkInvite,
+		IsFormal:    createdRoom.IsFormal().IsFormal,
+		Name:        createdRoom.Name().Name,
+		AdminID:     createdRoom.AdminID().Id,
 		Description: createdRoom.Description().Description,
-		RoomCode:   createdRoom.InviteCode().Code,
+		RoomCode:    createdRoom.InviteCode().Code,
 	}
 
 	response := map[string]interface{}{
@@ -148,13 +150,13 @@ func (h *RoomEchoHandler) GetAllRooms(c echo.Context) error {
 	var roomsDTO []d.RoomDTO
 	for _, room := range rooms {
 		roomDTO := &d.RoomDTO{
-			ID:         room.ID().Id,
-			LinkInvite: room.LinkInvite().LinkInvite,
-			IsFormal:   room.IsFormal().IsFormal,
-			Name:       room.Name().Name,
-			AdminID:    room.AdminID().Id,
+			ID:          room.ID().Id,
+			LinkInvite:  room.LinkInvite().LinkInvite,
+			IsFormal:    room.IsFormal().IsFormal,
+			Name:        room.Name().Name,
+			AdminID:     room.AdminID().Id,
 			Description: room.Description().Description,
-			RoomCode:   room.InviteCode().Code,
+			RoomCode:    room.InviteCode().Code,
 		}
 		fmt.Println("Hola")
 		roomsDTO = append(roomsDTO, *roomDTO)
@@ -179,13 +181,13 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 	}
 
 	roomDTO := &d.RoomDTO{
-		ID:         room.ID().Id,
-		LinkInvite: room.LinkInvite().LinkInvite,
-		IsFormal:   room.IsFormal().IsFormal,
-		Name:       room.Name().Name,
-		AdminID:    room.AdminID().Id,
+		ID:          room.ID().Id,
+		LinkInvite:  room.LinkInvite().LinkInvite,
+		IsFormal:    room.IsFormal().IsFormal,
+		Name:        room.Name().Name,
+		AdminID:     room.AdminID().Id,
 		Description: room.Description().Description,
-		RoomCode:   room.InviteCode().Code,
+		RoomCode:    room.InviteCode().Code,
 	}
 	return c.JSON(http.StatusOK, roomDTO)
 }
@@ -252,13 +254,13 @@ func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 	}
 
 	roomDTO := &d.RoomDTO{
-		ID:         room.ID().Id,
-		LinkInvite: room.LinkInvite().LinkInvite,
-		IsFormal:   room.IsFormal().IsFormal,
-		Name:       room.Name().Name,
-		AdminID:    room.AdminID().Id,
+		ID:          room.ID().Id,
+		LinkInvite:  room.LinkInvite().LinkInvite,
+		IsFormal:    room.IsFormal().IsFormal,
+		Name:        room.Name().Name,
+		AdminID:     room.AdminID().Id,
 		Description: room.Description().Description,
-		RoomCode:   room.InviteCode().Code,
+		RoomCode:    room.InviteCode().Code,
 	}
 
 	response := map[string]interface{}{
@@ -407,4 +409,78 @@ func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
 	}
 
 	return nil
+}
+
+func (h *RoomEchoHandler) Update(c echo.Context) error {
+	// Obtener ID de la sala desde la URL
+	roomIDStr := c.Param("id")
+	roomID, err := strconv.Atoi(roomIDStr)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room ID"})
+	}
+
+	// Obtener la solicitud del cuerpo
+	var req d.RoomCreateRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	// Crear el objeto Room a partir de la solicitud
+	// Validar los value objects antes de continuar
+
+	id, err := sv.NewID(uint(roomID))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	linkInvite, err := v.NewLinkInvite(req.LinkInvite)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room name"})
+	}
+
+	name, err := v.NewName(req.Name)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room name"})
+	}
+
+	description, err := v.NewDescription(req.Description)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room description"})
+	}
+
+	isFormal, err := v.NewIsFormal(req.IsFormal)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room name"})
+	}
+
+	adminID, err := GetUserIDFromSession(c) // Usar el ID del admin actual o el que corresponda
+
+	room := d.NewRoom(
+		id,
+		*linkInvite, // no se modifica el linkInvite
+		*isFormal,
+		*name,
+		adminID,
+		*description,
+	)
+
+	updatedRoom, err := h.UpdateRoomUsecase.Execute(room)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	// Devolver la respuesta con la sala actualizada
+	roomDTO := d.RoomDTO{
+		ID:          updatedRoom.ID().Id,
+		LinkInvite:  updatedRoom.LinkInvite().LinkInvite,
+		IsFormal:    updatedRoom.IsFormal().IsFormal,
+		Name:        updatedRoom.Name().Name,
+		AdminID:     updatedRoom.AdminID().Id,
+		Description: updatedRoom.Description().Description,
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"success": "room updated successfully",
+		"room":    roomDTO,
+	})
 }

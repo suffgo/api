@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	u "suffgo/internal/users/application/useCases"
@@ -28,6 +29,7 @@ type UserEchoHandler struct {
 	LoginUsecase          *u.LoginUsecase
 	RestoreUsecase        *u.RestoreUsecase
 	ChangePasswordUsecase *u.ChangePassword
+	UpdateUsecase         *u.UpdateUsecase
 }
 
 // Constructor for UserEchoHandler
@@ -40,6 +42,7 @@ func NewUserEchoHandler(
 	loginUC *u.LoginUsecase,
 	restoreUC *u.RestoreUsecase,
 	changePassUC *u.ChangePassword,
+	updateUC *u.UpdateUsecase,
 ) *UserEchoHandler {
 	return &UserEchoHandler{
 		CreateUserUsecase:     createUC,
@@ -50,6 +53,7 @@ func NewUserEchoHandler(
 		LoginUsecase:          loginUC,
 		RestoreUsecase:        restoreUC,
 		ChangePasswordUsecase: changePassUC,
+		UpdateUsecase:         updateUC,
 	}
 }
 
@@ -364,5 +368,107 @@ func (h *UserEchoHandler) ChangePassword(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]string{
 		"success": "Password changed successfully",
+	})
+}
+
+func (h *UserEchoHandler) Update(c echo.Context) error {
+	// Obtener el ID del usuario logueado desde el contexto
+	userIDRaw := c.Get("user_id")
+	if userIDRaw == nil {
+		fmt.Println("[ERROR] userID is missing from context")
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
+	}
+
+	userIDStr, ok := userIDRaw.(string)
+	if !ok || userIDStr == "" {
+		fmt.Println("[ERROR] userID is empty or not set correctly in context")
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
+	}
+
+	fmt.Println("[DEBUG] User ID from context:", userIDStr)
+
+	// Convertir el ID del usuario de string a uint
+	userIDInt, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		fmt.Println("[ERROR] Invalid user ID format:", err)
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid user ID"})
+	}
+
+	userID := uint(userIDInt)
+	fmt.Println("[DEBUG] Parsed user ID:", userID)
+
+	// Crear el ID del usuario utilizando el value object
+	id, err := sv.NewID(userID)
+	if err != nil {
+		fmt.Println("[ERROR] Failed to create ID:", err)
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	// Bind del cuerpo de la solicitud
+	var req d.UserSafeDTO
+	if err := c.Bind(&req); err != nil {
+		fmt.Println("[ERROR] Failed to bind request:", err)
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+	fmt.Println("[DEBUG] Parsed request:", req)
+
+	// Validar y crear los value objects
+	fullName, err := v.NewFullName(req.Name, req.Lastname)
+	if err != nil {
+		fmt.Println("[ERROR] Invalid full name:", err)
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	username, err := v.NewUserName(req.Username)
+	if err != nil {
+		fmt.Println("[ERROR] Invalid username:", err)
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	dni, err := v.NewDni(req.Dni)
+	if err != nil {
+		fmt.Println("[ERROR] Invalid DNI:", err)
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	email, err := v.NewEmail(req.Email)
+	if err != nil {
+		fmt.Println("[ERROR] Invalid email:", err)
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	// Crear el objeto User con los datos actualizados
+	user := d.NewUser(
+		id,
+		*fullName,
+		*username,
+		*dni,
+		*email,
+		v.Password{}, // No actualizamos la contraseña
+	)
+	fmt.Println("[DEBUG] User object created:", user)
+
+	// Llamar al caso de uso para actualizar el usuario
+	updatedUser, err := h.UpdateUsecase.Execute(user)
+	if err != nil {
+		fmt.Println("[ERROR] Failed to update user:", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	fmt.Println("[DEBUG] Updated user received:", updatedUser)
+
+	// Crear el DTO para la respuesta
+	userDTO := &d.UserSafeDTO{
+		ID:       updatedUser.ID().Id,
+		Name:     updatedUser.FullName().Name,
+		Lastname: updatedUser.FullName().Lastname,
+		Username: updatedUser.Username().Username,
+		Dni:      updatedUser.Dni().Dni,
+		Email:    updatedUser.Email().Email,
+	}
+
+	// Devolver la respuesta
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"success": "user updated successfully",
+		"user":    userDTO,
 	})
 }

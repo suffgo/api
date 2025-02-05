@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"fmt"
+	"log"
 	"suffgo/cmd/database"
 	se "suffgo/internal/shared/domain/errors"
 	sv "suffgo/internal/shared/domain/valueObjects"
@@ -24,7 +25,7 @@ func NewUserXormRepository(db database.Database) *UserXormRepository {
 
 func (s *UserXormRepository) GetByID(id sv.ID) (*d.User, error) {
 	userModel := new(m.Users)
-	has, err := s.db.GetDb().ID(id.Id).Get(userModel)
+	has, err := s.db.GetDb().ID(id.Id).Where("(deleted_at IS NULL OR deleted_at = '') AND id = ?", id).Get(&userModel)
 	if err != nil {
 		return nil, err
 	}
@@ -174,27 +175,18 @@ func (s *UserXormRepository) Save(user d.User) (*d.User, error) {
 	return domusr, nil
 }
 
-func (s *UserXormRepository) Update(user *d.User) error {
-	// Primero verificamos si existe el usuario
-	existingUser := new(m.Users)
-	exists, err := s.db.GetDb().ID(user.ID().Id).Get(existingUser)
+func (s *UserXormRepository) Update(user d.User) (*d.User, error) {
+	userID := user.ID().Id
+	affected, err := s.db.GetDb().ID(userID).Update(&user)
 	if err != nil {
-		return fmt.Errorf("failed to check user existence: %w", err)
-	}
-	if !exists {
-		return fmt.Errorf("user not found with ID %d", user.ID().Id)
+		log.Printf("[ERROR] Failed to update user: %v", err)
+		return nil, err
 	}
 
-	// Si existe, procedemos a actualizarlo
-	userModel := mappers.DomainToModel(user)
-	affected, err := s.db.GetDb().ID(user.ID().Id).Update(userModel)
-	if err != nil {
-		return fmt.Errorf("failed to update user: %w", err)
-	}
-
+	// Verificar si se actualizó alguna fila
 	if affected == 0 {
-		return fmt.Errorf("no rows were affected when updating user %d", user.ID().Id)
+		return nil, fmt.Errorf("no rows were updated")
 	}
 
-	return nil
+	return &user, nil
 }

@@ -43,7 +43,8 @@ func (s *ChangePassword) Execute(email v.Email, newPassword v.Password) error {
 	)
 
 	// Actualizar en la base de datos
-	if err := s.repository.Update(updateUser); err != nil {
+	_, err = s.repository.Update(*updateUser) // Manejar ambos valores de retorno
+	if err != nil {
 		return fmt.Errorf("failed to update user: %w", err)
 	}
 

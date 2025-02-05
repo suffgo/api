@@ -20,4 +20,5 @@ func InitializeRoomEchoRouter(e *echo.Echo, handler *RoomEchoHandler) {
 	roomGroup.POST("/join", handler.JoinRoom)
 	roomGroup.POST("/addUser", handler.AddSingleUser)
 	roomGroup.GET("/ws", handler.WsHandler)
+	roomGroup.PUT("/update/:id", handler.Update)
 }
