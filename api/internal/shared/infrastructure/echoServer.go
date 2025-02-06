@@ -189,11 +189,13 @@ func (s *EchoServer) InitializeSettingRoom() {
 	deleteSettingRoomUseCase := settingRoomUsecase.NewDeleteUsecase(settingRoomRepo)
 	getAllSettingRoomUseCase := settingRoomUsecase.NewGetAllUsecase(settingRoomRepo)
 	getSettingRoomByIDUseCase := settingRoomUsecase.NewGetByIDUsecase(settingRoomRepo)
+	updateSettingRoom := settingRoomUsecase.NewUpdateSettingRoomUsecase(settingRoomRepo)
 	settingRoomHandler := sr.NewSettingRoomEchoHandler(
 		createSettingRoomUseCase,
 		deleteSettingRoomUseCase,
 		getAllSettingRoomUseCase,
 		getSettingRoomByIDUseCase,
+		updateSettingRoom,
 	)
 	sr.InitializeSettingRoomEchoRouter(s.app, settingRoomHandler)
 }

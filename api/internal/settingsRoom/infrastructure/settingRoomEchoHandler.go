@@ -19,6 +19,7 @@ type SettingRoomEchoHandler struct {
 	DeleteSettingRoomUsecase  *s.DeleteUsecase
 	GetAllSettingRoomUsecase  *s.GetAllUsecase
 	GetSettingRoomByIDUsecase *s.GetByIDUsecase
+	UpdateSettingRoomUsecase  *s.UpdateSettingRoomUsecase
 }
 
 func NewSettingRoomEchoHandler(
@@ -26,18 +27,19 @@ func NewSettingRoomEchoHandler(
 	deleteUC *s.DeleteUsecase,
 	getAllUC *s.GetAllUsecase,
 	getByIDUC *s.GetByIDUsecase,
+	updateUC *s.UpdateSettingRoomUsecase,
 ) *SettingRoomEchoHandler {
 	return &SettingRoomEchoHandler{
 		CreateSettingRoomUsecase:  createUC,
 		DeleteSettingRoomUsecase:  deleteUC,
 		GetAllSettingRoomUsecase:  getAllUC,
 		GetSettingRoomByIDUsecase: getByIDUC,
+		UpdateSettingRoomUsecase:  updateUC,
 	}
 }
 
 func (h *SettingRoomEchoHandler) CreateSettingRoom(c echo.Context) error {
 	var req d.SettingRoomCreateRequest
-
 
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -182,4 +184,84 @@ func (h *SettingRoomEchoHandler) GetSettingRoomByID(c echo.Context) error {
 		RoomID:        settingRoom.RoomID().Id,
 	}
 	return c.JSON(http.StatusOK, settingRoomDTO)
+}
+
+func (h *SettingRoomEchoHandler) Update(c echo.Context) error {
+	settingRoomIDStr := c.Param("id")
+
+	settingRoomID, err := strconv.Atoi(settingRoomIDStr)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room ID"})
+	}
+
+	var req d.SettingRoomCreateRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	id, err := sv.NewID(uint(settingRoomID))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	privacy, err := v.NewPrivacy(req.Privacy)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	ProposalTimer, err := v.NewProposalTimer(req.ProposalTimer)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	Quorum, err := v.NewQuorum(req.Quorum)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	TimeAndDate, err := v.NewTimeAndDate(req.Time, req.Date)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	VoterLimit, err := v.NewVoterLimit(req.VoterLimit)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	RoomID, err := sv.NewID(req.RoomID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	settingRoom := d.NewSettingRoom(
+		id,
+		privacy,
+		ProposalTimer,
+		*Quorum,
+		*TimeAndDate,
+		VoterLimit,
+		RoomID,
+	)
+
+	updatedSettingRoom, err := h.UpdateSettingRoomUsecase.Execute(settingRoom)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	settingRoomDTO := d.SettingRoomDTO{
+		ID:            updatedSettingRoom.ID().Id,
+		Privacy:       updatedSettingRoom.Privacy().Privacy,
+		ProposalTimer: updatedSettingRoom.ProposalTimer().ProposalTimer,
+		Quorum:        updatedSettingRoom.Quorum().Quorum,
+		Time:          updatedSettingRoom.TimeAndDate().Time,
+		Date:          updatedSettingRoom.TimeAndDate().Date,
+		VoterLimit:    updatedSettingRoom.ProposalTimer().ProposalTimer,
+		RoomID:        updatedSettingRoom.ID().Id,
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"success":     "settingRoom updated successfully",
+		"settingRoom": settingRoomDTO,
+	})
 }
