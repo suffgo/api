@@ -23,12 +23,9 @@ func (s *JoinRoomUsecase) Execute(roomCode string, userID sv.ID) (*domain.Room, 
 	//Obtener sala a traves de codigo
 	roomID, err := s.joinRoomUsecaseRepository.GetRoomByCode(roomCode)
 	
-	
-	//validar error, si es nulo, el codigo no es valido
 	if err != nil {
 		return nil, err
 	}
-
 
 	rID := sv.ID{Id: roomID}
 	//obtener datos de sala

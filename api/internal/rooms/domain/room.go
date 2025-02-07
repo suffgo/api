@@ -3,6 +3,7 @@ package domain
 import (
 	v "suffgo/internal/rooms/domain/valueObjects"
 	sv "suffgo/internal/shared/domain/valueObjects"
+	"time"
 )
 
 type (
@@ -24,6 +25,18 @@ type (
 		AdminID     uint   `json:"admin_id"`
 		Description string `json:"description"`
 		RoomCode    string `json:"room_code"`
+	}
+
+	//Dto para informacion util al frontend
+	RoomDetailedDTO struct {
+		ID          uint       `json:"id"`
+		LinkInvite  string     `json:"link_invite"`
+		IsFormal    bool       `json:"is_formal"`
+		RoomTitle   string     `json:"room_title"` //es el nombre
+		AdminName   string     `json:"admin_name"`
+		Description string     `json:"description"`
+		RoomCode    string     `json:"room_code"`
+		StartTime   *time.Time `json:"start_time"`
 	}
 
 	RoomCreateRequest struct {
@@ -52,12 +65,12 @@ func NewRoom(
 	description v.Description,
 ) *Room {
 	return &Room{
-		id:         id,
-		linkInvite: linkInvite,
-		isFormal:   isFormal,
-		name:       name,
-		adminID:    adminID,
-		inviteCode: nil,
+		id:          id,
+		linkInvite:  linkInvite,
+		isFormal:    isFormal,
+		name:        name,
+		adminID:     adminID,
+		inviteCode:  nil,
 		description: description,
 	}
 }

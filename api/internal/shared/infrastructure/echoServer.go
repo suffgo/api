@@ -67,12 +67,12 @@ func (s *EchoServer) Start() {
 	store := sessions.NewCookieStore(authKey)
 	s.app.Use(session.Middleware(store))
 
+	s.InitializeSettingRoom()
 	userRepo := s.InitializeUser()
 	roomRepo := s.InitializeRoom(userRepo)
 	s.InitializeProposal(roomRepo)
 	s.InitializeVote()
 	s.InitializeOption()
-	s.InitializeSettingRoom()
 
 	s.app.GET("/v1/health", func(c echo.Context) error {
 		return c.String(200, "OK")
@@ -86,6 +86,8 @@ func (s *EchoServer) Start() {
 	s.app.Logger.Fatal(s.app.Start(serverUrl))
 }
 
+var getUserByIDUseCase *userUsecase.GetByIDUsecase
+
 func (s *EchoServer) InitializeUser() *u.UserXormRepository {
 	userRepo := u.NewUserXormRepository(s.db)
 
@@ -95,6 +97,7 @@ func (s *EchoServer) InitializeUser() *u.UserXormRepository {
 	getAllUsersUseCase := userUsecase.NewGetAllUsecase(userRepo)
 	getUserByIDUseCase := userUsecase.NewGetByIDUsecase(userRepo)
 	getUserByEmail := userUsecase.NewGetByEmailUsecase(userRepo)
+	getUserByIDUseCase = userUsecase.NewGetByIDUsecase(userRepo)
 	loginUseCase := userUsecase.NewLoginUsecase(userRepo)
 	restoreUseCase := userUsecase.NewRestoreUsecase(userRepo)
 	changePasswordUseCase := userUsecase.NewChangePasswordUsecase(userRepo)
@@ -176,12 +179,16 @@ func (s *EchoServer) InitializeRoom(userRepo *u.UserXormRepository) *r.RoomXormR
 		joinUsecase,
 		AddSingleUserUsecase,
 		UpdateRoomUseCase,
+		getUserByIDUseCase,
+		getByRoomIdUsecase,
 	)
 	r.InitializeRoomEchoRouter(s.app, roomHandler)
 
 	return roomRepo
 
 }
+
+var getByRoomIdUsecase *settingRoomUsecase.GetByRoomIDUsecase
 
 func (s *EchoServer) InitializeSettingRoom() {
 	settingRoomRepo := sr.NewSettingRoomXormRepository(s.db)
@@ -190,12 +197,14 @@ func (s *EchoServer) InitializeSettingRoom() {
 	getAllSettingRoomUseCase := settingRoomUsecase.NewGetAllUsecase(settingRoomRepo)
 	getSettingRoomByIDUseCase := settingRoomUsecase.NewGetByIDUsecase(settingRoomRepo)
 	updateSettingRoom := settingRoomUsecase.NewUpdateSettingRoomUsecase(settingRoomRepo)
+	getByRoomIdUsecase = settingRoomUsecase.NewGetByRoomID(settingRoomRepo)
 	settingRoomHandler := sr.NewSettingRoomEchoHandler(
 		createSettingRoomUseCase,
 		deleteSettingRoomUseCase,
 		getAllSettingRoomUseCase,
 		getSettingRoomByIDUseCase,
 		updateSettingRoom,
+		getByRoomIdUsecase,
 	)
 	sr.InitializeSettingRoomEchoRouter(s.app, settingRoomHandler)
 }

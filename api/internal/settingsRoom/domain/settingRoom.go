@@ -12,7 +12,7 @@ type (
 		privacy       v.Privacy
 		proposalTimer v.ProposalTimer
 		quorum        *v.Quorum
-		timeAndDate   *v.TimeAndDate
+		startTime     *v.DateTime
 		voterLimit    v.VoterLimit
 		roomID        *sv.ID
 	}
@@ -22,20 +22,18 @@ type (
 		Privacy       bool       `json:"privacy"`
 		ProposalTimer int        `json:"proposal_timer"`
 		Quorum        *int       `json:"quorum"`
-		Time          *time.Time `json:"time"`
-		Date          *time.Time `json:"date"`
+		StartTime     *time.Time `json:"start_time"`
 		VoterLimit    int        `json:"voter_limit"`
 		RoomID        uint       `json:"room_id"`
 	}
 
 	SettingRoomCreateRequest struct {
-		Privacy       bool       `json:"privacy"`
-		ProposalTimer int        `json:"proposal_timer"`
-		Quorum        *int       `json:"quorum"`
-		Time          *time.Time `json:"time"`
-		Date          *time.Time `json:"date"`
-		VoterLimit    int        `json:"voter_limit"`
-		RoomID        uint       `json:"room_id"`
+		Privacy       bool   `json:"privacy"`
+		ProposalTimer int    `json:"proposal_timer"`
+		Quorum        *int   `json:"quorum"`
+		DateTime      *time.Time `json:"date_time"`
+		VoterLimit    int    `json:"voter_limit"`
+		RoomID        uint   `json:"room_id"`
 	}
 )
 
@@ -44,7 +42,7 @@ func NewSettingRoom(
 	privacy v.Privacy,
 	proposalTimer v.ProposalTimer,
 	quorum v.Quorum,
-	timeAndDate v.TimeAndDate,
+	startTime v.DateTime,
 	voterLimit v.VoterLimit,
 	roomID *sv.ID,
 ) *SettingRoom {
@@ -53,7 +51,7 @@ func NewSettingRoom(
 		privacy:       privacy,
 		proposalTimer: proposalTimer,
 		quorum:        &quorum,
-		timeAndDate:   &timeAndDate,
+		startTime:     &startTime,
 		voterLimit:    voterLimit,
 		roomID:        roomID,
 	}
@@ -75,8 +73,8 @@ func (s *SettingRoom) Quorum() v.Quorum {
 	return *s.quorum
 }
 
-func (s *SettingRoom) TimeAndDate() v.TimeAndDate {
-	return *s.timeAndDate
+func (s *SettingRoom) StartTime() v.DateTime {
+	return *s.startTime
 }
 
 func (s *SettingRoom) VoterLimit() v.VoterLimit {

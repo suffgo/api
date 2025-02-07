@@ -1,8 +1,9 @@
 package usecases
 
 import (
-	e "suffgo/internal/settingsRoom/domain/errors"
+	"errors"
 	"suffgo/internal/settingsRoom/domain"
+	e "suffgo/internal/settingsRoom/domain/errors"
 )
 
 type (
@@ -18,24 +19,20 @@ func NewCreateUsecase(repository domain.SettingRoomRepository) *CreateUsecase {
 }
 
 func (s *CreateUsecase) Execute(settingRoom domain.SettingRoom) error {
-	
-	//tengo que ver si la existe 
-
 
 	//tengo que fijarme si es una creacion o una actualizacion
 	existingSettingRoom, err := s.repository.GetByRoom(settingRoom.RoomID())
 
-	if err != nil {
-		return err
-	}
-
-	if existingSettingRoom != nil {
+	if errors.Is(err, e.SettingRoomNotFoundError) {
+		err = s.repository.Save(settingRoom)
+		if err != nil {
+			return err
+		}
+	} else if existingSettingRoom != nil {
 		return e.ErrAlreadyExists
-	}
-
-	err = s.repository.Save(settingRoom)
-	if err != nil {
+	} else if err != nil {
 		return err
 	}
+
 	return nil
 }

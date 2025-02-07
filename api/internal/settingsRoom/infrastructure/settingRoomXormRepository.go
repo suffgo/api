@@ -3,7 +3,6 @@ package infrastructure
 import (
 	"errors"
 	"suffgo/cmd/database"
-	"suffgo/internal/settingsRoom/domain"
 	d "suffgo/internal/settingsRoom/domain"
 	se "suffgo/internal/settingsRoom/domain/errors"
 	"suffgo/internal/settingsRoom/infrastructure/mappers"
@@ -72,13 +71,12 @@ func (s *SettingRoomXormRepository) Delete(id sv.ID) error {
 	return nil
 }
 
-func (s *SettingRoomXormRepository) Save(settingRoom domain.SettingRoom) error {
+func (s *SettingRoomXormRepository) Save(settingRoom d.SettingRoom) error {
 	settingRoomModel := &m.SettingsRoom{
 		Privacy:       settingRoom.Privacy().Privacy,
 		ProposalTimer: settingRoom.ProposalTimer().ProposalTimer,
 		Quorum:        settingRoom.Quorum().Quorum,
-		Time:          settingRoom.TimeAndDate().Time,
-		Date:          settingRoom.TimeAndDate().Date,
+		StartTime:     settingRoom.StartTime().DateTime,
 		VoterLimit:    settingRoom.VoterLimit().VoterLimit,
 		RoomID:        settingRoom.RoomID().Id,
 	}
