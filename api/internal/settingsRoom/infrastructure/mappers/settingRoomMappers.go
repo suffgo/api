@@ -50,5 +50,5 @@ func ModelToDomain(settingRoomModel *m.SettingsRoom) (*domain.SettingRoom, error
 	if err != nil {
 		return nil, err
 	}
-	return domain.NewSettingRoom(id, privacy, proposalTimer, *quorum, *startTime, voterLimit, room), nil
+	return domain.NewSettingRoom(id, *privacy, proposalTimer, *quorum, *startTime, voterLimit, room), nil
 }

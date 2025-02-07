@@ -2,13 +2,13 @@ package valueobjects
 
 type (
 	Privacy struct {
-		Privacy bool
+		Privacy *bool
 	}
 )
 
-func NewPrivacy(privacy bool) (Privacy, error) {
+func NewPrivacy(privacy *bool) (*Privacy, error) {
 
-	return Privacy{
+	return &Privacy{
 		Privacy: privacy,
 	}, nil
 }

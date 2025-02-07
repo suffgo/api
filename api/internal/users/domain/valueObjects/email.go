@@ -40,7 +40,6 @@ func NewEmail(email string) (*Email, error) {
 		return nil, errors.New("invalid email")
 	}
 
-
 	return &Email{
 		Email: email,
 	}, nil

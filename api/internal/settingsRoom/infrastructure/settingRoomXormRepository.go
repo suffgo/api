@@ -1,8 +1,8 @@
 package infrastructure
 
 import (
+	"errors"
 	"suffgo/cmd/database"
-	"suffgo/internal/settingsRoom/domain"
 	d "suffgo/internal/settingsRoom/domain"
 	se "suffgo/internal/settingsRoom/domain/errors"
 	"suffgo/internal/settingsRoom/infrastructure/mappers"
@@ -71,7 +71,7 @@ func (s *SettingRoomXormRepository) Delete(id sv.ID) error {
 	return nil
 }
 
-func (s *SettingRoomXormRepository) Save(settingRoom domain.SettingRoom) error {
+func (s *SettingRoomXormRepository) Save(settingRoom d.SettingRoom) error {
 	settingRoomModel := &m.SettingsRoom{
 		Privacy:       settingRoom.Privacy().Privacy,
 		ProposalTimer: settingRoom.ProposalTimer().ProposalTimer,
@@ -104,4 +104,36 @@ func (s *SettingRoomXormRepository) GetByRoom(roomID sv.ID) (*d.SettingRoom, err
 		return nil, se.DataMappingError
 	}
 	return userEnt, nil
+}
+
+func (s *SettingRoomXormRepository) Update(settingRoom *d.SettingRoom) (*d.SettingRoom, error) {
+	settingRoomID := settingRoom.ID().Id
+
+	var existingSettingRoom m.SettingsRoom
+
+	found, err := s.db.GetDb().ID(settingRoomID).Get(&existingSettingRoom)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, errors.New("settingRoom not found")
+	}
+
+	updateSettingRoom := mappers.DomainToModel(settingRoom)
+
+	affected, err := s.db.GetDb().ID(settingRoomID).Update(updateSettingRoom)
+
+	if err != nil {
+		return nil, err
+	}
+	if affected == 0 {
+		return nil, errors.New("no rows were updated")
+	}
+
+	updatedSettingRoom, err := mappers.ModelToDomain(updateSettingRoom)
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedSettingRoom, nil
 }

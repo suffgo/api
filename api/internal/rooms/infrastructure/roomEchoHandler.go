@@ -40,6 +40,7 @@ type RoomEchoHandler struct {
 	AddSingleUSerUsecase *addUsers.AddSingleUserUsecase
 	GetUserByIDUsecase   *useruc.GetByIDUsecase
 	GetSrByRoom          *setRoomuc.GetByRoomIDUsecase
+	UpdateRoomUsecase    *r.UpdateRoomUsecase
 }
 
 func NewRoomEchoHandler(
@@ -53,6 +54,7 @@ func NewRoomEchoHandler(
 	addSingleUserUC *addUsers.AddSingleUserUsecase,
 	getUserByIDUC *useruc.GetByIDUsecase,
 	getSrByRoomUC *setRoomuc.GetByRoomIDUsecase,
+	updateUC *r.UpdateRoomUsecase,
 
 ) *RoomEchoHandler {
 	return &RoomEchoHandler{
@@ -66,6 +68,7 @@ func NewRoomEchoHandler(
 		AddSingleUSerUsecase: addSingleUserUC,
 		GetUserByIDUsecase:   getUserByIDUC,
 		GetSrByRoom:          getSrByRoomUC,
+		UpdateRoomUsecase:    updateUC,
 	}
 }
 
@@ -551,4 +554,78 @@ func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
 	}
 
 	return nil
+}
+
+func (h *RoomEchoHandler) Update(c echo.Context) error {
+	// Obtener ID de la sala desde la URL
+	roomIDStr := c.Param("id")
+	roomID, err := strconv.Atoi(roomIDStr)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room ID"})
+	}
+
+	// Obtener la solicitud del cuerpo
+	var req d.RoomCreateRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	// Crear el objeto Room a partir de la solicitud
+	// Validar los value objects antes de continuar
+
+	id, err := sv.NewID(uint(roomID))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	linkInvite, err := v.NewLinkInvite(req.LinkInvite)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room name"})
+	}
+
+	name, err := v.NewName(req.Name)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room name"})
+	}
+
+	description, err := v.NewDescription(req.Description)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room description"})
+	}
+
+	isFormal, err := v.NewIsFormal(req.IsFormal)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room name"})
+	}
+
+	adminID, err := GetUserIDFromSession(c) // Usar el ID del admin actual o el que corresponda
+
+	room := d.NewRoom(
+		id,
+		*linkInvite,
+		*isFormal,
+		*name,
+		adminID,
+		*description,
+	)
+
+	updatedRoom, err := h.UpdateRoomUsecase.Execute(room)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	// Devolver la respuesta con la sala actualizada
+	roomDTO := d.RoomDTO{
+		ID:          updatedRoom.ID().Id,
+		LinkInvite:  updatedRoom.LinkInvite().LinkInvite,
+		IsFormal:    updatedRoom.IsFormal().IsFormal,
+		Name:        updatedRoom.Name().Name,
+		AdminID:     updatedRoom.AdminID().Id,
+		Description: updatedRoom.Description().Description,
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"success": "room updated successfully",
+		"room":    roomDTO,
+	})
 }

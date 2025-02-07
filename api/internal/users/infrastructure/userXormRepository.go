@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"errors"
 	"suffgo/cmd/database"
 	se "suffgo/internal/shared/domain/errors"
 	sv "suffgo/internal/shared/domain/valueObjects"
@@ -38,6 +39,7 @@ func (s *UserXormRepository) GetByID(id sv.ID) (*d.User, error) {
 	}
 
 	return userEnt, nil
+
 }
 
 func (s *UserXormRepository) GetAll() ([]d.User, error) {
@@ -72,6 +74,7 @@ func (s *UserXormRepository) Delete(id sv.ID) error {
 	}
 
 	return nil
+
 }
 
 func (s *UserXormRepository) Restore(userID sv.ID) error {
@@ -79,7 +82,7 @@ func (s *UserXormRepository) Restore(userID sv.ID) error {
 
 	user := &m.Users{DeletedAt: nil}
 
-	affected, err := s.db.GetDb().Unscoped().ID(primitiveID).Cols("deleted_at").Update(user)
+	affected, err := s.db.GetDb().Unscoped().ID(primitiveID).Cols("delete_a_t").Update(user)
 	if err != nil {
 		return err
 	}
@@ -171,4 +174,36 @@ func (s *UserXormRepository) Save(user d.User) (*d.User, error) {
 	}
 
 	return domusr, nil
+}
+
+func (s *UserXormRepository) Update(user d.User) (*d.User, error) {
+	userID := user.ID().Id
+	var existingUser m.Users
+
+	found, err := s.db.GetDb().ID(userID).Get(&existingUser)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, errors.New("user not found")
+	}
+
+	updateUser := mappers.DomainToModel(&user)
+
+	affected, err := s.db.GetDb().ID(userID).Update(updateUser)
+
+	if err != nil {
+		return nil, err
+	}
+	if affected == 0 {
+		return nil, errors.New("no rows were updated")
+	}
+
+	updatedUser, err := mappers.ModelToDomain(updateUser)
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedUser, nil
+
 }

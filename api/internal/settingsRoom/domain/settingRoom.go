@@ -9,7 +9,7 @@ import (
 type (
 	SettingRoom struct {
 		id            *sv.ID
-		privacy       v.Privacy
+		privacy       *v.Privacy
 		proposalTimer v.ProposalTimer
 		quorum        *v.Quorum
 		startTime     *v.DateTime
@@ -19,7 +19,7 @@ type (
 
 	SettingRoomDTO struct {
 		ID            uint       `json:"id"`
-		Privacy       bool       `json:"privacy"`
+		Privacy       *bool      `json:"privacy"`
 		ProposalTimer int        `json:"proposal_timer"`
 		Quorum        *int       `json:"quorum"`
 		StartTime     *time.Time `json:"start_time"`
@@ -28,12 +28,12 @@ type (
 	}
 
 	SettingRoomCreateRequest struct {
-		Privacy       bool   `json:"privacy"`
-		ProposalTimer int    `json:"proposal_timer"`
-		Quorum        *int   `json:"quorum"`
+		Privacy       *bool      `json:"privacy"`
+		ProposalTimer int        `json:"proposal_timer"`
+		Quorum        *int       `json:"quorum"`
 		DateTime      *time.Time `json:"date_time"`
-		VoterLimit    int    `json:"voter_limit"`
-		RoomID        uint   `json:"room_id"`
+		VoterLimit    int        `json:"voter_limit"`
+		RoomID        uint       `json:"room_id"`
 	}
 )
 
@@ -48,7 +48,7 @@ func NewSettingRoom(
 ) *SettingRoom {
 	return &SettingRoom{
 		id:            id,
-		privacy:       privacy,
+		privacy:       &privacy,
 		proposalTimer: proposalTimer,
 		quorum:        &quorum,
 		startTime:     &startTime,
@@ -62,7 +62,7 @@ func (s *SettingRoom) ID() sv.ID {
 }
 
 func (s *SettingRoom) Privacy() v.Privacy {
-	return s.privacy
+	return *s.privacy
 }
 
 func (s *SettingRoom) ProposalTimer() v.ProposalTimer {
