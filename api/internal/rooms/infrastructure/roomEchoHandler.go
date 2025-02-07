@@ -602,7 +602,7 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 
 	room := d.NewRoom(
 		id,
-		*linkInvite, // no se modifica el linkInvite
+		*linkInvite,
 		*isFormal,
 		*name,
 		adminID,

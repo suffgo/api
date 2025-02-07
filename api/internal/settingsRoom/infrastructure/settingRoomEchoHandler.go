@@ -90,7 +90,7 @@ func (h *SettingRoomEchoHandler) CreateSettingRoom(c echo.Context) error {
 
 	settingRoom := d.NewSettingRoom(
 		newID,
-		privacy,
+		*privacy,
 		proposalTimer,
 		*quorum,
 		*timeAndDate,
@@ -206,6 +206,11 @@ func (h *SettingRoomEchoHandler) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
+	curretSettings, err := h.GetSettingRoomByIDUsecase.Execute(*id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
 	privacy, err := v.NewPrivacy(req.Privacy)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -231,19 +236,16 @@ func (h *SettingRoomEchoHandler) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	RoomID, err := sv.NewID(req.RoomID)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
-	}
+	RoomID := curretSettings.RoomID()
 
 	settingRoom := d.NewSettingRoom(
 		id,
-		privacy,
+		*privacy,
 		ProposalTimer,
 		*Quorum,
 		*DateTime,
 		VoterLimit,
-		RoomID,
+		&RoomID,
 	)
 
 	updatedSettingRoom, err := h.UpdateSettingRoomUsecase.Execute(settingRoom)

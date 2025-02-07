@@ -11,5 +11,6 @@ func InitializeSettingRoomEchoRouter(e *echo.Echo, handler *SettingRoomEchoHandl
 	settingRoomGroup.GET("", handler.GetAllSettingRoom)
 	settingRoomGroup.GET("/:id", handler.GetSettingRoomByID)
 	settingRoomGroup.DELETE("/:id", handler.DeleteSettingRoom)
+	settingRoomGroup.PUT("/:id", handler.Update)
 
 }
