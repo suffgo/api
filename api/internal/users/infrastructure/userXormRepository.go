@@ -1,8 +1,7 @@
 package infrastructure
 
 import (
-	"fmt"
-	"log"
+	"errors"
 	"suffgo/cmd/database"
 	se "suffgo/internal/shared/domain/errors"
 	sv "suffgo/internal/shared/domain/valueObjects"
@@ -25,7 +24,7 @@ func NewUserXormRepository(db database.Database) *UserXormRepository {
 
 func (s *UserXormRepository) GetByID(id sv.ID) (*d.User, error) {
 	userModel := new(m.Users)
-	has, err := s.db.GetDb().ID(id.Id).Where("(deleted_at IS NULL OR deleted_at = '') AND id = ?", id).Get(&userModel)
+	has, err := s.db.GetDb().ID(id.Id).Get(userModel)
 	if err != nil {
 		return nil, err
 	}
@@ -40,11 +39,12 @@ func (s *UserXormRepository) GetByID(id sv.ID) (*d.User, error) {
 	}
 
 	return userEnt, nil
+
 }
 
 func (s *UserXormRepository) GetAll() ([]d.User, error) {
 	var users []m.Users
-	err := s.db.GetDb().Where("delete_a_t IS NULL").Find(&users)
+	err := s.db.GetDb().Where("deleted_at IS NULL").Find(&users)
 	if err != nil {
 		return nil, err
 	}
@@ -74,6 +74,7 @@ func (s *UserXormRepository) Delete(id sv.ID) error {
 	}
 
 	return nil
+
 }
 
 func (s *UserXormRepository) Restore(userID sv.ID) error {
@@ -177,16 +178,32 @@ func (s *UserXormRepository) Save(user d.User) (*d.User, error) {
 
 func (s *UserXormRepository) Update(user d.User) (*d.User, error) {
 	userID := user.ID().Id
-	affected, err := s.db.GetDb().ID(userID).Update(&user)
+	var existingUser m.Users
+
+	found, err := s.db.GetDb().ID(userID).Get(&existingUser)
 	if err != nil {
-		log.Printf("[ERROR] Failed to update user: %v", err)
+		return nil, err
+	}
+	if !found {
+		return nil, errors.New("user not found")
+	}
+
+	updateUser := mappers.DomainToModel(&user)
+
+	affected, err := s.db.GetDb().ID(userID).Update(updateUser)
+
+	if err != nil {
+		return nil, err
+	}
+	if affected == 0 {
+		return nil, errors.New("no rows were updated")
+	}
+
+	updatedUser, err := mappers.ModelToDomain(updateUser)
+	if err != nil {
 		return nil, err
 	}
 
-	// Verificar si se actualizó alguna fila
-	if affected == 0 {
-		return nil, fmt.Errorf("no rows were updated")
-	}
+	return updatedUser, nil
 
-	return &user, nil
 }

@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -66,4 +67,28 @@ func logout(c echo.Context) error {
 	sess.Save(c.Request(), c.Response())
 
 	return nil
+}
+
+func GetAuthenticatedUserID(c echo.Context) (*sv.ID, error) {
+	userIDRaw := c.Get("user_id")
+	if userIDRaw == nil {
+		return nil, fmt.Errorf("usuario no autenticado: ID no encontrado en el contexto")
+	}
+
+	userIDStr, ok := userIDRaw.(string)
+	if !ok || userIDStr == "" {
+		return nil, fmt.Errorf("usuario no autenticado: ID inválido en el contexto")
+	}
+
+	userIDInt, err := strconv.ParseUint(userIDStr, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("ID de usuario inválido: %w", err)
+	}
+
+	id, err := sv.NewID(uint(userIDInt))
+	if err != nil {
+		return nil, fmt.Errorf("error al crear ID: %w", err)
+	}
+
+	return id, nil
 }

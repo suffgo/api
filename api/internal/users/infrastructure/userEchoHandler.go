@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	u "suffgo/internal/users/application/useCases"
@@ -372,37 +373,11 @@ func (h *UserEchoHandler) ChangePassword(c echo.Context) error {
 }
 
 func (h *UserEchoHandler) Update(c echo.Context) error {
-	// Obtener el ID del usuario logueado desde el contexto
-	userIDRaw := c.Get("user_id")
-	if userIDRaw == nil {
-		fmt.Println("[ERROR] userID is missing from context")
-		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
-	}
-
-	userIDStr, ok := userIDRaw.(string)
-	if !ok || userIDStr == "" {
-		fmt.Println("[ERROR] userID is empty or not set correctly in context")
-		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
-	}
-
-	fmt.Println("[DEBUG] User ID from context:", userIDStr)
-
-	// Convertir el ID del usuario de string a uint
-	userIDInt, err := strconv.ParseInt(userIDStr, 10, 64)
+	id, err := GetAuthenticatedUserID(c)
 	if err != nil {
-		fmt.Println("[ERROR] Invalid user ID format:", err)
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid user ID"})
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
 	}
-
-	userID := uint(userIDInt)
-	fmt.Println("[DEBUG] Parsed user ID:", userID)
-
-	// Crear el ID del usuario utilizando el value object
-	id, err := sv.NewID(userID)
-	if err != nil {
-		fmt.Println("[ERROR] Failed to create ID:", err)
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
-	}
+	log.Printf("[DEBUG] Authenticated user ID: %v", id)
 
 	// Bind del cuerpo de la solicitud
 	var req d.UserSafeDTO
@@ -437,6 +412,14 @@ func (h *UserEchoHandler) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
+	currentUser, err := h.GetUserByIDUsecase.Execute(*id)
+	if err != nil {
+		fmt.Println("[ERROR] Invalid User:", err)
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	currentPassword := currentUser.Password()
+
 	// Crear el objeto User con los datos actualizados
 	user := d.NewUser(
 		id,
@@ -444,7 +427,7 @@ func (h *UserEchoHandler) Update(c echo.Context) error {
 		*username,
 		*dni,
 		*email,
-		v.Password{}, // No actualizamos la contraseña
+		currentPassword, // No actualizamos la contraseña
 	)
 	fmt.Println("[DEBUG] User object created:", user)
 

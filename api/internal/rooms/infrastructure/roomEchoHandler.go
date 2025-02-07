@@ -160,9 +160,7 @@ func (h *RoomEchoHandler) GetAllRooms(c echo.Context) error {
 
 	var roomsDTO []d.RoomDetailedDTO
 	for _, room := range rooms {
-
 		admin, err := h.GetUserByIDUsecase.Execute(room.AdminID())
-
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
