@@ -95,7 +95,6 @@ func (s *EchoServer) InitializeUser() *u.UserXormRepository {
 	createUserUseCase := userUsecase.NewCreateUsecase(userRepo)
 	deleteUserUseCase := userUsecase.NewDeleteUsecase(userRepo)
 	getAllUsersUseCase := userUsecase.NewGetAllUsecase(userRepo)
-	getUserByIDUseCase := userUsecase.NewGetByIDUsecase(userRepo)
 	getUserByEmail := userUsecase.NewGetByEmailUsecase(userRepo)
 	getUserByIDUseCase = userUsecase.NewGetByIDUsecase(userRepo)
 	loginUseCase := userUsecase.NewLoginUsecase(userRepo)
@@ -178,9 +177,9 @@ func (s *EchoServer) InitializeRoom(userRepo *u.UserXormRepository) *r.RoomXormR
 		restoreUseCase,
 		joinUsecase,
 		AddSingleUserUsecase,
-		UpdateRoomUseCase,
 		getUserByIDUseCase,
 		getByRoomIdUsecase,
+		UpdateRoomUseCase,
 	)
 	r.InitializeRoomEchoRouter(s.app, roomHandler)
 

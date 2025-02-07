@@ -38,9 +38,9 @@ type RoomEchoHandler struct {
 	RestoreUsecase       *r.RestoreUsecase
 	JoinRoomUsecase      *r.JoinRoomUsecase
 	AddSingleUSerUsecase *addUsers.AddSingleUserUsecase
-	UpdateRoomUsecase    *r.UpdateRoomUsecase
 	GetUserByIDUsecase   *useruc.GetByIDUsecase
 	GetSrByRoom          *setRoomuc.GetByRoomIDUsecase
+	UpdateRoomUsecase    *r.UpdateRoomUsecase
 }
 
 func NewRoomEchoHandler(
@@ -52,9 +52,9 @@ func NewRoomEchoHandler(
 	restoreUC *r.RestoreUsecase,
 	joinRoomUC *r.JoinRoomUsecase,
 	addSingleUserUC *addUsers.AddSingleUserUsecase,
-	updateUC *r.UpdateRoomUsecase,
 	getUserByIDUC *useruc.GetByIDUsecase,
 	getSrByRoomUC *setRoomuc.GetByRoomIDUsecase,
+	updateUC *r.UpdateRoomUsecase,
 
 ) *RoomEchoHandler {
 	return &RoomEchoHandler{
@@ -66,9 +66,9 @@ func NewRoomEchoHandler(
 		RestoreUsecase:       restoreUC,
 		JoinRoomUsecase:      joinRoomUC,
 		AddSingleUSerUsecase: addSingleUserUC,
-		UpdateRoomUsecase:    updateUC,
 		GetUserByIDUsecase:   getUserByIDUC,
 		GetSrByRoom:          getSrByRoomUC,
+		UpdateRoomUsecase:    updateUC,
 	}
 }
 
@@ -160,7 +160,9 @@ func (h *RoomEchoHandler) GetAllRooms(c echo.Context) error {
 
 	var roomsDTO []d.RoomDetailedDTO
 	for _, room := range rooms {
+
 		admin, err := h.GetUserByIDUsecase.Execute(room.AdminID())
+
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
