@@ -117,6 +117,7 @@ func (s *RoomXormRepository) Save(room d.Room) (*d.Room, error) {
 		IsFormal:   room.IsFormal().IsFormal,
 		Name:       room.Name().Name,
 		AdminID:    room.AdminID().Id,
+		Description: room.Description().Description,
 	}
 
 	_, err := s.db.GetDb().Insert(roomModel)
@@ -210,10 +211,8 @@ func (s *RoomXormRepository) UserInWhitelist(roomID sv.ID, userID sv.ID) (bool, 
 }
 
 func (r *RoomXormRepository) Update(room *d.Room) (*d.Room, error) {
-	// Extraer el ID
 	roomID := room.ID().Id
 
-	// Verificar si el ID existe antes de actualizar
 	var existingRoom m.Room
 	found, err := r.db.GetDb().ID(roomID).Get(&existingRoom)
 	if err != nil {
@@ -223,10 +222,8 @@ func (r *RoomXormRepository) Update(room *d.Room) (*d.Room, error) {
 		return nil, errors.New("room not found")
 	}
 
-	// Convertir `room` al modelo de base de datos
 	updateRoom := mappers.DomainToModel(room)
 
-	// Ejecutar la actualización
 	affected, err := r.db.GetDb().
 		ID(roomID).
 		Update(updateRoom)
@@ -238,7 +235,6 @@ func (r *RoomXormRepository) Update(room *d.Room) (*d.Room, error) {
 		return nil, errors.New("no rows were updated")
 	}
 
-	// Convertir de modelo a dominio antes de retornar
 	updatedRoom, err := mappers.ModelToDomain(updateRoom)
 	if err != nil {
 		return nil, err

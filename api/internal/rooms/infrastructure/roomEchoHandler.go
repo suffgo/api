@@ -2,12 +2,12 @@ package infrastructure
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	r "suffgo/internal/rooms/application/useCases"
 	addUsers "suffgo/internal/rooms/application/useCases/addUsers"
+	roomWs "suffgo/internal/rooms/application/useCases/websocket"
 
 	d "suffgo/internal/rooms/domain"
 	v "suffgo/internal/rooms/domain/valueObjects"
@@ -41,6 +41,8 @@ type RoomEchoHandler struct {
 	GetUserByIDUsecase   *useruc.GetByIDUsecase
 	GetSrByRoom          *setRoomuc.GetByRoomIDUsecase
 	UpdateRoomUsecase    *r.UpdateRoomUsecase
+	StartWsUsecase       *roomWs.StartWsUsecase
+	ManageWsUsecase      *roomWs.ManageWsUsecase
 }
 
 func NewRoomEchoHandler(
@@ -55,6 +57,8 @@ func NewRoomEchoHandler(
 	getUserByIDUC *useruc.GetByIDUsecase,
 	getSrByRoomUC *setRoomuc.GetByRoomIDUsecase,
 	updateUC *r.UpdateRoomUsecase,
+	manageWsUC *roomWs.ManageWsUsecase,
+	startWsUC *roomWs.StartWsUsecase,
 
 ) *RoomEchoHandler {
 	return &RoomEchoHandler{
@@ -69,6 +73,8 @@ func NewRoomEchoHandler(
 		GetUserByIDUsecase:   getUserByIDUC,
 		GetSrByRoom:          getSrByRoomUC,
 		UpdateRoomUsecase:    updateUC,
+		ManageWsUsecase:      manageWsUC,
+		StartWsUsecase:       startWsUC,
 	}
 }
 
@@ -418,27 +424,6 @@ func (h *RoomEchoHandler) Restore(c echo.Context) error {
 
 }
 
-// En caso de devolver error lo hace en forma de response
-func GetUserIDFromSession(c echo.Context) (*sv.ID, error) {
-	// Obtener el user_id de la sesion
-	userIDStr, ok := c.Get("user_id").(string)
-	if !ok || userIDStr == "" {
-		return nil, c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
-	}
-
-	adminIDUint, err := strconv.ParseUint(userIDStr, 10, 64)
-	if err != nil {
-		return nil, c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
-	}
-
-	adminID, err := sv.NewID(uint(adminIDUint))
-	if err != nil {
-		return nil, c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
-	}
-
-	return adminID, nil
-}
-
 var (
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -450,63 +435,6 @@ var (
 		},
 	}
 )
-
-var hub = NewHub()
-
-func init() {
-	go hub.Run()
-}
-
-type Message struct {
-	Sender *websocket.Conn
-	Data   []byte
-}
-
-// Hub gestiona las conexiones y mensajes.
-type Hub struct {
-	Clients    map[*websocket.Conn]bool
-	Broadcast  chan Message
-	Register   chan *websocket.Conn
-	Unregister chan *websocket.Conn
-}
-
-// NewHub crea e inicializa un nuevo Hub.
-func NewHub() *Hub {
-	return &Hub{
-		Clients:    make(map[*websocket.Conn]bool),
-		Broadcast:  make(chan Message),
-		Register:   make(chan *websocket.Conn),
-		Unregister: make(chan *websocket.Conn),
-	}
-}
-
-// Run inicia el bucle principal del Hub.
-func (h *Hub) Run() {
-	for {
-		select {
-		case client := <-h.Register:
-			h.Clients[client] = true
-			log.Println("Cliente registrado. Total:", len(h.Clients))
-		case client := <-h.Unregister:
-			if _, ok := h.Clients[client]; ok {
-				delete(h.Clients, client)
-				client.Close()
-				log.Println("Cliente desregistrado. Total:", len(h.Clients))
-			}
-		case msg := <-h.Broadcast:
-			// Enviar el mensaje a todos los clientes, excepto al remitente
-			for client := range h.Clients {
-				if client != msg.Sender {
-					if err := client.WriteMessage(websocket.TextMessage, msg.Data); err != nil {
-						log.Println("Error al enviar mensaje a un cliente:", err)
-						client.Close()
-						delete(h.Clients, client)
-					}
-				}
-			}
-		}
-	}
-}
 
 func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
 
@@ -523,55 +451,32 @@ func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
 		log.Println("Error al actualizar a WebSocket:", err)
 		return err
 	}
-	// Registrar la conexión en el hub
-	hub.Register <- ws
 
-	// Asegurarse de que la conexión se deba dar de baja cuando se cierre
-	defer func() {
-		hub.Unregister <- ws
-		ws.Close()
-	}()
-
-	// Enviar un mensaje de bienvenida
-	if err := ws.WriteMessage(websocket.TextMessage, []byte("Bienvenido!!")); err != nil {
-		log.Println("Error al enviar mensaje de bienvenida:", err)
-		return err
-	}
+	err = h.StartWsUsecase.Execute(ws)
 
 	for {
-		_, msg, err := ws.ReadMessage()
+		err = h.ManageWsUsecase.Execute(ws, username)
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("Error inesperado de cierre de WebSocket: %v", err)
-			}
 			break
 		}
-
-		// Si no se pudo obtener el nombre, se verá como vacío
-		response := fmt.Sprintf("%s: %s", username, msg)
-
-		hub.Broadcast <- Message{Sender: ws, Data: []byte(response)}
 	}
+
+	ws.Close()
 
 	return nil
 }
 
 func (h *RoomEchoHandler) Update(c echo.Context) error {
-	// Obtener ID de la sala desde la URL
 	roomIDStr := c.Param("id")
 	roomID, err := strconv.Atoi(roomIDStr)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room ID"})
 	}
 
-	// Obtener la solicitud del cuerpo
 	var req d.RoomCreateRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-
-	// Crear el objeto Room a partir de la solicitud
-	// Validar los value objects antes de continuar
 
 	id, err := sv.NewID(uint(roomID))
 	if err != nil {
@@ -628,4 +533,25 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		"success": "room updated successfully",
 		"room":    roomDTO,
 	})
+}
+
+// En caso de devolver error lo hace en forma de response
+func GetUserIDFromSession(c echo.Context) (*sv.ID, error) {
+	// Obtener el user_id de la sesion
+	userIDStr, ok := c.Get("user_id").(string)
+	if !ok || userIDStr == "" {
+		return nil, c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
+	}
+
+	adminIDUint, err := strconv.ParseUint(userIDStr, 10, 64)
+	if err != nil {
+		return nil, c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
+	}
+
+	adminID, err := sv.NewID(uint(adminIDUint))
+	if err != nil {
+		return nil, c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
+	}
+
+	return adminID, nil
 }

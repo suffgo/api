@@ -22,6 +22,7 @@ import (
 	p "suffgo/internal/proposals/infrastructure"
 
 	roomUsecase "suffgo/internal/rooms/application/useCases"
+	roomWsUsecase "suffgo/internal/rooms/application/useCases/websocket"
 	roomUsecaseAddUsers "suffgo/internal/rooms/application/useCases/addUsers"
 
 	r "suffgo/internal/rooms/infrastructure"
@@ -167,6 +168,8 @@ func (s *EchoServer) InitializeRoom(userRepo *u.UserXormRepository) *r.RoomXormR
 	joinUsecase := roomUsecase.NewJoinRoomUsecase(roomRepo)
 	AddSingleUserUsecase := roomUsecaseAddUsers.NewAddSingleUserUsecase(roomRepo, userRepo)
 	UpdateRoomUseCase := roomUsecase.NewUpdateRoomUsecase(roomRepo)
+	ManageWsUsecase := roomWsUsecase.NewManageWsUsecase(roomRepo)
+	StartWsUsecae := roomWsUsecase.NewStartWsUsecase(roomRepo)
 
 	roomHandler := r.NewRoomEchoHandler(
 		createRoomUseCase,
@@ -180,6 +183,8 @@ func (s *EchoServer) InitializeRoom(userRepo *u.UserXormRepository) *r.RoomXormR
 		getUserByIDUseCase,
 		getByRoomIdUsecase,
 		UpdateRoomUseCase,
+		ManageWsUsecase,
+		StartWsUsecae,
 	)
 	r.InitializeRoomEchoRouter(s.app, roomHandler)
 
