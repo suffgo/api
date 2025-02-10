@@ -12,9 +12,8 @@ import (
 	d "suffgo/internal/rooms/domain"
 	v "suffgo/internal/rooms/domain/valueObjects"
 
-	sv "suffgo/internal/shared/domain/valueObjects"
 	se "suffgo/internal/shared/domain/errors"
-
+	sv "suffgo/internal/shared/domain/valueObjects"
 
 	rerr "suffgo/internal/rooms/domain/errors"
 	uerr "suffgo/internal/users/domain/errors"
@@ -27,7 +26,6 @@ import (
 
 	setRoomuc "suffgo/internal/settingsRoom/application/useCases"
 	srerr "suffgo/internal/settingsRoom/domain/errors"
-
 )
 
 type RoomEchoHandler struct {
@@ -545,26 +543,14 @@ func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
 	}
 
 	roomID := c.Param("room_id")
-	hub := roomWs.RoomMap.GetHub(roomID)
-	client := &roomWs.Client{
-        Username: username,
-        Conn:   ws,
-    }
-    hub.Register <- client
-
-    // Enviar mensaje de bienvenida (opcional)
-    if err := ws.WriteMessage(websocket.TextMessage, []byte("Bienvenido!!")); err != nil {
-        log.Println("Error al enviar mensaje de bienvenida:", err)
-        return err
-    }
-
+	
 	for {
 		err = h.ManageWsUsecase.Execute(ws, username, roomID)
 		if err != nil {
+			log.Println(err.Error())
 			break
 		}
 	}
-
 	ws.Close()
 
 	return nil
