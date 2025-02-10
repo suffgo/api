@@ -13,8 +13,8 @@ import (
 	v "suffgo/internal/rooms/domain/valueObjects"
 
 	sv "suffgo/internal/shared/domain/valueObjects"
-
 	se "suffgo/internal/shared/domain/errors"
+
 
 	rerr "suffgo/internal/rooms/domain/errors"
 	uerr "suffgo/internal/users/domain/errors"
@@ -27,6 +27,7 @@ import (
 
 	setRoomuc "suffgo/internal/settingsRoom/application/useCases"
 	srerr "suffgo/internal/settingsRoom/domain/errors"
+
 )
 
 type RoomEchoHandler struct {
@@ -436,35 +437,6 @@ var (
 	}
 )
 
-func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
-
-	sess, err := session.Get("session", c)
-	if err != nil {
-		c.Logger().Error("Error al obtener la sesión:", err)
-		return err
-	}
-	// Extraer el nombre desde la sesión
-	username, _ := sess.Values["name"].(string)
-
-	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
-	if err != nil {
-		log.Println("Error al actualizar a WebSocket:", err)
-		return err
-	}
-
-	err = h.StartWsUsecase.Execute(ws)
-
-	for {
-		err = h.ManageWsUsecase.Execute(ws, username)
-		if err != nil {
-			break
-		}
-	}
-
-	ws.Close()
-
-	return nil
-}
 
 func (h *RoomEchoHandler) Update(c echo.Context) error {
 	roomIDStr := c.Param("id")
@@ -555,3 +527,46 @@ func GetUserIDFromSession(c echo.Context) (*sv.ID, error) {
 
 	return adminID, nil
 }
+
+func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
+
+	sess, err := session.Get("session", c)
+	if err != nil {
+		c.Logger().Error("Error al obtener la sesión:", err)
+		return err
+	}
+	// Extraer el nombre desde la sesion
+	username, _ := sess.Values["name"].(string)
+
+	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		log.Println("Error al actualizar a WebSocket:", err)
+		return err
+	}
+
+	roomID := c.Param("room_id")
+	hub := roomWs.RoomMap.GetHub(roomID)
+	client := &roomWs.Client{
+        Username: username,
+        Conn:   ws,
+    }
+    hub.Register <- client
+
+    // Enviar mensaje de bienvenida (opcional)
+    if err := ws.WriteMessage(websocket.TextMessage, []byte("Bienvenido!!")); err != nil {
+        log.Println("Error al enviar mensaje de bienvenida:", err)
+        return err
+    }
+
+	for {
+		err = h.ManageWsUsecase.Execute(ws, username, roomID)
+		if err != nil {
+			break
+		}
+	}
+
+	ws.Close()
+
+	return nil
+}
+
