@@ -181,7 +181,7 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, username, roomID string) e
         log.Println(room.Description())
 
         //Cambio el estado de la sala a "activa" 
-
+        
 
         //Inicio el hub de la sala
 

@@ -15,6 +15,7 @@ type (
 		adminID     *sv.ID
 		inviteCode  *v.InviteCode //es opcional porque al momento de creacion no existe
 		description v.Description
+		state       *v.State
 	}
 
 	RoomDTO struct {
@@ -119,3 +120,8 @@ func (r *Room) Description() v.Description {
 func (r *Room) SetDescription(description v.Description) {
 	r.description = description
 }
+
+func (r *Room) State() v.State {
+	return *r.state
+}
+
