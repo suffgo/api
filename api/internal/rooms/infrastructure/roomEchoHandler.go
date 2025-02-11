@@ -327,7 +327,7 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 				AdminName:  admin.FullName().Name + " " + admin.FullName().Lastname,
 				RoomCode:   room.InviteCode().Code,
 				StartTime:  settingRoom.StartTime().DateTime,
-				State:       room.State().CurrentState,
+				State:      room.State().CurrentState,
 			}
 		} else {
 			roomDTO = &d.RoomDetailedDTO{
@@ -505,6 +505,7 @@ var (
 )
 
 func (h *RoomEchoHandler) Update(c echo.Context) error {
+
 	roomIDStr := c.Param("id")
 	roomID, err := strconv.Atoi(roomIDStr)
 	if err != nil {
@@ -516,7 +517,7 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	id, err := sv.NewID(uint(roomID))
+	id, err := sv.NewID(roomID)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
