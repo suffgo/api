@@ -19,6 +19,6 @@ func InitializeRoomEchoRouter(e *echo.Echo, handler *RoomEchoHandler) {
 	roomGroup.POST("/restore/:id", handler.Restore)
 	roomGroup.POST("/join", handler.JoinRoom)
 	roomGroup.POST("/addUser", handler.AddSingleUser)
-	roomGroup.GET("/ws", handler.WsHandler)
+	roomGroup.GET("/ws/:room_id", handler.WsHandler)
 	roomGroup.PUT("/:id", handler.Update)
 }

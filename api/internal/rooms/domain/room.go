@@ -15,6 +15,7 @@ type (
 		adminID     *sv.ID
 		inviteCode  *v.InviteCode //es opcional porque al momento de creacion no existe
 		description v.Description
+		state       *v.State
 	}
 
 	RoomDTO struct {
@@ -25,6 +26,7 @@ type (
 		AdminID     uint   `json:"admin_id"`
 		Description string `json:"description"`
 		RoomCode    string `json:"room_code"`
+		State       string `json:"state"`
 	}
 
 	//Dto para informacion util al frontend
@@ -36,6 +38,7 @@ type (
 		AdminName   string     `json:"admin_name"`
 		Description string     `json:"description"`
 		RoomCode    string     `json:"room_code"`
+		State       string `json:"state"`
 		StartTime   *time.Time `json:"start_time"`
 	}
 
@@ -64,6 +67,13 @@ func NewRoom(
 	adminID *sv.ID,
 	description v.Description,
 ) *Room {
+
+	state, err := v.NewState("created")
+
+	if err != nil {
+		return nil
+	}
+	
 	return &Room{
 		id:          id,
 		linkInvite:  linkInvite,
@@ -72,6 +82,7 @@ func NewRoom(
 		adminID:     adminID,
 		inviteCode:  nil,
 		description: description,
+		state: state,
 	}
 }
 
@@ -118,4 +129,8 @@ func (r *Room) Description() v.Description {
 
 func (r *Room) SetDescription(description v.Description) {
 	r.description = description
+}
+
+func (r *Room) State() v.State {
+	return *r.state
 }

@@ -9,19 +9,19 @@ import (
 
 type (
 	CreateUsecase struct {
-		repository domain.RoomRepository
+		roomRepository domain.RoomRepository
 	}
 )
 
-func NewCreateUsecase(repository domain.RoomRepository) *CreateUsecase {
+func NewCreateUsecase(roomRepo domain.RoomRepository) *CreateUsecase {
 	return &CreateUsecase{
-		repository: repository,
+		roomRepository: roomRepo,
 	}
 }
 
 func (s *CreateUsecase) Execute(roomData domain.Room) (*domain.Room, error) {
 
-	createdRoom, err := s.repository.Save(roomData)
+	createdRoom, err := s.roomRepository.Save(roomData)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,18 @@ func (s *CreateUsecase) Execute(roomData domain.Room) (*domain.Room, error) {
 
 	//guardo codigo
 
-	err = s.repository.SaveInviteCode(inviteCode.Code, createdRoom.ID().Id)
+	err = s.roomRepository.SaveInviteCode(inviteCode.Code, createdRoom.ID().Id)
 
-	return createdRoom,nil
+	//si es formal añado el admin a la whitelist
+
+	if createdRoom.IsFormal().IsFormal {
+
+		err = s.roomRepository.AddToWhitelist(createdRoom.ID(), createdRoom.AdminID())
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return createdRoom, nil
 }

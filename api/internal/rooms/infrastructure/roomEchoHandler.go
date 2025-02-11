@@ -12,9 +12,8 @@ import (
 	d "suffgo/internal/rooms/domain"
 	v "suffgo/internal/rooms/domain/valueObjects"
 
-	sv "suffgo/internal/shared/domain/valueObjects"
-
 	se "suffgo/internal/shared/domain/errors"
+	sv "suffgo/internal/shared/domain/valueObjects"
 
 	rerr "suffgo/internal/rooms/domain/errors"
 	uerr "suffgo/internal/users/domain/errors"
@@ -26,6 +25,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	setRoomuc "suffgo/internal/settingsRoom/application/useCases"
+	"suffgo/internal/settingsRoom/domain"
 	srerr "suffgo/internal/settingsRoom/domain/errors"
 )
 
@@ -130,6 +130,7 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 		AdminID:     createdRoom.AdminID().Id,
 		Description: createdRoom.Description().Description,
 		RoomCode:    createdRoom.InviteCode().Code,
+		State:       createdRoom.State().CurrentState,
 	}
 
 	response := map[string]interface{}{
@@ -173,27 +174,42 @@ func (h *RoomEchoHandler) GetAllRooms(c echo.Context) error {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 
-		settingRoom, err := h.GetSrByRoom.Execute(room.ID())
+		var roomDTO *d.RoomDetailedDTO
+		if room.IsFormal().IsFormal {
+			settingRoom, err := h.GetSrByRoom.Execute(room.ID())
 
-		if err != nil {
-			if errors.Is(err, srerr.SettingRoomNotFoundError) {
-				return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+			if err != nil {
+				if errors.Is(err, srerr.SettingRoomNotFoundError) {
+					return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+				}
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 			}
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+
+			roomDTO = &d.RoomDetailedDTO{
+				ID:         room.ID().Id,
+				LinkInvite: room.LinkInvite().LinkInvite,
+				IsFormal:   room.IsFormal().IsFormal,
+				RoomTitle:  room.Name().Name,
+				AdminName:  admin.FullName().Name + " " + admin.FullName().Lastname,
+				RoomCode:   room.InviteCode().Code,
+				StartTime:  settingRoom.StartTime().DateTime,
+				State:      room.State().CurrentState,
+			}
+		} else {
+			roomDTO = &d.RoomDetailedDTO{
+				ID:          room.ID().Id,
+				LinkInvite:  room.LinkInvite().LinkInvite,
+				RoomTitle:   room.Name().Name,
+				AdminName:   admin.FullName().Lastname + " " + admin.FullName().Name,
+				Description: room.Description().Description,
+				RoomCode:    room.InviteCode().Code,
+				State:       room.State().CurrentState,
+			}
 		}
 
-		roomDTO := &d.RoomDetailedDTO{
-			ID:          room.ID().Id,
-			LinkInvite:  room.LinkInvite().LinkInvite,
-			IsFormal:    room.IsFormal().IsFormal,
-			RoomTitle:   room.Name().Name,
-			AdminName:   admin.FullName().Lastname + " " + admin.FullName().Name,
-			Description: room.Description().Description,
-			RoomCode:    room.InviteCode().Code,
-			StartTime:   settingRoom.StartTime().DateTime,
-		}
 		roomsDTO = append(roomsDTO, *roomDTO)
 	}
+
 	return c.JSON(http.StatusOK, roomsDTO)
 }
 
@@ -219,25 +235,46 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	settingRoom, err := h.GetSrByRoom.Execute(room.ID())
+	var settingRoom *domain.SettingRoom
+	var roomDetailedDTO *d.RoomDetailedDTO
+	if room.IsFormal().IsFormal {
+		settingRoom, err = h.GetSrByRoom.Execute(room.ID())
 
-	if err != nil {
-		if errors.Is(err, srerr.SettingRoomNotFoundError) {
-			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		if err != nil {
+			if errors.Is(err, srerr.SettingRoomNotFoundError) {
+				return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+			}
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+
+		roomDetailedDTO = &d.RoomDetailedDTO{
+			ID:          room.ID().Id,
+			LinkInvite:  room.LinkInvite().LinkInvite,
+			RoomTitle:   room.Name().Name,
+			AdminName:   admin.FullName().Lastname + " " + admin.FullName().Name,
+			Description: room.Description().Description,
+			RoomCode:    room.InviteCode().Code,
+			StartTime:   settingRoom.StartTime().DateTime,
+			State:       room.State().CurrentState,
+		}
+	} else {
+		roomDetailedDTO = &d.RoomDetailedDTO{
+			ID:          room.ID().Id,
+			LinkInvite:  room.LinkInvite().LinkInvite,
+			RoomTitle:   room.Name().Name,
+			AdminName:   admin.FullName().Lastname + " " + admin.FullName().Name,
+			Description: room.Description().Description,
+			RoomCode:    room.InviteCode().Code,
+			State:       room.State().CurrentState,
+		}
 	}
 
-	roomDTO := &d.RoomDetailedDTO{
-		ID:          room.ID().Id,
-		LinkInvite:  room.LinkInvite().LinkInvite,
-		RoomTitle:   room.Name().Name,
-		AdminName:   admin.FullName().Lastname + " " + admin.FullName().Name,
-		Description: room.Description().Description,
-		RoomCode:    room.InviteCode().Code,
-		StartTime:   settingRoom.StartTime().DateTime,
+	response := map[string]interface{}{
+		"success": "Ingreso a la sala exitoso",
+		"room":    roomDetailedDTO,
 	}
-	return c.JSON(http.StatusOK, roomDTO)
+
+	return c.JSON(http.StatusOK, response)
 }
 
 func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
@@ -271,30 +308,46 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 	var roomsDTO []d.RoomDetailedDTO
 	for _, room := range rooms {
 
-		settingRoom, err := h.GetSrByRoom.Execute(room.ID())
+		var roomDTO *d.RoomDetailedDTO
+		if room.IsFormal().IsFormal {
+			settingRoom, err := h.GetSrByRoom.Execute(room.ID())
 
-		if err != nil {
-			if errors.Is(err, srerr.SettingRoomNotFoundError) {
-				return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+			if err != nil {
+				if errors.Is(err, srerr.SettingRoomNotFoundError) {
+					return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+				}
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 			}
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+
+			roomDTO = &d.RoomDetailedDTO{
+				ID:         room.ID().Id,
+				LinkInvite: room.LinkInvite().LinkInvite,
+				IsFormal:   room.IsFormal().IsFormal,
+				RoomTitle:  room.Name().Name,
+				AdminName:  admin.FullName().Name + " " + admin.FullName().Lastname,
+				RoomCode:   room.InviteCode().Code,
+				StartTime:  settingRoom.StartTime().DateTime,
+				State:      room.State().CurrentState,
+			}
+		} else {
+			roomDTO = &d.RoomDetailedDTO{
+				ID:          room.ID().Id,
+				LinkInvite:  room.LinkInvite().LinkInvite,
+				RoomTitle:   room.Name().Name,
+				AdminName:   admin.FullName().Lastname + " " + admin.FullName().Name,
+				Description: room.Description().Description,
+				RoomCode:    room.InviteCode().Code,
+				State:       room.State().CurrentState,
+			}
 		}
 
-		roomDTO := &d.RoomDetailedDTO{
-			ID:         room.ID().Id,
-			LinkInvite: room.LinkInvite().LinkInvite,
-			IsFormal:   room.IsFormal().IsFormal,
-			RoomTitle:  room.Name().Name,
-			AdminName:  admin.FullName().Name + " " + admin.FullName().Lastname,
-			RoomCode:   room.InviteCode().Code,
-			StartTime:  settingRoom.StartTime().DateTime,
-		}
 		roomsDTO = append(roomsDTO, *roomDTO)
 	}
 	return c.JSON(http.StatusOK, roomsDTO)
 }
 
 func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
+
 	var req d.JoinRoomRequest
 
 	if err := c.Bind(&req); err != nil {
@@ -327,23 +380,38 @@ func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	settingRoom, err := h.GetSrByRoom.Execute(room.ID())
+	var settingRoom *domain.SettingRoom
+	var roomDetailedDTO *d.RoomDetailedDTO
+	if room.IsFormal().IsFormal {
+		settingRoom, err = h.GetSrByRoom.Execute(room.ID())
 
-	if err != nil {
-		if errors.Is(err, srerr.SettingRoomNotFoundError) {
-			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		if err != nil {
+			if errors.Is(err, srerr.SettingRoomNotFoundError) {
+				return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+			}
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-	}
 
-	roomDetailedDTO := &d.RoomDetailedDTO{
-		ID:          room.ID().Id,
-		LinkInvite:  room.LinkInvite().LinkInvite,
-		RoomTitle:   room.Name().Name,
-		AdminName:   admin.FullName().Lastname + " " + admin.FullName().Name,
-		Description: room.Description().Description,
-		RoomCode:    room.InviteCode().Code,
-		StartTime:   settingRoom.StartTime().DateTime,
+		roomDetailedDTO = &d.RoomDetailedDTO{
+			ID:          room.ID().Id,
+			LinkInvite:  room.LinkInvite().LinkInvite,
+			RoomTitle:   room.Name().Name,
+			AdminName:   admin.FullName().Lastname + " " + admin.FullName().Name,
+			Description: room.Description().Description,
+			RoomCode:    room.InviteCode().Code,
+			StartTime:   settingRoom.StartTime().DateTime,
+			State:       room.State().CurrentState,
+		}
+	} else {
+		roomDetailedDTO = &d.RoomDetailedDTO{
+			ID:          room.ID().Id,
+			LinkInvite:  room.LinkInvite().LinkInvite,
+			RoomTitle:   room.Name().Name,
+			AdminName:   admin.FullName().Lastname + " " + admin.FullName().Name,
+			Description: room.Description().Description,
+			RoomCode:    room.InviteCode().Code,
+			State:       room.State().CurrentState,
+		}
 	}
 
 	response := map[string]interface{}{
@@ -436,37 +504,8 @@ var (
 	}
 )
 
-func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
-
-	sess, err := session.Get("session", c)
-	if err != nil {
-		c.Logger().Error("Error al obtener la sesión:", err)
-		return err
-	}
-	// Extraer el nombre desde la sesión
-	username, _ := sess.Values["name"].(string)
-
-	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
-	if err != nil {
-		log.Println("Error al actualizar a WebSocket:", err)
-		return err
-	}
-
-	err = h.StartWsUsecase.Execute(ws)
-
-	for {
-		err = h.ManageWsUsecase.Execute(ws, username)
-		if err != nil {
-			break
-		}
-	}
-
-	ws.Close()
-
-	return nil
-}
-
 func (h *RoomEchoHandler) Update(c echo.Context) error {
+
 	roomIDStr := c.Param("id")
 	roomID, err := strconv.Atoi(roomIDStr)
 	if err != nil {
@@ -478,7 +517,7 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	id, err := sv.NewID(uint(roomID))
+	id, err := sv.NewID(roomID)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -527,6 +566,7 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		Name:        updatedRoom.Name().Name,
 		AdminID:     updatedRoom.AdminID().Id,
 		Description: updatedRoom.Description().Description,
+		State:       room.State().CurrentState,
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
@@ -554,4 +594,34 @@ func GetUserIDFromSession(c echo.Context) (*sv.ID, error) {
 	}
 
 	return adminID, nil
+}
+
+func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
+
+	sess, err := session.Get("session", c)
+	if err != nil {
+		c.Logger().Error("Error al obtener la sesión:", err)
+		return err
+	}
+	// Extraer el nombre desde la sesion
+	username, _ := sess.Values["name"].(string)
+
+	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		log.Println("Error al actualizar a WebSocket:", err)
+		return err
+	}
+
+	roomID := c.Param("room_id")
+
+	for {
+		err = h.ManageWsUsecase.Execute(ws, username, roomID)
+		if err != nil {
+			log.Println(err.Error())
+			break
+		}
+	}
+	ws.Close()
+
+	return nil
 }

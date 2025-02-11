@@ -15,6 +15,7 @@ func DomainToModel(room *domain.Room) *m.Room {
 		Name:        room.Name().Name,
 		Description: room.Description().Description,
 		AdminID:     room.AdminID().Id,
+		State:       room.State().CurrentState,
 	}
 }
 
