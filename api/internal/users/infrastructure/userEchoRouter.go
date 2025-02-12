@@ -20,6 +20,6 @@ func InitializeUserEchoRouter(e *echo.Echo, handler *UserEchoHandler) {
 	userGroup.POST("/restore/:id", handler.Restore)
 
 	userGroup.POST("/logout", handler.Logout)
-	userGroup.GET("/auth", handler.CheckAuth) //200ok si esta autenticado
+	userGroup.GET("/auth", handler.CheckAuth)
 	userGroup.PUT("/update", handler.Update)
 }

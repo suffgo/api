@@ -109,6 +109,10 @@ func (h *SettingRoomEchoHandler) CreateSettingRoom(c echo.Context) error {
 			return c.JSON(http.StatusConflict, map[string]string{"message": err.Error()})
 		}
 
+		if errors.Is(err, errors.ErrUnsupported) {
+			return c.JSON(http.StatusMethodNotAllowed, map[string]string{"message": err.Error() + ", room is not formal"})
+		}
+
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
 

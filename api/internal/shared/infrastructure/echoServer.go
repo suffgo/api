@@ -68,9 +68,9 @@ func (s *EchoServer) Start() {
 	store := sessions.NewCookieStore(authKey)
 	s.app.Use(session.Middleware(store))
 
-	s.InitializeSettingRoom()
 	userRepo := s.InitializeUser()
 	roomRepo := s.InitializeRoom(userRepo)
+	s.InitializeSettingRoom(roomRepo)
 	s.InitializeProposal(roomRepo)
 	s.InitializeVote()
 	s.InitializeOption()
@@ -194,9 +194,9 @@ func (s *EchoServer) InitializeRoom(userRepo *u.UserXormRepository) *r.RoomXormR
 
 var getByRoomIdUsecase *settingRoomUsecase.GetByRoomIDUsecase
 
-func (s *EchoServer) InitializeSettingRoom() {
+func (s *EchoServer) InitializeSettingRoom(roomRepo *r.RoomXormRepository) {
 	settingRoomRepo := sr.NewSettingRoomXormRepository(s.db)
-	createSettingRoomUseCase := settingRoomUsecase.NewCreateUsecase(settingRoomRepo)
+	createSettingRoomUseCase := settingRoomUsecase.NewCreateUsecase(settingRoomRepo, roomRepo)
 	deleteSettingRoomUseCase := settingRoomUsecase.NewDeleteUsecase(settingRoomRepo)
 	getAllSettingRoomUseCase := settingRoomUsecase.NewGetAllUsecase(settingRoomRepo)
 	getSettingRoomByIDUseCase := settingRoomUsecase.NewGetByIDUsecase(settingRoomRepo)

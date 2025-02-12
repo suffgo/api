@@ -3,7 +3,6 @@ package infrastructure
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	u "suffgo/internal/users/application/useCases"
@@ -241,6 +240,7 @@ func (h *UserEchoHandler) GetUserByID(c echo.Context) error {
 }
 
 func (h *UserEchoHandler) GetUserByEmail(c echo.Context) error {
+	
 	var request struct {
 		Email string `json:"email" validate:"required,email"`
 	}
@@ -273,14 +273,13 @@ func (h *UserEchoHandler) GetUserByEmail(c echo.Context) error {
 		})
 	}
 
-	userDTO := &d.UserDTO{
+	userDTO := &d.UserSafeDTO{
 		ID:       user.ID().Id,
 		Name:     user.FullName().Name,
 		Lastname: user.FullName().Lastname,
 		Username: user.Username().Username,
 		Dni:      user.Dni().Dni,
 		Email:    user.Email().Email,
-		Password: user.Password().Password,
 	}
 
 	// Devolver el usuario si fue encontrado
@@ -322,6 +321,7 @@ func (h *UserEchoHandler) Restore(c echo.Context) error {
 		if errors.Is(err, uerr.ErrUserNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
 		}
+
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Internal server error"})
 	}
 
@@ -377,7 +377,6 @@ func (h *UserEchoHandler) Update(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
 	}
-	log.Printf("[DEBUG] Authenticated user ID: %v", id)
 
 	// Bind del cuerpo de la solicitud
 	var req d.UserSafeDTO
