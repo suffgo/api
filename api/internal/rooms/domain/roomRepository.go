@@ -7,7 +7,7 @@ import (
 type RoomRepository interface {
 	GetByID(id sv.ID) (*Room, error)
 	GetAll() ([]Room, error)
-	Delete(id sv.ID) error
+	Delete(roomID sv.ID) error
 	Save(room Room) (*Room, error)
 	GetByAdminID(adminID sv.ID) ([]Room, error)
 	Restore(id sv.ID) error

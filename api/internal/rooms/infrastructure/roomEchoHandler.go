@@ -150,7 +150,9 @@ func (h *RoomEchoHandler) DeleteRoom(c echo.Context) error {
 
 	id, _ := sv.NewID(uint(idInput))
 
-	err = h.DeleteRoomUsecase.Execute(*id)
+	userID, err := GetUserIDFromSession(c)
+
+	err = h.DeleteRoomUsecase.Execute(*id, *userID)
 	if err != nil {
 		if errors.Is(err, rerr.ErrRoomNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
