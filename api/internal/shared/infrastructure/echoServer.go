@@ -186,7 +186,7 @@ func (s *EchoServer) InitializeRoom(userRepo *u.UserXormRepository) *r.RoomXormR
 		ManageWsUsecase,
 		StartWsUsecae,
 	)
-	r.InitializeRoomEchoRouter(s.app, roomHandler)
+	r.InitializeRoomEchoRouter(s.app, roomHandler, getByIDRoomUseCase)
 
 	return roomRepo
 

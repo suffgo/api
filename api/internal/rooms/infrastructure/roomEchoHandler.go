@@ -149,6 +149,7 @@ func (h *RoomEchoHandler) DeleteRoom(c echo.Context) error {
 	}
 
 	id, _ := sv.NewID(uint(idInput))
+
 	err = h.DeleteRoomUsecase.Execute(*id)
 	if err != nil {
 		if errors.Is(err, rerr.ErrRoomNotFound) {
@@ -522,9 +523,20 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
+	adminID, err := GetUserIDFromSession(c) // Usar el ID del admin actual o el que corresponda
+
+	currentRoom, err := h.GetRoomByIDUsecase.Execute(*id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid ID"})
+	}
+
+	if currentRoom.AdminID() != *adminID {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "user is not the admin room"})
+	}
+
 	linkInvite, err := v.NewLinkInvite(req.LinkInvite)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room name"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room link_Invite"})
 	}
 
 	name, err := v.NewName(req.Name)
@@ -539,10 +551,8 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 
 	isFormal, err := v.NewIsFormal(req.IsFormal)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room name"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room isFormal"})
 	}
-
-	adminID, err := GetUserIDFromSession(c) // Usar el ID del admin actual o el que corresponda
 
 	room := d.NewRoom(
 		id,
