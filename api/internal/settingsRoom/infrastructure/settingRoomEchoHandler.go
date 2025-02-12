@@ -254,6 +254,10 @@ func (h *SettingRoomEchoHandler) Update(c echo.Context) error {
 
 	updatedSettingRoom, err := h.UpdateSettingRoomUsecase.Execute(settingRoom)
 	if err != nil {
+		if errors.Is(seterr.SettingRoomNotFoundError, err) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		}
+		
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 

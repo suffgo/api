@@ -5,13 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 
 	"github.com/gorilla/websocket"
 
 	"suffgo/internal/rooms/domain"
 
-    sv "suffgo/internal/shared/domain/valueObjects"
+	sv "suffgo/internal/shared/domain/valueObjects"
 )
 
 // Message representa un mensaje que se difunde a los clientes conectados.
@@ -101,9 +102,10 @@ func (rm *RoomManager) GetHub(roomID string) *Hub {
 }
 
 // Solo lo debe poder usar el administrador
-func (rm *RoomManager) InitializeHub(roomID string) *Hub {
+func (rm *RoomManager) InitializeHub(roomID uint) *Hub {
+	roomIDStr := strconv.FormatUint(uint64(roomID), 10)
 	hub := NewHub()
-	rm.Rooms[roomID] = hub
+	rm.Rooms[roomIDStr] = hub
 	go hub.Run()
 	return hub
 }
@@ -126,7 +128,7 @@ func NewManageWsUsecase(repo domain.RoomRepository) *ManageWsUsecase {
 
 var RoomMap = NewRoomManager()
 
-func (s *ManageWsUsecase) Execute(ws *websocket.Conn, username, roomID string) error {
+func (s *ManageWsUsecase) Execute(ws *websocket.Conn, username, roomID string, clientID sv.ID ) error {
 
     hub := RoomMap.GetHub(roomID)
     if hub == nil {
@@ -161,7 +163,7 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, username, roomID string) e
 			return err
 		}
 		response := fmt.Sprintf("%s: %s", username, payload.Message)
-		log.Println(response)
+
 		hub.Broadcast <- Message{SenderID: username, Data: []byte(response)}
 	case "start_room":
 		//Obtengo la sala a partir del id
@@ -178,15 +180,21 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, username, roomID string) e
         }
 
         //Verifico que el solicitante sea el administrador
-        log.Println(room.Description())
+        if room.AdminID().Id != clientID.Id {
+			return errors.ErrUnsupported
+		}
 
-        //Cambio el estado de la sala a "activa" 
-        
+		//Inicio el hub de la sala
+		actualHub := RoomMap.InitializeHub(room.ID().Id)
 
-        //Inicio el hub de la sala
+        //TODO: Cambio el estado de la sala a "activa" 
+		s.repository.UpdateState(room.ID(), "online")
 
+		//Conecto al admin a la sala
+		response := fmt.Sprintf("%s: se unió", username)
+		actualHub.Broadcast <- Message{SenderID: username, Data: []byte(response)}
 
-		//
+	case "join_room":
 	default:
 		log.Printf("Acción desconocida: %s", clientAction.Action)
 		errMsg := fmt.Sprintf("Acción %s no reconocida", clientAction.Action)
