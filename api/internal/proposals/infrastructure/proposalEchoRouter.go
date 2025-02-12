@@ -16,4 +16,5 @@ func InitializeProposalEchoRouter(e *echo.Echo, handler *ProposalEchoHandler) {
 	proposalGroup.Use(userInfr.AuthMiddleware)
 	proposalGroup.POST("", handler.CreateProposal)
 	proposalGroup.DELETE("/:id", handler.DeleteProposal)
+	proposalGroup.PUT("/:id", handler.Update)
 }
