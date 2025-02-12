@@ -154,6 +154,7 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, username, roomID string, c
     }
 
 	switch clientAction.Action {
+	//en teoria esto no lo necesito, va a estar adentro del bucle de lectura
 	case "send_message":
 		var payload struct {
 			Message string `json:"message"`
@@ -179,21 +180,26 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, username, roomID string, c
             return err
         }
 
-        //Verifico que el solicitante sea el administrador
-        if room.AdminID().Id != clientID.Id {
+		if room.AdminID().Id != clientID.Id {
 			return errors.ErrUnsupported
 		}
-
-		//Inicio el hub de la sala
-		actualHub := RoomMap.InitializeHub(room.ID().Id)
-
-        //TODO: Cambio el estado de la sala a "activa" 
+	
+		// Inicializar el hub de la sala
+		hub := RoomMap.InitializeHub(room.ID().Id)
+	
+		// Registrar al administrador en el hub
+		adminClient := &Client{Username: username, Conn: ws}
+		hub.Register <- adminClient
+	
+		// Actualizar el estado de la sala a "online"
 		s.repository.UpdateState(room.ID(), "online")
-
-		//Conecto al admin a la sala
+	
+		// Notificar que el administrador se ha unido
 		response := fmt.Sprintf("%s: se unió", username)
-		actualHub.Broadcast <- Message{SenderID: username, Data: []byte(response)}
+		hub.Broadcast <- Message{SenderID: username, Data: []byte(response)}
 
+
+		//falta implementar go routine que contiene bucle de lectura 
 	case "join_room":
 	default:
 		log.Printf("Acción desconocida: %s", clientAction.Action)
