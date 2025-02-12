@@ -96,7 +96,7 @@ func (h *ProposalEchoHandler) CreateProposal(c echo.Context) error {
 	if err != nil {
 
 		if err.Error() == "operación no autorizada para este usuario" {
-			return c.JSON(http.StatusMethodNotAllowed, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
 		} else if errors.Is(err, se.ErrInvalidID) {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
