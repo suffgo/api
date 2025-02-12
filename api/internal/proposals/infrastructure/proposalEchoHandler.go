@@ -2,7 +2,6 @@ package infrastructure
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	u "suffgo/internal/proposals/application/useCases"
@@ -236,7 +235,7 @@ func (h *ProposalEchoHandler) Update(c echo.Context) error {
 	}
 
 	currentProposal, err := h.GetByIDProposalUseCase.Execute(*id)
-	fmt.Println("RoomID:", currentProposal.RoomID())
+
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -257,7 +256,6 @@ func (h *ProposalEchoHandler) Update(c echo.Context) error {
 	}
 
 	RoomID := currentProposal.RoomID()
-	fmt.Println("RoomID NUEVO:", RoomID)
 
 	proposal := d.NewProposal(
 		id,

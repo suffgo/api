@@ -2,8 +2,6 @@ package infrastructure
 
 import (
 	"errors"
-	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	u "suffgo/internal/users/application/useCases"
@@ -377,44 +375,36 @@ func (h *UserEchoHandler) Update(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
 	}
-	log.Printf("[DEBUG] Authenticated user ID: %v", id)
 
 	// Bind del cuerpo de la solicitud
 	var req d.UserSafeDTO
 	if err := c.Bind(&req); err != nil {
-		fmt.Println("[ERROR] Failed to bind request:", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-	fmt.Println("[DEBUG] Parsed request:", req)
 
 	// Validar y crear los value objects
 	fullName, err := v.NewFullName(req.Name, req.Lastname)
 	if err != nil {
-		fmt.Println("[ERROR] Invalid full name:", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
 	username, err := v.NewUserName(req.Username)
 	if err != nil {
-		fmt.Println("[ERROR] Invalid username:", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
 	dni, err := v.NewDni(req.Dni)
 	if err != nil {
-		fmt.Println("[ERROR] Invalid DNI:", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
 	email, err := v.NewEmail(req.Email)
 	if err != nil {
-		fmt.Println("[ERROR] Invalid email:", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
 	currentUser, err := h.GetUserByIDUsecase.Execute(*id)
 	if err != nil {
-		fmt.Println("[ERROR] Invalid User:", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
@@ -429,15 +419,12 @@ func (h *UserEchoHandler) Update(c echo.Context) error {
 		*email,
 		currentPassword, // No actualizamos la contraseña
 	)
-	fmt.Println("[DEBUG] User object created:", user)
 
 	// Llamar al caso de uso para actualizar el usuario
 	updatedUser, err := h.UpdateUsecase.Execute(user)
 	if err != nil {
-		fmt.Println("[ERROR] Failed to update user:", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	fmt.Println("[DEBUG] Updated user received:", updatedUser)
 
 	// Crear el DTO para la respuesta
 	userDTO := &d.UserSafeDTO{
