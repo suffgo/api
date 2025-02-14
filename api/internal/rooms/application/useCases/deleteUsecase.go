@@ -24,7 +24,7 @@ func (s *DeleteUsecase) Execute(roomID sv.ID, userID sv.ID) error {
 	}
 
 	if room.AdminID() != userID {
-		return errors.New("you are not allowed to delete this room")
+		return errors.New("unauthorized")
 	}
 
 	err = s.roomDeleteRepository.Delete(roomID)

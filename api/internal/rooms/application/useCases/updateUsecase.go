@@ -28,7 +28,7 @@ func (u *UpdateRoomUsecase) Execute(room *domain.Room, userID sv.ID) (*domain.Ro
 	}
 
 	if existingRoom.AdminID() != userID {
-		return nil, errors.New("you are not allowed to delete this room")
+		return nil, errors.New("unauthorized")
 	}
 
 	// Guardar los cambios en el repositorio

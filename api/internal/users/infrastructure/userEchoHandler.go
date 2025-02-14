@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	u "suffgo/internal/users/application/useCases"
@@ -177,8 +178,14 @@ func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
 	}
 
 	id, _ := sv.NewID(uint(idInput))
-	//TODO: AGREGAR MIDDLEWARE PARA VERIFICAR QUE EL USUARIO QUE INTENTA BORRAR ES EL MISMO QUE EL QUE ESTA LOGUEADO
-	err = h.DeleteUserUsecase.Execute(*id)
+
+	currentUserID, err := GetAuthenticatedUserID(c)
+	fmt.Println("EL USUARIO ACTUAL ES: ", currentUserID)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
+	}
+
+	err = h.DeleteUserUsecase.Execute(*id, *currentUserID)
 	if err != nil {
 		if errors.Is(err, uerr.ErrUserNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
