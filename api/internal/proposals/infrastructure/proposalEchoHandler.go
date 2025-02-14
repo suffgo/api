@@ -266,8 +266,12 @@ func (h *ProposalEchoHandler) Update(c echo.Context) error {
 	)
 
 	updatedProposal, err := h.UpdateUseCase.Execute(proposal)
+
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		if errors.Is(err, perrors.ErrPropNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
 	proposalDTO := d.ProposalDTO{
