@@ -218,11 +218,11 @@ func (s *EchoServer) InitializeProposal(roomRepo *r.RoomXormRepository) {
 	proposalRepo := p.NewProposalXormRepository(s.db)
 
 	createProposalUseCase := proposalUsecase.NewCreateUsecase(proposalRepo, roomRepo)
-	deleteProposalUseCase := proposalUsecase.NewDeleteUseCase(proposalRepo)
+	deleteProposalUseCase := proposalUsecase.NewDeleteUseCase(proposalRepo, roomRepo)
 	getAllProposalsUseCase := proposalUsecase.NewGetAllUseCase(proposalRepo)
 	getProposalByIDUseCase := proposalUsecase.NewGetByIDUseCase(proposalRepo)
 	restoreProposalUseCase := proposalUsecase.NewRestoreUsecase(proposalRepo)
-	updateProposalUseCase := proposalUsecase.NewUpdateProposalUsecase(proposalRepo)
+	updateProposalUseCase := proposalUsecase.NewUpdateProposalUsecase(proposalRepo, roomRepo)
 
 	proposalHandler := p.NewProposalEchoHandler(
 		createProposalUseCase,

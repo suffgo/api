@@ -95,17 +95,15 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-
+	description, err := v.NewDescription(req.Description)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
 	// Obtener el user_id de la sesion
 	adminID, err := GetUserIDFromSession(c)
 
 	if err != nil {
 		return err
-	}
-
-	description, err := v.NewDescription(req.Description)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
 	room := d.NewRoom(
@@ -154,11 +152,13 @@ func (h *RoomEchoHandler) DeleteRoom(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-
 	err = h.DeleteRoomUsecase.Execute(*id, *userID)
 	if err != nil {
 		if errors.Is(err, rerr.ErrRoomNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		}
+		if err.Error() == "unauthorized" {
+			return c.JSON(http.StatusMethodNotAllowed, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -571,6 +571,9 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 	}
 
 	updatedRoom, err := h.UpdateRoomUsecase.Execute(room, *userID)
+	if err.Error() == "unauthorized" {
+		return c.JSON(http.StatusMethodNotAllowed, map[string]string{"error": err.Error()})
+	}
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}

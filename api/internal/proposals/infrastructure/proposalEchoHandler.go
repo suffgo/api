@@ -10,6 +10,7 @@ import (
 
 	d "suffgo/internal/proposals/domain"
 	v "suffgo/internal/proposals/domain/valueObjects"
+	rh "suffgo/internal/rooms/infrastructure"
 	se "suffgo/internal/shared/domain/errors"
 	sv "suffgo/internal/shared/domain/valueObjects"
 
@@ -183,11 +184,20 @@ func (h *ProposalEchoHandler) DeleteProposal(c echo.Context) error {
 	}
 
 	id, _ := sv.NewID(uint(idInput))
-	err = h.DeleteProposalUseCase.Execute(*id)
+
+	currentUser, err := rh.GetUserIDFromSession(c)
+	if err != nil {
+		return err
+	}
+
+	err = h.DeleteProposalUseCase.Execute(*id, *currentUser)
 
 	if err != nil {
 		if errors.Is(err, perrors.ErrPropNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		}
+		if err.Error() == "unauthorized" {
+			return c.JSON(http.StatusMethodNotAllowed, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -265,11 +275,19 @@ func (h *ProposalEchoHandler) Update(c echo.Context) error {
 		&RoomID,
 	)
 
-	updatedProposal, err := h.UpdateUseCase.Execute(proposal)
+	currentUser, err := rh.GetUserIDFromSession(c)
+	if err != nil {
+		return err
+	}
+
+	updatedProposal, err := h.UpdateUseCase.Execute(proposal, *currentUser)
 
 	if err != nil {
 		if errors.Is(err, perrors.ErrPropNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		}
+		if err.Error() == "unauthorized" {
+			return c.JSON(http.StatusMethodNotAllowed, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}

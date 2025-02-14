@@ -190,6 +190,9 @@ func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
 		if errors.Is(err, uerr.ErrUserNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
+		if err.Error() == "unauthorized" {
+			return c.JSON(http.StatusMethodNotAllowed, map[string]string{"error": err.Error()})
+		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
@@ -429,6 +432,9 @@ func (h *UserEchoHandler) Update(c echo.Context) error {
 
 	// Llamar al caso de uso para actualizar el usuario
 	updatedUser, err := h.UpdateUsecase.Execute(user)
+	if err.Error() == "unauthorized" {
+		return c.JSON(http.StatusMethodNotAllowed, map[string]string{"error": err.Error()})
+	}
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
