@@ -457,21 +457,16 @@ func (h *RoomEchoHandler) AddSingleUser(c echo.Context) error {
 
 		if errors.Is(err, rerr.ErrUserNotAdmin) {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
-		}
-
-		if errors.Is(err, uerr.ErrUserNotFound) {
+		} else if errors.Is(err, uerr.ErrUserNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
-		}
-
-		if errors.Is(err, rerr.ErrRoomNotFound) {
+		} else if errors.Is(err, rerr.ErrRoomNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
-		}
-
-		if errors.Is(err, rerr.ErrAlreadyInWhitelist) {
+		} else if errors.Is(err, rerr.ErrAlreadyInWhitelist) {
 			return c.JSON(http.StatusConflict, map[string]string{"error": err.Error()})
+		} else {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{"success": "usuario agregado a la sala exitosamente"})
@@ -623,7 +618,7 @@ func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
 		c.Logger().Error("Error al obtener la sesión:", err)
 		return err
 	}
-	// Extraer el nombre desde la sesion
+
 	username, _ := sess.Values["name"].(string)
 
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
@@ -633,9 +628,15 @@ func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
 	}
 
 	roomID := c.Param("room_id")
+	clientID, err := GetUserIDFromSession(c)
+	if err != nil {
+		ws.Close()
+		return nil
+	}
+
 
 	for {
-		err = h.ManageWsUsecase.Execute(ws, username, roomID)
+		err = h.ManageWsUsecase.Execute(ws, username, roomID, *clientID)
 		if err != nil {
 			log.Println(err.Error())
 			break

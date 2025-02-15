@@ -9,10 +9,11 @@ import (
 func InitializeRoomEchoRouter(e *echo.Echo, handler *RoomEchoHandler) {
 
 	roomGroup := e.Group("/v1/rooms")
-	roomGroup.Use(userInfr.AuthMiddleware)
-
-	roomGroup.POST("", handler.CreateRoom)
 	roomGroup.GET("", handler.GetAllRooms)
+
+	roomGroup.Use(userInfr.AuthMiddleware)
+	roomGroup.POST("", handler.CreateRoom)
+	roomGroup.DELETE("/:id", handler.DeleteRoom)
 	roomGroup.GET("/:id", handler.GetRoomByID)
 	roomGroup.GET("/myRooms", handler.GetRoomsByAdmin)
 	roomGroup.POST("/restore/:id", handler.Restore)
@@ -20,5 +21,5 @@ func InitializeRoomEchoRouter(e *echo.Echo, handler *RoomEchoHandler) {
 	roomGroup.POST("/addUser", handler.AddSingleUser)
 	roomGroup.GET("/ws/:room_id", handler.WsHandler)
 	roomGroup.PUT("/:id", handler.Update)
-	roomGroup.DELETE("/:id", handler.DeleteRoom)
 }
+

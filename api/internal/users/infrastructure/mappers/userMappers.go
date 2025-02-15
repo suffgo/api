@@ -20,6 +20,7 @@ func DomainToModel(user *domain.User) *m.Users {
 }
 
 func ModelToDomain(userModel *m.Users) (*domain.User, error) {
+
 	id, err := sv.NewID(userModel.ID)
 	if err != nil {
 		return nil, err
@@ -45,5 +46,6 @@ func ModelToDomain(userModel *m.Users) (*domain.User, error) {
 		return nil, err
 	}
 
+	
 	return domain.NewUser(id, *name, *username, *dni, *email, *password), nil
 }

@@ -109,6 +109,10 @@ func (h *SettingRoomEchoHandler) CreateSettingRoom(c echo.Context) error {
 			return c.JSON(http.StatusConflict, map[string]string{"message": err.Error()})
 		}
 
+		if errors.Is(err, errors.ErrUnsupported) {
+			return c.JSON(http.StatusForbidden, map[string]string{"message": err.Error() + ", room is not formal"})
+		}
+
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
 
@@ -250,6 +254,10 @@ func (h *SettingRoomEchoHandler) Update(c echo.Context) error {
 
 	updatedSettingRoom, err := h.UpdateSettingRoomUsecase.Execute(settingRoom)
 	if err != nil {
+		if errors.Is(seterr.SettingRoomNotFoundError, err) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		}
+		
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 

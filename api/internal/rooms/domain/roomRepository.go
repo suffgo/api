@@ -17,4 +17,5 @@ type RoomRepository interface {
 	AddToWhitelist(roomID sv.ID, userID sv.ID) error
 	UserInWhitelist(roomID sv.ID, userID sv.ID) (bool, error)
 	Update(room *Room) (*Room, error)
+	UpdateState(room sv.ID, newState string) error
 }
