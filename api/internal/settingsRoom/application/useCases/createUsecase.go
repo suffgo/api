@@ -34,7 +34,6 @@ func (s *CreateUsecase) Execute(settingRoom domain.SettingRoom) error {
 		return errors.ErrUnsupported
 	}
 
-	//tengo que fijarme si es una creacion o una actualizacion
 	existingSettingRoom, err := s.repository.GetByRoom(settingRoom.RoomID())
 
 	if errors.Is(err, e.SettingRoomNotFoundError) {

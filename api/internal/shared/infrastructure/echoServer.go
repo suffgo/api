@@ -6,6 +6,13 @@ import (
 	"suffgo/cmd/config"
 	"suffgo/cmd/database"
 
+	optDom "suffgo/internal/options/domain"
+	propDom "suffgo/internal/proposals/domain"
+	roomDom "suffgo/internal/rooms/domain"
+	srDom "suffgo/internal/settingsRoom/domain"
+	userDom "suffgo/internal/users/domain"
+	voteDom "suffgo/internal/votes/domain"
+
 	userUsecase "suffgo/internal/users/application/useCases"
 	u "suffgo/internal/users/infrastructure"
 
@@ -51,6 +58,33 @@ func NewEchoServer(db database.Database, conf *config.Config) *EchoServer {
 	}
 }
 
+type Dependencies struct {
+	UserRepo        userDom.UserRepository
+	RoomRepo        roomDom.RoomRepository
+	SettingRoomRepo srDom.SettingRoomRepository
+	ProposalRepo    propDom.ProposalRepository
+	VotesRepo       voteDom.VoteRepository
+	OptionsRepo     optDom.OptionRepository
+}
+
+func NewDependencies(db database.Database) *Dependencies {
+	userRepo := u.NewUserXormRepository(db)
+	roomRepo := r.NewRoomXormRepository(db)
+	settingRoomRepo := sr.NewSettingRoomXormRepository(db)
+	proposalRepo := p.NewProposalXormRepository(db)
+	voteRepo := v.NewVoteXormRepository(db)
+	optionRepo := o.NewOptionXormRepository(db)
+
+	return &Dependencies{
+		UserRepo:        userRepo,
+		RoomRepo:        roomRepo,
+		SettingRoomRepo: settingRoomRepo,
+		ProposalRepo:    proposalRepo,
+		VotesRepo:       voteRepo,
+		OptionsRepo:     optionRepo,
+	}
+}
+
 func (s *EchoServer) Start() {
 	s.app.Use(middleware.Recover())
 	s.app.Use(middleware.Logger())
@@ -68,10 +102,12 @@ func (s *EchoServer) Start() {
 	store := sessions.NewCookieStore(authKey)
 	s.app.Use(session.Middleware(store))
 
-	userRepo := s.InitializeUser()
-	roomRepo := s.InitializeRoom(userRepo)
-	s.InitializeSettingRoom(roomRepo)
-	s.InitializeProposal(roomRepo)
+	deps := NewDependencies(s.db)
+
+	s.InitializeUser(deps.UserRepo)
+	s.InitializeRoom(deps.UserRepo, deps.SettingRoomRepo)
+	s.InitializeSettingRoom(deps.SettingRoomRepo, deps.RoomRepo)
+	s.InitializeProposal(deps.ProposalRepo, deps.RoomRepo)
 	s.InitializeVote()
 	s.InitializeOption()
 
@@ -89,8 +125,7 @@ func (s *EchoServer) Start() {
 
 var getUserByIDUseCase *userUsecase.GetByIDUsecase
 
-func (s *EchoServer) InitializeUser() *u.UserXormRepository {
-	userRepo := u.NewUserXormRepository(s.db)
+func (s *EchoServer) InitializeUser(userRepo userDom.UserRepository) {
 
 	// Initialize Use Cases
 	createUserUseCase := userUsecase.NewCreateUsecase(userRepo)
@@ -118,7 +153,6 @@ func (s *EchoServer) InitializeUser() *u.UserXormRepository {
 	// Initialize User Router
 	u.InitializeUserEchoRouter(s.app, userHandler)
 
-	return userRepo
 }
 
 func (s *EchoServer) InitializeOption() {
@@ -157,7 +191,7 @@ func (s *EchoServer) InitializeVote() {
 	v.InitializeVoteEchoRouter(s.app, voteHandler)
 }
 
-func (s *EchoServer) InitializeRoom(userRepo *u.UserXormRepository) *r.RoomXormRepository {
+func (s *EchoServer) InitializeRoom(userRepo userDom.UserRepository, settingRoomRepo srDom.SettingRoomRepository) {
 	roomRepo := r.NewRoomXormRepository(s.db)
 	createRoomUseCase := roomUsecase.NewCreateUsecase(roomRepo)
 	deleteRoomUseCase := roomUsecase.NewDeleteUsecase(roomRepo)
@@ -170,6 +204,7 @@ func (s *EchoServer) InitializeRoom(userRepo *u.UserXormRepository) *r.RoomXormR
 	UpdateRoomUseCase := roomUsecase.NewUpdateRoomUsecase(roomRepo)
 	ManageWsUsecase := roomWsUsecase.NewManageWsUsecase(roomRepo)
 	StartWsUsecae := roomWsUsecase.NewStartWsUsecase(roomRepo)
+	GetSrByRoomIDUsecase := roomUsecase.NewGetSrByRoomUsecase(roomRepo, settingRoomRepo)
 
 	roomHandler := r.NewRoomEchoHandler(
 		createRoomUseCase,
@@ -181,27 +216,23 @@ func (s *EchoServer) InitializeRoom(userRepo *u.UserXormRepository) *r.RoomXormR
 		joinUsecase,
 		AddSingleUserUsecase,
 		getUserByIDUseCase,
-		getByRoomIdUsecase,
 		UpdateRoomUseCase,
 		ManageWsUsecase,
+		GetSrByRoomIDUsecase,
 		StartWsUsecae,
 	)
 	r.InitializeRoomEchoRouter(s.app, roomHandler)
 
-	return roomRepo
-
 }
 
-var getByRoomIdUsecase *settingRoomUsecase.GetByRoomIDUsecase
+func (s *EchoServer) InitializeSettingRoom(srRepo srDom.SettingRoomRepository, roomRepo roomDom.RoomRepository) {
 
-func (s *EchoServer) InitializeSettingRoom(roomRepo *r.RoomXormRepository) {
-	settingRoomRepo := sr.NewSettingRoomXormRepository(s.db)
-	createSettingRoomUseCase := settingRoomUsecase.NewCreateUsecase(settingRoomRepo, roomRepo)
-	deleteSettingRoomUseCase := settingRoomUsecase.NewDeleteUsecase(settingRoomRepo)
-	getAllSettingRoomUseCase := settingRoomUsecase.NewGetAllUsecase(settingRoomRepo)
-	getSettingRoomByIDUseCase := settingRoomUsecase.NewGetByIDUsecase(settingRoomRepo)
-	updateSettingRoom := settingRoomUsecase.NewUpdateSettingRoomUsecase(settingRoomRepo)
-	getByRoomIdUsecase = settingRoomUsecase.NewGetByRoomID(settingRoomRepo)
+	createSettingRoomUseCase := settingRoomUsecase.NewCreateUsecase(srRepo, roomRepo)
+	deleteSettingRoomUseCase := settingRoomUsecase.NewDeleteUsecase(srRepo)
+	getAllSettingRoomUseCase := settingRoomUsecase.NewGetAllUsecase(srRepo)
+	getSettingRoomByIDUseCase := settingRoomUsecase.NewGetByIDUsecase(srRepo)
+	updateSettingRoom := settingRoomUsecase.NewUpdateSettingRoomUsecase(srRepo)
+	getByRoomIdUsecase := settingRoomUsecase.NewGetByRoomID(srRepo)
 	settingRoomHandler := sr.NewSettingRoomEchoHandler(
 		createSettingRoomUseCase,
 		deleteSettingRoomUseCase,
@@ -213,16 +244,14 @@ func (s *EchoServer) InitializeSettingRoom(roomRepo *r.RoomXormRepository) {
 	sr.InitializeSettingRoomEchoRouter(s.app, settingRoomHandler)
 }
 
-func (s *EchoServer) InitializeProposal(roomRepo *r.RoomXormRepository) {
+func (s *EchoServer) InitializeProposal(propRepo propDom.ProposalRepository, roomRepo roomDom.RoomRepository) {
 
-	proposalRepo := p.NewProposalXormRepository(s.db)
-
-	createProposalUseCase := proposalUsecase.NewCreateUsecase(proposalRepo, roomRepo)
-	deleteProposalUseCase := proposalUsecase.NewDeleteUseCase(proposalRepo, roomRepo)
-	getAllProposalsUseCase := proposalUsecase.NewGetAllUseCase(proposalRepo)
-	getProposalByIDUseCase := proposalUsecase.NewGetByIDUseCase(proposalRepo)
-	restoreProposalUseCase := proposalUsecase.NewRestoreUsecase(proposalRepo)
-	updateProposalUseCase := proposalUsecase.NewUpdateProposalUsecase(proposalRepo, roomRepo)
+	createProposalUseCase := proposalUsecase.NewCreateUsecase(propRepo, roomRepo)
+	deleteProposalUseCase := proposalUsecase.NewDeleteUseCase(propRepo, roomRepo)
+	getAllProposalsUseCase := proposalUsecase.NewGetAllUseCase(propRepo)
+	getProposalByIDUseCase := proposalUsecase.NewGetByIDUseCase(propRepo)
+	restoreProposalUseCase := proposalUsecase.NewRestoreUsecase(propRepo)
+	updateProposalUseCase := proposalUsecase.NewUpdateProposalUsecase(propRepo, roomRepo)
 
 	proposalHandler := p.NewProposalEchoHandler(
 		createProposalUseCase,
