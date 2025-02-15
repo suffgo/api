@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"errors"
+
 	"suffgo/cmd/database"
 	d "suffgo/internal/settingsRoom/domain"
 	se "suffgo/internal/settingsRoom/domain/errors"
@@ -88,8 +89,7 @@ func (s *SettingRoomXormRepository) Save(settingRoom d.SettingRoom) error {
 	return nil
 }
 
-func (s *SettingRoomXormRepository) GetByRoom(roomID sv.ID) (*d.SettingRoom, error) {
-
+func (s *SettingRoomXormRepository) GetByRoom(roomID sv.ID) (*d.SettingRoom, error){
 	settingRoomModel := new(m.SettingsRoom)
 	has, err := s.db.GetDb().Where("room_id = ?", roomID.Id).Get(settingRoomModel)
 	if err != nil {
