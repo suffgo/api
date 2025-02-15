@@ -10,6 +10,7 @@ import (
 
 	d "suffgo/internal/proposals/domain"
 	v "suffgo/internal/proposals/domain/valueObjects"
+	rh "suffgo/internal/rooms/infrastructure"
 	se "suffgo/internal/shared/domain/errors"
 	sv "suffgo/internal/shared/domain/valueObjects"
 
@@ -22,6 +23,7 @@ type ProposalEchoHandler struct {
 	GetByIDProposalUseCase *u.GetByIDUsecase
 	DeleteProposalUseCase  *u.DeleteUseCase
 	RestoreUseCase         *u.RestoreUsecase
+	UpdateUseCase          *u.UpdateUsecase
 }
 
 func NewProposalEchoHandler(
@@ -30,6 +32,7 @@ func NewProposalEchoHandler(
 	getByID *u.GetByIDUsecase,
 	deleteUC *u.DeleteUseCase,
 	restoreUC *u.RestoreUsecase,
+	updateUC *u.UpdateUsecase,
 ) *ProposalEchoHandler {
 	return &ProposalEchoHandler{
 		CreateProposalUsecase:  createUC,
@@ -37,6 +40,7 @@ func NewProposalEchoHandler(
 		GetByIDProposalUseCase: getByID,
 		DeleteProposalUseCase:  deleteUC,
 		RestoreUseCase:         restoreUC,
+		UpdateUseCase:          updateUC,
 	}
 }
 
@@ -180,11 +184,20 @@ func (h *ProposalEchoHandler) DeleteProposal(c echo.Context) error {
 	}
 
 	id, _ := sv.NewID(uint(idInput))
-	err = h.DeleteProposalUseCase.Execute(*id)
+
+	currentUser, err := rh.GetUserIDFromSession(c)
+	if err != nil {
+		return err
+	}
+
+	err = h.DeleteProposalUseCase.Execute(*id, *currentUser)
 
 	if err != nil {
 		if errors.Is(err, perrors.ErrPropNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		}
+		if err.Error() == "unauthorized" {
+			return c.JSON(http.StatusMethodNotAllowed, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -212,4 +225,83 @@ func (h *ProposalEchoHandler) RestoreProposal(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]string{"succes": "proposal restored succesfully"})
 
+}
+
+func (h *ProposalEchoHandler) Update(c echo.Context) error {
+	proposalIDStr := c.Param("id")
+	proposalID, err := strconv.Atoi(proposalIDStr)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid proposal ID"})
+	}
+
+	var req d.ProposalUpdateRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	id, err := sv.NewID(uint(proposalID))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	currentProposal, err := h.GetByIDProposalUseCase.Execute(*id)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	Archive, err := v.NewArchive(*req.Archive)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	Title, err := v.NewTitle(req.Title)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	Description, err := v.NewDescription(*req.Description)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	RoomID := currentProposal.RoomID()
+
+	proposal := d.NewProposal(
+		id,
+		Archive,
+		*Title,
+		Description,
+		&RoomID,
+	)
+
+	currentUser, err := rh.GetUserIDFromSession(c)
+	if err != nil {
+		return err
+	}
+
+	updatedProposal, err := h.UpdateUseCase.Execute(proposal, *currentUser)
+
+	if err != nil {
+		if errors.Is(err, perrors.ErrPropNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		}
+		if err.Error() == "unauthorized" {
+			return c.JSON(http.StatusMethodNotAllowed, map[string]string{"error": err.Error()})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	proposalDTO := d.ProposalDTO{
+		ID:          updatedProposal.ID().Id,
+		Archive:     &updatedProposal.Archive().Archive,
+		Title:       updatedProposal.Title().Title,
+		Description: &updatedProposal.Description().Description,
+		RoomID:      updatedProposal.RoomID().Id,
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"success":     "proposal updated successfully",
+		"settingRoom": proposalDTO,
+	})
 }

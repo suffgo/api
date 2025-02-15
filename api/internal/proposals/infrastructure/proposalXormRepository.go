@@ -1,9 +1,10 @@
 package infrastructure
 
 import (
+	"errors"
 	"suffgo/cmd/database"
 	d "suffgo/internal/proposals/domain"
-	ue "suffgo/internal/proposals/domain/errors"
+	pe "suffgo/internal/proposals/domain/errors"
 	"suffgo/internal/proposals/infrastructure/mappers"
 	m "suffgo/internal/proposals/infrastructure/models"
 	se "suffgo/internal/shared/domain/errors"
@@ -72,7 +73,7 @@ func (s *ProposalXormRepository) GetById(id sv.ID) (*d.Proposal, error) {
 		return nil, err
 	}
 	if !has {
-		return nil, ue.ErrPropNotFound
+		return nil, pe.ErrPropNotFound
 	}
 
 	proposalEnt, err := mappers.ModelToDomain(proposalModel)
@@ -91,7 +92,7 @@ func (s *ProposalXormRepository) Delete(id sv.ID) error {
 	}
 
 	if affected == 0 {
-		return ue.ErrPropNotFound
+		return pe.ErrPropNotFound
 	}
 
 	return nil
@@ -107,7 +108,40 @@ func (s *ProposalXormRepository) Restore(proposalID sv.ID) error {
 		return err
 	}
 	if affected == 0 {
-		return ue.ErrPropNotFound
+		return pe.ErrPropNotFound
 	}
 	return err
+}
+
+func (s *ProposalXormRepository) Update(proposal *d.Proposal) (*d.Proposal, error) {
+	proposalID := proposal.ID().Id
+
+	var existingProposal m.Proposal
+
+	found, err := s.db.GetDb().ID(proposalID).Get(&existingProposal)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, pe.ErrPropNotFound
+	}
+
+	updateProposal := mappers.DomainToModel(proposal)
+
+	affected, err := s.db.GetDb().ID(proposalID).Update(updateProposal)
+
+	if err != nil {
+		return nil, err
+	}
+	if affected == 0 {
+		return nil, errors.New("no rows were updated")
+	}
+
+	updatedProposal, err := mappers.ModelToDomain(updateProposal)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedProposal, nil
 }

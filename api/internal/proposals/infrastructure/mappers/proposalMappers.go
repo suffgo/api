@@ -13,7 +13,7 @@ func DomainToModel(proposal *domain.Proposal) *m.Proposal {
 		Archive:     &proposal.Archive().Archive,
 		Title:       proposal.Title().Title,
 		Description: &proposal.Description().Description,
-		RoomID:      proposal.ID().Id,
+		RoomID:      proposal.RoomID().Id,
 	}
 }
 

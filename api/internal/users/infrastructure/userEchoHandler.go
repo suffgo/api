@@ -178,11 +178,20 @@ func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
 	}
 
 	id, _ := sv.NewID(uint(idInput))
-	//TODO: AGREGAR MIDDLEWARE PARA VERIFICAR QUE EL USUARIO QUE INTENTA BORRAR ES EL MISMO QUE EL QUE ESTA LOGUEADO
-	err = h.DeleteUserUsecase.Execute(*id)
+
+	currentUserID, err := GetAuthenticatedUserID(c)
+	fmt.Println("EL USUARIO ACTUAL ES: ", currentUserID)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
+	}
+
+	err = h.DeleteUserUsecase.Execute(*id, *currentUserID)
 	if err != nil {
 		if errors.Is(err, uerr.ErrUserNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		}
+		if err.Error() == "unauthorized" {
+			return c.JSON(http.StatusMethodNotAllowed, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -381,39 +390,32 @@ func (h *UserEchoHandler) Update(c echo.Context) error {
 	// Bind del cuerpo de la solicitud
 	var req d.UserSafeDTO
 	if err := c.Bind(&req); err != nil {
-		fmt.Println("[ERROR] Failed to bind request:", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-	fmt.Println("[DEBUG] Parsed request:", req)
 
 	// Validar y crear los value objects
 	fullName, err := v.NewFullName(req.Name, req.Lastname)
 	if err != nil {
-		fmt.Println("[ERROR] Invalid full name:", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
 	username, err := v.NewUserName(req.Username)
 	if err != nil {
-		fmt.Println("[ERROR] Invalid username:", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
 	dni, err := v.NewDni(req.Dni)
 	if err != nil {
-		fmt.Println("[ERROR] Invalid DNI:", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
 	email, err := v.NewEmail(req.Email)
 	if err != nil {
-		fmt.Println("[ERROR] Invalid email:", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
 	currentUser, err := h.GetUserByIDUsecase.Execute(*id)
 	if err != nil {
-		fmt.Println("[ERROR] Invalid User:", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
@@ -428,15 +430,15 @@ func (h *UserEchoHandler) Update(c echo.Context) error {
 		*email,
 		currentPassword, // No actualizamos la contraseña
 	)
-	fmt.Println("[DEBUG] User object created:", user)
 
 	// Llamar al caso de uso para actualizar el usuario
 	updatedUser, err := h.UpdateUsecase.Execute(user)
+	if err.Error() == "unauthorized" {
+		return c.JSON(http.StatusMethodNotAllowed, map[string]string{"error": err.Error()})
+	}
 	if err != nil {
-		fmt.Println("[ERROR] Failed to update user:", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	fmt.Println("[DEBUG] Updated user received:", updatedUser)
 
 	// Crear el DTO para la respuesta
 	userDTO := &d.UserSafeDTO{
