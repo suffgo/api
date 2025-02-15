@@ -118,6 +118,7 @@ func (s *RoomXormRepository) Save(room d.Room) (*d.Room, error) {
 		Name:        room.Name().Name,
 		AdminID:     room.AdminID().Id,
 		Description: room.Description().Description,
+		State:       room.State().CurrentState,
 	}
 
 	_, err := s.db.GetDb().Insert(roomModel)
@@ -244,7 +245,6 @@ func (r *RoomXormRepository) Update(room *d.Room) (*d.Room, error) {
 }
 
 func (s *RoomXormRepository) UpdateState(roomID sv.ID, state string) error {
-	
-	
+
 	return nil
 }

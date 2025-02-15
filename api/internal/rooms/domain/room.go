@@ -131,6 +131,6 @@ func (r *Room) SetDescription(description v.Description) {
 	r.description = description
 }
 
-func (r *Room) State() v.State {
-	return *r.state
+func (r *Room) State() *v.State {
+	return r.state
 }

@@ -21,6 +21,8 @@ func NewCreateUsecase(roomRepo domain.RoomRepository) *CreateUsecase {
 
 func (s *CreateUsecase) Execute(roomData domain.Room) (*domain.Room, error) {
 
+	roomData.State().SetState("created") 
+
 	createdRoom, err := s.roomRepository.Save(roomData)
 	if err != nil {
 		return nil, err
