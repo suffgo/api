@@ -22,8 +22,8 @@ import (
 	p "suffgo/internal/proposals/infrastructure"
 
 	roomUsecase "suffgo/internal/rooms/application/useCases"
-	roomWsUsecase "suffgo/internal/rooms/application/useCases/websocket"
 	roomUsecaseAddUsers "suffgo/internal/rooms/application/useCases/addUsers"
+	roomWsUsecase "suffgo/internal/rooms/application/useCases/websocket"
 
 	r "suffgo/internal/rooms/infrastructure"
 
@@ -218,10 +218,11 @@ func (s *EchoServer) InitializeProposal(roomRepo *r.RoomXormRepository) {
 	proposalRepo := p.NewProposalXormRepository(s.db)
 
 	createProposalUseCase := proposalUsecase.NewCreateUsecase(proposalRepo, roomRepo)
-	deleteProposalUseCase := proposalUsecase.NewDeleteUseCase(proposalRepo)
+	deleteProposalUseCase := proposalUsecase.NewDeleteUseCase(proposalRepo, roomRepo)
 	getAllProposalsUseCase := proposalUsecase.NewGetAllUseCase(proposalRepo)
 	getProposalByIDUseCase := proposalUsecase.NewGetByIDUseCase(proposalRepo)
 	restoreProposalUseCase := proposalUsecase.NewRestoreUsecase(proposalRepo)
+	updateProposalUseCase := proposalUsecase.NewUpdateProposalUsecase(proposalRepo, roomRepo)
 
 	proposalHandler := p.NewProposalEchoHandler(
 		createProposalUseCase,
@@ -229,6 +230,7 @@ func (s *EchoServer) InitializeProposal(roomRepo *r.RoomXormRepository) {
 		getProposalByIDUseCase,
 		deleteProposalUseCase,
 		restoreProposalUseCase,
+		updateProposalUseCase,
 	)
 
 	p.InitializeProposalEchoRouter(s.app, proposalHandler)

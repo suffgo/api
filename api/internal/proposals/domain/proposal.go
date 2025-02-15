@@ -29,6 +29,12 @@ type (
 		RoomID        uint    `json:"room_id"`
 		UserCreatorID uint    `json:"user_creator_id"`
 	}
+
+	ProposalUpdateRequest struct {
+		Archive     *string `json:"archive"`
+		Title       string  `json:"title"`
+		Description *string `json:"description"`
+	}
 )
 
 func NewProposal(

@@ -113,10 +113,10 @@ func (r *RoomXormRepository) GetByAdminID(adminID sv.ID) ([]d.Room, error) {
 
 func (s *RoomXormRepository) Save(room d.Room) (*d.Room, error) {
 	roomModel := &m.Room{
-		LinkInvite: ptr(room.LinkInvite().LinkInvite),
-		IsFormal:   room.IsFormal().IsFormal,
-		Name:       room.Name().Name,
-		AdminID:    room.AdminID().Id,
+		LinkInvite:  ptr(room.LinkInvite().LinkInvite),
+		IsFormal:    room.IsFormal().IsFormal,
+		Name:        room.Name().Name,
+		AdminID:     room.AdminID().Id,
 		Description: room.Description().Description,
 	}
 

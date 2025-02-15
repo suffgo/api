@@ -82,7 +82,7 @@ func (s *UserXormRepository) Restore(userID sv.ID) error {
 
 	user := &m.Users{DeletedAt: nil}
 
-	affected, err := s.db.GetDb().Unscoped().ID(primitiveID).Cols("delete_a_t").Update(user)
+	affected, err := s.db.GetDb().Unscoped().ID(primitiveID).Cols("deleted_at").Update(user)
 	if err != nil {
 		return err
 	}
