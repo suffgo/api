@@ -39,7 +39,6 @@ type RoomEchoHandler struct {
 	AddSingleUserUsecase *addUsers.AddSingleUserUsecase
 	GetUserByIDUsecase   *useruc.GetByIDUsecase
 	UpdateRoomUsecase    *r.UpdateRoomUsecase
-	StartWsUsecase       *roomWs.StartWsUsecase
 	GetSrByRoomIDUsecase *r.GetSrByRoomUsecase
 	ManageWsUsecase      *roomWs.ManageWsUsecase
 }
@@ -57,7 +56,6 @@ func NewRoomEchoHandler(
 	updateUC *r.UpdateRoomUsecase,
 	manageWsUC *roomWs.ManageWsUsecase,
 	getSrByRoomIDUC *r.GetSrByRoomUsecase,
-	startWsUC *roomWs.StartWsUsecase,
 
 ) *RoomEchoHandler {
 	return &RoomEchoHandler{
@@ -73,7 +71,6 @@ func NewRoomEchoHandler(
 		UpdateRoomUsecase:    updateUC,
 		ManageWsUsecase:      manageWsUC,
 		GetSrByRoomIDUsecase: getSrByRoomIDUC,
-		StartWsUsecase:       startWsUC,
 	}
 }
 
@@ -665,6 +662,8 @@ func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
 	}
 
 	username, _ := sess.Values["name"].(string)
+
+	//TODO: validar que sea el administrador
 
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {

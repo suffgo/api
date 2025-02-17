@@ -7,47 +7,47 @@ import (
 
 	"suffgo/internal/rooms/domain"
 
+	"suffgo/internal/rooms/application/useCases/websocket/socketStructs"
+	_ "suffgo/internal/rooms/application/useCases/websocket/socketStructs"
 	sv "suffgo/internal/shared/domain/valueObjects"
 )
 
 type ManageWsUsecase struct {
-	repository domain.RoomRepository
+	rooms          map[sv.ID]*socketStructs.RoomLobby
+	roomRepository domain.RoomRepository
 }
 
-// NewManageWsUsecase crea una nueva instancia de ManageWsUsecase.
 func NewManageWsUsecase(repo domain.RoomRepository) *ManageWsUsecase {
+
 	return &ManageWsUsecase{
-		repository: repo,
+		roomRepository: repo,
+		rooms:          make(map[sv.ID]*socketStructs.RoomLobby),
 	}
 }
 
-//clave = id y valor = sala
-var rooms map[sv.ID]*RoomLobby
-
-//client = user
-func (s *ManageWsUsecase) Execute(ws *websocket.Conn, username string, primitiveRoomId, clientID sv.ID) error {
-	
-	if rooms == nil {
-		rooms = make(map[sv.ID]*RoomLobby)
-	}
+func (s *ManageWsUsecase) Execute(ws *websocket.Conn, username string, roomId, clientID sv.ID) error {
 
 	log.Printf("New connection %s \n", username)
-
-	client := NewClient(ws, username)
+	client := socketStructs.NewClient(ws, username)
 	//inicia la sala
-	if rooms[primitiveRoomId] == nil {
-		rooms[primitiveRoomId] = NewRoomLobby(client, primitiveRoomId)
-	}
-	
-	//asigno el lobby al cliente
-	client.lobby = rooms[primitiveRoomId]
-	log.Printf("Sala iniciada con id = %d \n", primitiveRoomId.Id)
-	
-	//agrego al admin
-	rooms[primitiveRoomId].addClient(client)
+	if s.rooms[roomId] == nil {
 
-	go client.readMessages()
-	go client.writeMessages()
+		room, err := s.roomRepository.GetByID(roomId)
+
+		if err != nil {
+			return err
+		}
+
+		s.rooms[room.ID()] = socketStructs.NewRoomLobby(client, room, s.roomRepository)
+		log.Printf("Sala iniciada con id = %d \n", room.ID().Id)
+	}
+
+	client.SetLobby(s.rooms[roomId])
+
+	s.rooms[roomId].AddClient(client)
+
+	go client.ReadMessages()
+	go client.WriteMessages()
 
 	return nil
 }
