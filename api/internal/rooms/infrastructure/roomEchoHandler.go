@@ -338,7 +338,6 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 		adminName = "null"
 	}
 
-
 	var roomsDTO []d.RoomDetailedDTO
 	for _, room := range rooms {
 
@@ -397,6 +396,9 @@ func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 	room, err := h.JoinRoomUsecase.Execute(req.RoomCode, *userID)
 
 	if err != nil {
+		if errors.Is(err, rerr.ErrNotWhitelist) {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
+		}
 		if errors.Is(err, rerr.ErrRoomNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
@@ -526,18 +528,6 @@ func (h *RoomEchoHandler) Restore(c echo.Context) error {
 
 }
 
-var (
-	upgrader = websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-		CheckOrigin: func(r *http.Request) bool {
-			// Permitir conexiones desde http://localhost:3000 (ajusta según tu frontend)
-			origin := r.Header.Get("Origin")
-			return origin == "http://localhost:4321"
-		},
-	}
-)
-
 func (h *RoomEchoHandler) Update(c echo.Context) error {
 
 	roomIDStr := c.Param("id")
@@ -644,37 +634,48 @@ func GetUserIDFromSession(c echo.Context) (*sv.ID, error) {
 	return adminID, nil
 }
 
-func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
+var (
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			// Permitir conexiones desde http://localhost:3000 (ajusta según tu frontend)
+			origin := r.Header.Get("Origin")
+			return origin == "http://localhost:4321"
+		},
+	}
+)
 
+func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
 	sess, err := session.Get("session", c)
 	if err != nil {
 		c.Logger().Error("Error al obtener la sesión:", err)
 		return err
 	}
 
+	id := c.Param("room_id")
+	roomId, err := sv.NewID(id)
+	if err != nil {
+		return err
+	}
+
+	clientID, err := GetUserIDFromSession(c)
+	if err != nil {
+		return nil
+	}
+
 	username, _ := sess.Values["name"].(string)
 
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
-		log.Println("Error al actualizar a WebSocket:", err)
 		return err
 	}
-
-	roomID := c.Param("room_id")
-	clientID, err := GetUserIDFromSession(c)
+	
+	
+	err = h.ManageWsUsecase.Execute(ws, username, *roomId, *clientID)
 	if err != nil {
-		ws.Close()
-		return nil
+		log.Println(err.Error())
 	}
-
-	for {
-		err = h.ManageWsUsecase.Execute(ws, username, roomID, *clientID)
-		if err != nil {
-			log.Println(err.Error())
-			break
-		}
-	}
-	ws.Close()
-
+	
 	return nil
 }

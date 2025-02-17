@@ -5,6 +5,7 @@ import (
 	"suffgo/internal/rooms/domain"
 	sv "suffgo/internal/shared/domain/valueObjects"
 	sr "suffgo/internal/rooms/domain/valueObjects"
+	rerr "suffgo/internal/rooms/domain/errors"
 )
 
 type JoinRoomUsecase struct {
@@ -48,7 +49,7 @@ func (s *JoinRoomUsecase) Execute(roomCode string, userID sv.ID) (*domain.Room, 
 		}
 
 		if !can {
-			return nil, errors.New("user not in whitelist")
+			return nil, rerr.ErrNotWhitelist
 		}
 	}
 
