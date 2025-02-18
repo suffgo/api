@@ -202,7 +202,7 @@ func (s *EchoServer) InitializeRoom(userRepo userDom.UserRepository, settingRoom
 	joinUsecase := roomUsecase.NewJoinRoomUsecase(roomRepo)
 	AddSingleUserUsecase := roomUsecaseAddUsers.NewAddSingleUserUsecase(roomRepo, userRepo)
 	UpdateRoomUseCase := roomUsecase.NewUpdateRoomUsecase(roomRepo)
-	ManageWsUsecase := roomWsUsecase.NewManageWsUsecase(roomRepo)
+	ManageWsUsecase := roomWsUsecase.NewManageWsUsecase(roomRepo, userRepo)
 	GetSrByRoomIDUsecase := roomUsecase.NewGetSrByRoomUsecase(roomRepo, settingRoomRepo)
 
 	roomHandler := r.NewRoomEchoHandler(

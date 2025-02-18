@@ -67,7 +67,7 @@ func (r *RoomLobby) AddClient(client *Client) {
 
 	r.clients[client] = true //lo agrego a la lista de clientes conectados
 	for user, conn := range r.clients {
-		log.Printf("user %s; conn: %t", user.username, conn)
+		log.Printf("user %s; conn: %t", user.user.Username().Username, conn)
 	}
 
 }

@@ -21,7 +21,6 @@ import (
 	useruc "suffgo/internal/users/application/useCases"
 
 	"github.com/gorilla/websocket"
-	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 
 	"suffgo/internal/settingsRoom/domain"
@@ -644,11 +643,6 @@ var (
 )
 
 func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
-	sess, err := session.Get("session", c)
-	if err != nil {
-		c.Logger().Error("Error al obtener la sesión:", err)
-		return err
-	}
 
 	id := c.Param("room_id")
 	roomId, err := sv.NewID(id)
@@ -661,8 +655,6 @@ func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
 		return nil
 	}
 
-	username, _ := sess.Values["name"].(string)
-
 	//TODO: validar que sea el administrador
 
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
@@ -671,10 +663,12 @@ func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
 	}
 	
 	
-	err = h.ManageWsUsecase.Execute(ws, username, *roomId, *clientID)
+	err = h.ManageWsUsecase.Execute(ws, *clientID, *roomId )
 	if err != nil {
+		ws.Close()
 		log.Println(err.Error())
 	}
+
 	
 	return nil
 }

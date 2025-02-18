@@ -5,20 +5,21 @@ import (
 	"log"
 
 	"github.com/gorilla/websocket"
+	userdom "suffgo/internal/users/domain"
 )
 
 type Client struct {
-	conn     *websocket.Conn
-	username string
-	lobby    *RoomLobby
+	conn   *websocket.Conn
+	user   userdom.User
+	lobby  *RoomLobby
 	egress chan Event //debido a que la conexion no soporta muchos mensajes al mismo tiempo, se utiliza este canal para que los mensajes lleguen uno a la vez
 }
 
-func NewClient(conn *websocket.Conn, username string) *Client {
+func NewClient(conn *websocket.Conn, user userdom.User) *Client {
 	return &Client{
-		conn:     conn,
-		username: username,
-		egress:   make(chan Event),
+		conn:   conn,
+		user:   user,
+		egress: make(chan Event),
 	}
 }
 
@@ -37,7 +38,7 @@ func (c *Client) ReadMessages() {
 			break
 		}
 
-		var request Event 
+		var request Event
 		if err := json.Unmarshal(payload, &request); err != nil {
 			log.Printf("error marshalling event : %v\n", err)
 			break
@@ -49,7 +50,6 @@ func (c *Client) ReadMessages() {
 		}
 	}
 }
-
 
 func (c *Client) WriteMessages() {
 	defer func() {
@@ -64,11 +64,11 @@ func (c *Client) WriteMessages() {
 				}
 				return
 			}
-			
+
 			data, err := json.Marshal(message)
 			if err != nil {
 				log.Println(err)
-				return 
+				return
 			}
 			if err := c.conn.WriteMessage(websocket.TextMessage, data); err != nil {
 				log.Printf("failed to send message: %v", err)
@@ -77,8 +77,8 @@ func (c *Client) WriteMessages() {
 	}
 }
 
-func (c *Client) Username() string {
-	return c.username
+func (c *Client) User() userdom.User {
+	return c.user
 }
 
 func (c *Client) Conn() *websocket.Conn {
@@ -92,4 +92,3 @@ func (c *Client) Lobby() *RoomLobby {
 func (c *Client) SetLobby(lobby *RoomLobby) {
 	c.lobby = lobby
 }
-
