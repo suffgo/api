@@ -21,7 +21,6 @@ import (
 	useruc "suffgo/internal/users/application/useCases"
 
 	"github.com/gorilla/websocket"
-	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 
 	"suffgo/internal/settingsRoom/domain"
@@ -39,7 +38,6 @@ type RoomEchoHandler struct {
 	AddSingleUserUsecase *addUsers.AddSingleUserUsecase
 	GetUserByIDUsecase   *useruc.GetByIDUsecase
 	UpdateRoomUsecase    *r.UpdateRoomUsecase
-	StartWsUsecase       *roomWs.StartWsUsecase
 	GetSrByRoomIDUsecase *r.GetSrByRoomUsecase
 	ManageWsUsecase      *roomWs.ManageWsUsecase
 }
@@ -57,7 +55,6 @@ func NewRoomEchoHandler(
 	updateUC *r.UpdateRoomUsecase,
 	manageWsUC *roomWs.ManageWsUsecase,
 	getSrByRoomIDUC *r.GetSrByRoomUsecase,
-	startWsUC *roomWs.StartWsUsecase,
 
 ) *RoomEchoHandler {
 	return &RoomEchoHandler{
@@ -73,7 +70,6 @@ func NewRoomEchoHandler(
 		UpdateRoomUsecase:    updateUC,
 		ManageWsUsecase:      manageWsUC,
 		GetSrByRoomIDUsecase: getSrByRoomIDUC,
-		StartWsUsecase:       startWsUC,
 	}
 }
 
@@ -338,7 +334,6 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 		adminName = "null"
 	}
 
-
 	var roomsDTO []d.RoomDetailedDTO
 	for _, room := range rooms {
 
@@ -397,6 +392,9 @@ func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 	room, err := h.JoinRoomUsecase.Execute(req.RoomCode, *userID)
 
 	if err != nil {
+		if errors.Is(err, rerr.ErrNotWhitelist) {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
+		}
 		if errors.Is(err, rerr.ErrRoomNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
@@ -526,18 +524,6 @@ func (h *RoomEchoHandler) Restore(c echo.Context) error {
 
 }
 
-var (
-	upgrader = websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-		CheckOrigin: func(r *http.Request) bool {
-			// Permitir conexiones desde http://localhost:3000 (ajusta según tu frontend)
-			origin := r.Header.Get("Origin")
-			return origin == "http://localhost:4321"
-		},
-	}
-)
-
 func (h *RoomEchoHandler) Update(c echo.Context) error {
 
 	roomIDStr := c.Param("id")
@@ -644,37 +630,45 @@ func GetUserIDFromSession(c echo.Context) (*sv.ID, error) {
 	return adminID, nil
 }
 
+var (
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			// Permitir conexiones desde http://localhost:3000 (ajusta según tu frontend)
+			origin := r.Header.Get("Origin")
+			return origin == "http://localhost:4321"
+		},
+	}
+)
+
 func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
 
-	sess, err := session.Get("session", c)
+	id := c.Param("room_id")
+	roomId, err := sv.NewID(id)
 	if err != nil {
-		c.Logger().Error("Error al obtener la sesión:", err)
 		return err
 	}
 
-	username, _ := sess.Values["name"].(string)
-
-	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
-	if err != nil {
-		log.Println("Error al actualizar a WebSocket:", err)
-		return err
-	}
-
-	roomID := c.Param("room_id")
 	clientID, err := GetUserIDFromSession(c)
 	if err != nil {
-		ws.Close()
 		return nil
 	}
 
-	for {
-		err = h.ManageWsUsecase.Execute(ws, username, roomID, *clientID)
-		if err != nil {
-			log.Println(err.Error())
-			break
-		}
-	}
-	ws.Close()
+	//TODO: validar que sea el administrador
 
+	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		return err
+	}
+	
+	
+	err = h.ManageWsUsecase.Execute(ws, *clientID, *roomId )
+	if err != nil {
+		ws.Close()
+		log.Println(err.Error())
+	}
+
+	
 	return nil
 }
