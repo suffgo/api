@@ -11,9 +11,14 @@ type EventUsecase func(event Event, c *Client) error
 
 const (
 	EventSendMessage = "send_message"
+	EventUpdateClientList = "update_client_list"
 )
 
 type SendMessageEvent struct {
 	Message string `json:"message"`
 	From    string `json:"from"`
+}
+
+type UpdateClientListEvent struct {
+	Clients []string `json:"clients"`
 }
