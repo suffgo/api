@@ -60,10 +60,11 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, userId, roomId sv.ID) erro
 
 	client.SetLobby(s.rooms[roomId])
 
-	s.rooms[roomId].AddClient(client)
-
 	go client.ReadMessages()
 	go client.WriteMessages()
+
+	s.rooms[roomId].AddClient(client)
+
 
 	return nil
 }
