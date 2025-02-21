@@ -11,7 +11,7 @@ type ClientList map[*Client]bool
 
 type RoomLobby struct {
 	sync.RWMutex
-	clients ClientList //incluyendo al administrador
+	clients ClientList 
 	admin   *Client
 	room    *domain.Room
 	clientsmx sync.RWMutex
