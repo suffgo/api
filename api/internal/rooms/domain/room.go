@@ -16,6 +16,7 @@ type (
 		inviteCode  *v.InviteCode //es opcional porque al momento de creacion no existe
 		description v.Description
 		state       *v.State
+		image       *v.Image
 	}
 
 	RoomDTO struct {
@@ -27,6 +28,7 @@ type (
 		Description string `json:"description"`
 		RoomCode    string `json:"room_code"`
 		State       string `json:"state"`
+		Image       string `json:"image"`
 	}
 
 	//Dto para informacion util al frontend
@@ -38,11 +40,20 @@ type (
 		AdminName   string     `json:"admin_name"`
 		Description string     `json:"description"`
 		RoomCode    string     `json:"room_code"`
-		State       string `json:"state"`
+		State       string     `json:"state"`
 		StartTime   *time.Time `json:"start_time"`
+		Image       string     `json:"image"`
 	}
 
 	RoomCreateRequest struct {
+		LinkInvite  string `json:"link_invite"`
+		IsFormal    bool   `json:"is_formal"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Image       string `json:"image"`
+	}
+
+	RoomUpdate struct {
 		LinkInvite  string `json:"link_invite"`
 		IsFormal    bool   `json:"is_formal"`
 		Name        string `json:"name"`
@@ -66,6 +77,7 @@ func NewRoom(
 	name v.Name,
 	adminID *sv.ID,
 	description v.Description,
+	image *v.Image,
 ) *Room {
 
 	state, err := v.NewState("created")
@@ -73,7 +85,7 @@ func NewRoom(
 	if err != nil {
 		return nil
 	}
-	
+
 	return &Room{
 		id:          id,
 		linkInvite:  linkInvite,
@@ -82,7 +94,8 @@ func NewRoom(
 		adminID:     adminID,
 		inviteCode:  nil,
 		description: description,
-		state: state,
+		state:       state,
+		image:       image,
 	}
 }
 
@@ -133,4 +146,12 @@ func (r *Room) SetDescription(description v.Description) {
 
 func (r *Room) State() *v.State {
 	return r.state
+}
+
+func (r *Room) Image() *v.Image {
+	return r.image
+}
+
+func (r *Room) SetImage(image *v.Image) {
+	r.image = image
 }

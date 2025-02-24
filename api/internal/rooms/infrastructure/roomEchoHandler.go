@@ -1,9 +1,14 @@
 package infrastructure
 
 import (
+	"encoding/base64"
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	r "suffgo/internal/rooms/application/useCases"
 	addUsers "suffgo/internal/rooms/application/useCases/addUsers"
@@ -20,6 +25,7 @@ import (
 
 	useruc "suffgo/internal/users/application/useCases"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
@@ -100,9 +106,23 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 	}
 	// Obtener el user_id de la sesion
 	adminID, err := GetUserIDFromSession(c)
-
 	if err != nil {
 		return err
+	}
+
+	var image *v.Image
+	if req.Image != "" {
+		// Guardar la imagen y obtener la ruta
+		imagePath, err := saveImage(req.Image, adminID.Id)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "No se pudo guardar la imagen de perfil"})
+		}
+
+		// Crear el Value Object
+		image, err = v.NewImage(imagePath)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		}
 	}
 
 	room := d.NewRoom(
@@ -112,9 +132,10 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 		*name,
 		adminID,
 		*description,
+		image,
 	)
 
-	createdRoom, err := h.CreateRoomUsecase.Execute(*room)
+	createdRoom, err := h.CreateRoomUsecase.Execute(*room, req.Image)
 	if err != nil {
 		return c.JSON(http.StatusConflict, map[string]string{"error": err.Error()})
 	}
@@ -136,6 +157,32 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, response)
+}
+func saveImage(base64Image string, roomID uint) (string, error) {
+	// Decodificar la imagen base64
+	data, err := base64.StdEncoding.DecodeString(base64Image)
+	if err != nil {
+		return "", err
+	}
+
+	// Crear un nombre único para el archivo usando UUID
+	uniqueID := uuid.New().String()                                     // Genera un UUID único
+	fileName := fmt.Sprintf("room_%d_profile_%s.png", roomID, uniqueID) // Usar UUID en el nombre del archivo
+	filePath := filepath.Join("internal/rooms/infrastructure/uploads", fileName)
+
+	// Crear la carpeta "uploads" si no existe
+	err = os.MkdirAll("internal/rooms/infrastructure/uploads", os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+
+	// Guardar la imagen en el servidor
+	err = ioutil.WriteFile(filePath, data, 0644)
+	if err != nil {
+		return "", err
+	}
+
+	return filePath, nil
 }
 
 func (h *RoomEchoHandler) DeleteRoom(c echo.Context) error {
@@ -280,6 +327,7 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 			RoomCode:    room.InviteCode().Code,
 			StartTime:   settingRoom.StartTime().DateTime,
 			State:       room.State().CurrentState,
+			Image:       room.Image().Path(),
 		}
 	} else {
 		roomDetailedDTO = &d.RoomDetailedDTO{
@@ -290,6 +338,7 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 			Description: room.Description().Description,
 			RoomCode:    room.InviteCode().Code,
 			State:       room.State().CurrentState,
+			Image:       room.Image().Path(),
 		}
 	}
 
@@ -337,7 +386,6 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 	} else {
 		adminName = "null"
 	}
-
 
 	var roomsDTO []d.RoomDetailedDTO
 	for _, room := range rooms {
@@ -546,7 +594,7 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room ID"})
 	}
 
-	var req d.RoomCreateRequest
+	var req d.RoomUpdate
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -583,6 +631,8 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room isFormal"})
 	}
 
+	image, err := v.NewImage(currentRoom.Image().Path())
+
 	room := d.NewRoom(
 		id,
 		*linkInvite,
@@ -590,6 +640,7 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		*name,
 		adminID,
 		*description,
+		image,
 	)
 
 	userID, err := GetUserIDFromSession(c)

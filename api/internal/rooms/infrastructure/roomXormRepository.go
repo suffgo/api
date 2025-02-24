@@ -119,6 +119,11 @@ func (s *RoomXormRepository) Save(room d.Room) (*d.Room, error) {
 		AdminID:     room.AdminID().Id,
 		Description: room.Description().Description,
 		State:       room.State().CurrentState,
+		Image:       "",
+	}
+
+	if room.Image() != nil {
+		roomModel.Image = room.Image().Path()
 	}
 
 	_, err := s.db.GetDb().Insert(roomModel)
