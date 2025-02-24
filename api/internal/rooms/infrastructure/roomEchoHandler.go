@@ -101,6 +101,8 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 		return err
 	}
 
+	state, _ := v.NewState("created")
+
 	room := d.NewRoom(
 		nil,
 		*linkInvite,
@@ -108,7 +110,7 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 		*name,
 		adminID,
 		*description,
-		nil,
+		state,
 	)
 
 	createdRoom, err := h.CreateRoomUsecase.Execute(*room)
