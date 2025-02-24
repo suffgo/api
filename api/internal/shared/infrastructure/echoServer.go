@@ -250,6 +250,7 @@ func (s *EchoServer) InitializeProposal(propRepo propDom.ProposalRepository, roo
 	getProposalByIDUseCase := proposalUsecase.NewGetByIDUseCase(propRepo)
 	restoreProposalUseCase := proposalUsecase.NewRestoreUsecase(propRepo)
 	updateProposalUseCase := proposalUsecase.NewUpdateProposalUsecase(propRepo, roomRepo)
+	getByRoomUsecase := proposalUsecase.NewGetByRoomUsecase(propRepo)
 
 	proposalHandler := p.NewProposalEchoHandler(
 		createProposalUseCase,
@@ -258,6 +259,7 @@ func (s *EchoServer) InitializeProposal(propRepo propDom.ProposalRepository, roo
 		deleteProposalUseCase,
 		restoreProposalUseCase,
 		updateProposalUseCase,
+		getByRoomUsecase,
 	)
 
 	p.InitializeProposalEchoRouter(s.app, proposalHandler)
