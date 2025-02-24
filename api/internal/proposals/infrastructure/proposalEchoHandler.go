@@ -24,6 +24,7 @@ type ProposalEchoHandler struct {
 	DeleteProposalUseCase  *u.DeleteUseCase
 	RestoreUseCase         *u.RestoreUsecase
 	UpdateUseCase          *u.UpdateUsecase
+	GetByRoomID            *u.GetByRoomIDUsecase
 }
 
 func NewProposalEchoHandler(
@@ -33,6 +34,7 @@ func NewProposalEchoHandler(
 	deleteUC *u.DeleteUseCase,
 	restoreUC *u.RestoreUsecase,
 	updateUC *u.UpdateUsecase,
+	getByRoomId *u.GetByRoomIDUsecase,
 ) *ProposalEchoHandler {
 	return &ProposalEchoHandler{
 		CreateProposalUsecase:  createUC,
@@ -41,6 +43,7 @@ func NewProposalEchoHandler(
 		DeleteProposalUseCase:  deleteUC,
 		RestoreUseCase:         restoreUC,
 		UpdateUseCase:          updateUC,
+		GetByRoomID:            getByRoomId,
 	}
 }
 
@@ -304,4 +307,42 @@ func (h *ProposalEchoHandler) Update(c echo.Context) error {
 		"success":     "proposal updated successfully",
 		"settingRoom": proposalDTO,
 	})
+}
+
+func (h *ProposalEchoHandler) GetProposalsByRoomId(c echo.Context) error {
+
+	userId, ok := c.Get("user_id").(string)
+	if !ok || userId == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
+	}
+
+	idParam := c.Param("room_id")
+
+	roomId, err := sv.NewID(idParam)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	proposal, err := h.GetByRoomID.Execute(roomId)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	var proposalDTO []d.ProposalDTO
+
+	for _, prop := range proposal {
+
+		propDTO := &d.ProposalDTO{
+			ID:          prop.ID().Id,
+			Archive:     &prop.Archive().Archive,
+			Title:       prop.Title().Title,
+			Description: &prop.Description().Description,
+			RoomID:      roomId.Id,
+		}
+		proposalDTO = append(proposalDTO, *propDTO)
+	}
+
+	return c.JSON(http.StatusOK, proposalDTO)
 }

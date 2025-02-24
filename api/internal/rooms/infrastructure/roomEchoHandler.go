@@ -101,6 +101,8 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 		return err
 	}
 
+	state, _ := v.NewState("created")
+
 	room := d.NewRoom(
 		nil,
 		*linkInvite,
@@ -108,6 +110,7 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 		*name,
 		adminID,
 		*description,
+		state,
 	)
 
 	createdRoom, err := h.CreateRoomUsecase.Execute(*room)
@@ -411,8 +414,12 @@ func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 	}
 
 	var adminName string
+	privileges := false
 	if admin != nil {
 		adminName = admin.FullName().Name + " " + admin.FullName().Lastname
+		if userID.Id == room.AdminID().Id {
+			privileges = true
+		}
 	} else {
 		adminName = "null"
 	}
@@ -438,6 +445,7 @@ func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 			RoomCode:    room.InviteCode().Code,
 			StartTime:   settingRoom.StartTime().DateTime,
 			State:       room.State().CurrentState,
+			Privileges:  privileges,
 		}
 	} else {
 		roomDetailedDTO = &d.RoomDetailedDTO{
@@ -448,6 +456,7 @@ func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 			Description: room.Description().Description,
 			RoomCode:    room.InviteCode().Code,
 			State:       room.State().CurrentState,
+			Privileges:  privileges,
 		}
 	}
 
@@ -576,6 +585,7 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		*name,
 		adminID,
 		*description,
+		nil,
 	)
 
 	userID, err := GetUserIDFromSession(c)
@@ -661,14 +671,12 @@ func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	
-	
-	err = h.ManageWsUsecase.Execute(ws, *clientID, *roomId )
+
+	err = h.ManageWsUsecase.Execute(ws, *clientID, *roomId)
 	if err != nil {
 		ws.Close()
 		log.Println(err.Error())
 	}
 
-	
 	return nil
 }

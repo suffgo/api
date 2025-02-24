@@ -34,12 +34,13 @@ type (
 		ID          uint       `json:"id"`
 		LinkInvite  string     `json:"link_invite"`
 		IsFormal    bool       `json:"is_formal"`
-		RoomTitle   string     `json:"room_title"` //es el nombre
+		RoomTitle   string     `json:"room_title"` 
 		AdminName   string     `json:"admin_name"`
 		Description string     `json:"description"`
 		RoomCode    string     `json:"room_code"`
-		State       string `json:"state"`
+		State       string     `json:"state"`
 		StartTime   *time.Time `json:"start_time"`
+		Privileges  bool       `json:"privileges"`
 	}
 
 	RoomCreateRequest struct {
@@ -66,14 +67,10 @@ func NewRoom(
 	name v.Name,
 	adminID *sv.ID,
 	description v.Description,
+	state *v.State,
 ) *Room {
 
-	state, err := v.NewState("created")
 
-	if err != nil {
-		return nil
-	}
-	
 	return &Room{
 		id:          id,
 		linkInvite:  linkInvite,
@@ -82,7 +79,7 @@ func NewRoom(
 		adminID:     adminID,
 		inviteCode:  nil,
 		description: description,
-		state: state,
+		state:       state,
 	}
 }
 

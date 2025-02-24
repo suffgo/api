@@ -24,10 +24,6 @@ func NewClient(conn *websocket.Conn, user userdom.User) *Client {
 }
 
 func (c *Client) ReadMessages() {
-	defer func() {
-		c.lobby.removeClient(c)
-	}()
-
 	for {
 		_, payload, err := c.conn.ReadMessage()
 
@@ -49,12 +45,11 @@ func (c *Client) ReadMessages() {
 			break
 		}
 	}
+
+	c.lobby.removeClient(c)
 }
 
 func (c *Client) WriteMessages() {
-	defer func() {
-		c.lobby.removeClient(c)
-	}()
 	for {
 		select {
 		case message, ok := <-c.egress:
@@ -62,13 +57,13 @@ func (c *Client) WriteMessages() {
 				if err := c.conn.WriteMessage(websocket.CloseMessage, nil); err != nil {
 					log.Println("connection closed", err)
 				}
-				return
+				break
 			}
 
 			data, err := json.Marshal(message)
 			if err != nil {
 				log.Println(err)
-				return
+				break
 			}
 			if err := c.conn.WriteMessage(websocket.TextMessage, data); err != nil {
 				log.Printf("failed to send message: %v", err)
