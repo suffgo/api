@@ -105,7 +105,7 @@ func (s *EchoServer) Start() {
 	deps := NewDependencies(s.db)
 
 	s.InitializeUser(deps.UserRepo)
-	s.InitializeRoom(deps.UserRepo, deps.SettingRoomRepo)
+	s.InitializeRoom(deps.UserRepo, deps.SettingRoomRepo, deps.ProposalRepo)
 	s.InitializeSettingRoom(deps.SettingRoomRepo, deps.RoomRepo)
 	s.InitializeProposal(deps.ProposalRepo, deps.RoomRepo)
 	s.InitializeVote()
@@ -191,7 +191,7 @@ func (s *EchoServer) InitializeVote() {
 	v.InitializeVoteEchoRouter(s.app, voteHandler)
 }
 
-func (s *EchoServer) InitializeRoom(userRepo userDom.UserRepository, settingRoomRepo srDom.SettingRoomRepository) {
+func (s *EchoServer) InitializeRoom(userRepo userDom.UserRepository, settingRoomRepo srDom.SettingRoomRepository, proposalRepo propDom.ProposalRepository) {
 	roomRepo := r.NewRoomXormRepository(s.db)
 	createRoomUseCase := roomUsecase.NewCreateUsecase(roomRepo)
 	deleteRoomUseCase := roomUsecase.NewDeleteUsecase(roomRepo)
@@ -202,7 +202,7 @@ func (s *EchoServer) InitializeRoom(userRepo userDom.UserRepository, settingRoom
 	joinUsecase := roomUsecase.NewJoinRoomUsecase(roomRepo)
 	AddSingleUserUsecase := roomUsecaseAddUsers.NewAddSingleUserUsecase(roomRepo, userRepo)
 	UpdateRoomUseCase := roomUsecase.NewUpdateRoomUsecase(roomRepo)
-	ManageWsUsecase := roomWsUsecase.NewManageWsUsecase(roomRepo, userRepo)
+	ManageWsUsecase := roomWsUsecase.NewManageWsUsecase(roomRepo, userRepo, proposalRepo)
 	GetSrByRoomIDUsecase := roomUsecase.NewGetSrByRoomUsecase(roomRepo, settingRoomRepo)
 
 	roomHandler := r.NewRoomEchoHandler(

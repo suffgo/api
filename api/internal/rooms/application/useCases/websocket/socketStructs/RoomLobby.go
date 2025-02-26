@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"suffgo/internal/rooms/domain"
+	propdom "suffgo/internal/proposals/domain"
 	"sync"
 )
 
@@ -15,16 +16,22 @@ type RoomLobby struct {
 	admin   *Client
 	room    *domain.Room
 	clientsmx sync.RWMutex
-
+	proposals []propdom.Proposal
+	
 	usecases map[string]EventUsecase
 }
 
-func NewRoomLobby(admin *Client, room *domain.Room, roomRepo domain.RoomRepository) *RoomLobby {
+func NewRoomLobby(admin *Client, room *domain.Room, roomRepo domain.RoomRepository, propRepo propdom.ProposalRepository) *RoomLobby {
+	
+	//error ya manejado anteriormente
+	proposals, _ := propRepo.GetByRoom(room.ID())
+	
 	r := &RoomLobby{
 		clients:  make(ClientList),
 		admin:    admin,
 		room:     room,
 		usecases: make(map[string]EventUsecase),
+		proposals: proposals,
 	}
 
 	r.initializeUsecases()
@@ -32,8 +39,9 @@ func NewRoomLobby(admin *Client, room *domain.Room, roomRepo domain.RoomReposito
 	return r
 }
 
-func (r *RoomLobby) initializeUsecases( /*repo domain.RoomRepository (por ahora no lo uso)*/ ) {
+func (r *RoomLobby) initializeUsecases() {
 	r.usecases[EventSendMessage] = SendMessage
+	r.usecases[EventStartVoting] = StartVoting
 }
 
 func SendMessage(event Event, c *Client) error {
@@ -42,6 +50,38 @@ func SendMessage(event Event, c *Client) error {
 			client.egress <- event
 		}
 	}
+	return nil
+}
+
+func StartVoting(event Event, c *Client) error {
+	log.Println("roger that")
+
+	for _, prop  := range c.Lobby().proposals {
+		log.Println(prop.Description().Description)
+	}
+	
+	if c.user.ID().Id != c.Lobby().Admin().user.ID().Id {
+		
+		errorEvent := Event{
+			Action: EventError,
+			Payload: marshalOrPanic(ErrorEvent{Message: "You are not the admin"}),
+		}
+
+		c.egress <- errorEvent
+		return nil
+	}
+
+	proposal := c.Lobby().proposals[0]
+	prop := Event{
+		Action: EventFirstProp,
+		Payload: marshalOrPanic(proposal),
+	}
+
+	for client := range c.Lobby().Clients() {
+		client.egress <- prop
+	}
+
+	log.Println("nice checkpoint")
 	return nil
 }
 
@@ -89,7 +129,7 @@ func (r *RoomLobby) broadcastClientList() {
 func marshalOrPanic(v interface{}) []byte {
     data, err := json.Marshal(v)
     if err != nil {
-        log.Panicln("error marshalling UpdateClientListEvent:", err)
+        log.Panicln("error marshalling:", err)
     }
     return data
 }

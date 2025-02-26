@@ -16,6 +16,9 @@ const (
 	EventEndVoting = "end_voting"
 	EventVote = "vote"
 	EventResults = "results"
+	EventFirstProp = "first_proposal"
+	EventNextProp = "next_proposal"
+	EventError = "error"
 )
 
 type SendMessageEvent struct {
@@ -27,3 +30,14 @@ type UpdateClientListEvent struct {
 	Clients []string `json:"clients"`
 }
 
+type ErrorEvent struct{
+	Message string `json:"message"`
+}
+
+type FirstPropEvent struct {
+	Prop string `json:"prop"`
+}
+
+type NextPropEvent struct {
+	Prop string `json:"prop"`
+}
