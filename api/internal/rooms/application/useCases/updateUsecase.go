@@ -19,6 +19,7 @@ func NewUpdateRoomUsecase(repository domain.RoomRepository) *UpdateRoomUsecase {
 
 func (u *UpdateRoomUsecase) Execute(room *domain.Room, userID sv.ID) (*domain.Room, error) {
 	// Buscar la sala por ID
+
 	existingRoom, err := u.repository.GetByID(room.ID())
 	if err != nil {
 		return nil, err
@@ -26,6 +27,11 @@ func (u *UpdateRoomUsecase) Execute(room *domain.Room, userID sv.ID) (*domain.Ro
 	if existingRoom == nil {
 		return nil, e.ErrRoomNotFound
 	}
+
+	//solo la puede editar si la sala no inicio
+	if existingRoom.State().CurrentState !=  "created" {
+		return nil, e.ErrStateConstraint
+	} 
 
 	if existingRoom.AdminID() != userID {
 		return nil, errors.New("unauthorized")

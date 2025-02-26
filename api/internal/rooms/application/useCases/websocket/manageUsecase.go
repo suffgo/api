@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
+	propdom "suffgo/internal/proposals/domain"
 	"suffgo/internal/rooms/domain"
 	roomerr "suffgo/internal/rooms/domain/errors"
 	userdom "suffgo/internal/users/domain"
@@ -16,35 +17,35 @@ import (
 )
 
 type ManageWsUsecase struct {
-	rooms          map[sv.ID]*socketStructs.RoomLobby
-	userRepository userdom.UserRepository
-	roomRepository domain.RoomRepository
+	rooms        map[sv.ID]*socketStructs.RoomLobby
+	userRepo     userdom.UserRepository
+	roomRepo     domain.RoomRepository
+	proposalRepo propdom.ProposalRepository
 }
 
-func NewManageWsUsecase(repo domain.RoomRepository, userRepo userdom.UserRepository) *ManageWsUsecase {
+func NewManageWsUsecase(repo domain.RoomRepository, userRepo userdom.UserRepository, proposalRepo propdom.ProposalRepository) *ManageWsUsecase {
 
 	return &ManageWsUsecase{
-		roomRepository: repo,
-		userRepository: userRepo,
-		rooms:          make(map[sv.ID]*socketStructs.RoomLobby),
+		roomRepo: repo,
+		userRepo: userRepo,
+		proposalRepo: proposalRepo,
+		rooms:    make(map[sv.ID]*socketStructs.RoomLobby),
 	}
 }
 
 func (s *ManageWsUsecase) Execute(ws *websocket.Conn, userId, roomId sv.ID) error {
 
-	user, err := s.userRepository.GetByID(userId)
+	user, err := s.userRepo.GetByID(userId)
 	if err != nil {
 		return err
 	}
 
 	client := socketStructs.NewClient(ws, *user)
-	//inicia la sala
 	if s.rooms[roomId] == nil {
-		room, err := s.roomRepository.GetByID(roomId)
+		room, err := s.roomRepo.GetByID(roomId)
 		if err != nil {
 			return err
 		}
-		// Verifica que room no sea nil
 		if room == nil {
 			return fmt.Errorf("room not found")
 		}
@@ -53,8 +54,7 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, userId, roomId sv.ID) erro
 			return roomerr.ErrUserNotAdmin
 		}
 
-		// Usa roomId para almacenar la sala, de forma consistente.
-		s.rooms[roomId] = socketStructs.NewRoomLobby(client, room, s.roomRepository)
+		s.rooms[roomId] = socketStructs.NewRoomLobby(client, room, s.roomRepo, s.proposalRepo)
 		log.Printf("Sala iniciada con id = %d \n", room.ID().Id)
 	}
 
@@ -64,7 +64,6 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, userId, roomId sv.ID) erro
 	go client.WriteMessages()
 
 	s.rooms[roomId].AddClient(client)
-
 
 	return nil
 }

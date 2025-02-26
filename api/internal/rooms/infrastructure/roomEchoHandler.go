@@ -578,6 +578,8 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room isFormal"})
 	}
 
+	state, err := v.NewState("created")
+	
 	room := d.NewRoom(
 		id,
 		*linkInvite,
@@ -585,7 +587,7 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		*name,
 		adminID,
 		*description,
-		nil,
+		state,
 	)
 
 	userID, err := GetUserIDFromSession(c)
@@ -598,6 +600,10 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 	if err != nil {
 		if err.Error() == "unauthorized" {
 			return c.JSON(http.StatusMethodNotAllowed, map[string]string{"error": err.Error()})
+		}
+
+		if errors.Is(rerr.ErrStateConstraint, err) {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
