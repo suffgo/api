@@ -57,7 +57,7 @@ func StartVoting(event Event, c *Client) error {
 	log.Println("roger that")
 
 	for _, prop  := range c.Lobby().proposals {
-		log.Println(prop.Description().Description)
+		log.Println(prop)
 	}
 	
 	if c.user.ID().Id != c.Lobby().Admin().user.ID().Id {
@@ -71,17 +71,25 @@ func StartVoting(event Event, c *Client) error {
 		return nil
 	}
 
-	proposal := c.Lobby().proposals[0]
-	prop := Event{
-		Action: EventFirstProp,
-		Payload: marshalOrPanic(proposal),
+	if  len(c.Lobby().proposals) > 0 {
+		proposal := c.Lobby().proposals[0]
+		proposalevt := ProposalEvent{
+			ID: proposal.ID().Id,
+			Archive: &proposal.Archive().Archive,
+			Description: &proposal.Description().Description,
+			Title: proposal.Title().Title,
+		}
+	
+		prop := Event{
+			Action: EventFirstProp,
+			Payload: marshalOrPanic(proposalevt),
+		}
+	
+		for client := range c.Lobby().Clients() {
+			client.egress <- prop
+		}
 	}
 
-	for client := range c.Lobby().Clients() {
-		client.egress <- prop
-	}
-
-	log.Println("nice checkpoint")
 	return nil
 }
 

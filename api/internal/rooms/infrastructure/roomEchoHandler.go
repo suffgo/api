@@ -252,11 +252,18 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 		}
 	}
 
+	userId, _ := GetUserIDFromSession(c)
+
 	var adminName string
 	if admin == nil { //el admin es un usuario eliminado
 		adminName = "null"
 	} else {
 		adminName = admin.FullName().Lastname + " " + admin.FullName().Name
+	}
+
+	privileges := false
+	if room.AdminID().Id == userId.Id {
+		privileges = true
 	}
 
 	var settingRoom *domain.SettingRoom
@@ -279,6 +286,7 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 			RoomCode:    room.InviteCode().Code,
 			StartTime:   settingRoom.StartTime().DateTime,
 			State:       room.State().CurrentState,
+			Privileges:  privileges,
 		}
 	} else {
 		roomDetailedDTO = &d.RoomDetailedDTO{
@@ -289,6 +297,7 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 			Description: room.Description().Description,
 			RoomCode:    room.InviteCode().Code,
 			State:       room.State().CurrentState,
+			Privileges:  privileges,
 		}
 	}
 
@@ -340,6 +349,12 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 	var roomsDTO []d.RoomDetailedDTO
 	for _, room := range rooms {
 
+		userId , _ := GetUserIDFromSession(c)
+		privileges := false
+		if userId.Id == room.AdminID().Id {
+			privileges = true
+		} 
+
 		var roomDTO *d.RoomDetailedDTO
 		if room.IsFormal().IsFormal {
 			settingRoom, err := h.GetSrByRoomIDUsecase.Execute(room.ID())
@@ -360,6 +375,7 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 				RoomCode:   room.InviteCode().Code,
 				StartTime:  settingRoom.StartTime().DateTime,
 				State:      room.State().CurrentState,
+				Privileges: privileges,
 			}
 		} else {
 			roomDTO = &d.RoomDetailedDTO{
@@ -370,6 +386,7 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 				Description: room.Description().Description,
 				RoomCode:    room.InviteCode().Code,
 				State:       room.State().CurrentState,
+				Privileges: privileges,
 			}
 		}
 
@@ -579,7 +596,7 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 	}
 
 	state, err := v.NewState("created")
-	
+
 	room := d.NewRoom(
 		id,
 		*linkInvite,

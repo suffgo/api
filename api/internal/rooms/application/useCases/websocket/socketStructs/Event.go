@@ -34,6 +34,15 @@ type ErrorEvent struct{
 	Message string `json:"message"`
 }
 
+type ProposalEvent struct{
+	ID          uint    `json:"id"`
+	Archive     *string `json:"archive"`
+	Title       string  `json:"title"`
+	Description *string `json:"description"`
+	RoomID      uint    `json:"room_id"`
+}
+
+
 type FirstPropEvent struct {
 	Prop string `json:"prop"`
 }
