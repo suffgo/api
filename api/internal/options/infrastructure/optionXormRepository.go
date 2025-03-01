@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"log"
 	"suffgo/cmd/database"
 	d "suffgo/internal/options/domain"
 	oe "suffgo/internal/options/domain/errors"
@@ -105,4 +106,27 @@ func (s *OptionXormRepository) Save(option d.Option) error {
 	}
 
 	return nil
+}
+
+func (s *OptionXormRepository) GetByProposal(id sv.ID) ([]d.Option, error) {
+	
+	var options []m.Option
+	err := s.db.GetDb().Where("proposal_id = ?", id.Id).Find(&options)
+	if err != nil {
+		return nil, err
+	}
+
+	var optionsDomain []d.Option
+	for _, option := range options {
+		optionDomain, err := mappers.ModelToDomain(&option)
+
+		if err != nil {
+			return nil, se.ErrDataMap
+		}
+
+		optionsDomain = append(optionsDomain, *optionDomain)
+	}
+
+	log.Println("sobrevivo")
+	return optionsDomain, nil
 }

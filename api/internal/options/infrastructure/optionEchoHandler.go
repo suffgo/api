@@ -52,6 +52,7 @@ func (h *OptionEchoHandler) CreateOption(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
+	
 	proposalID, err := sv.NewID(req.ProposalID)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})

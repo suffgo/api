@@ -11,4 +11,5 @@ type OptionRepository interface {
 	GetByValue(value v.Value) (*Option, error)
 	Delete(id sv.ID) error
 	Save(option Option) error
+	GetByProposal(id sv.ID) ([]Option, error)
 }
