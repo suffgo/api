@@ -120,7 +120,7 @@ func StartVoting(event Event, c *Client) error {
 	return nil
 }
 
-// User triggered events
+
 func (r *RoomLobby) routeEvent(event Event, c *Client) error {
 	if usecase, ok := r.usecases[event.Action]; ok {
 		if err := usecase(event, c); err != nil {

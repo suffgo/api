@@ -39,12 +39,12 @@ func NewVoteEchoHandler(
 
 func (h *VoteEchoHandler) CreateVote(c echo.Context) error {
 	var req d.VoteCreateRequest
-	// bindea el body del request (json) al dto
+
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	userID, err := sv.NewID(req.UserID)
+	userID, err := GetUserIDFromSession(c)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -65,7 +65,7 @@ func (h *VoteEchoHandler) CreateVote(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-  
+
 	//mapear dto
 	voteDTO := &d.VoteDTO{
 		ID:       createVote.ID().Id,
@@ -162,4 +162,24 @@ func (h *VoteEchoHandler) GetVoteByID(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, response)
+}
+
+func GetUserIDFromSession(c echo.Context) (*sv.ID, error) {
+	// Obtener el user_id de la sesion
+	userIDStr, ok := c.Get("user_id").(string)
+	if !ok || userIDStr == "" {
+		return nil, c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
+	}
+
+	adminIDUint, err := strconv.ParseUint(userIDStr, 10, 64)
+	if err != nil {
+		return nil, c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
+	}
+
+	adminID, err := sv.NewID(uint(adminIDUint))
+	if err != nil {
+		return nil, c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
+	}
+
+	return adminID, nil
 }

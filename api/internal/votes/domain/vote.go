@@ -18,7 +18,6 @@ type (
 	}
 
 	VoteCreateRequest struct {
-		UserID   uint `json:"user_id"`
 		OptionID uint `json:"option_id"`
 	}
 )

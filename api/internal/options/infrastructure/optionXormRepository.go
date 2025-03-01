@@ -1,7 +1,6 @@
 package infrastructure
 
 import (
-	"log"
 	"suffgo/cmd/database"
 	d "suffgo/internal/options/domain"
 	oe "suffgo/internal/options/domain/errors"
@@ -127,6 +126,5 @@ func (s *OptionXormRepository) GetByProposal(id sv.ID) ([]d.Option, error) {
 		optionsDomain = append(optionsDomain, *optionDomain)
 	}
 
-	log.Println("sobrevivo")
 	return optionsDomain, nil
 }
