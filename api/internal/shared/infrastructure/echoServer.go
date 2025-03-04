@@ -163,6 +163,7 @@ func (s *EchoServer) InitializeOption() {
 	getAllOptionUseCase := optionUsecase.NewGetAllRepository(optionRepo)
 	getOptionByIDUseCase := optionUsecase.NewGetByIDUsecase(optionRepo)
 	getOptionByValueUseCase := optionUsecase.NewGetByValueUsecase(optionRepo)
+	getOptionByPropUsecase := optionUsecase.NewGetByPropUsecase(optionRepo)
 
 	optionHandler := o.NewOptionEchoHandler(
 		createOptionUseCase,
@@ -170,6 +171,7 @@ func (s *EchoServer) InitializeOption() {
 		getAllOptionUseCase,
 		getOptionByIDUseCase,
 		getOptionByValueUseCase,
+		getOptionByPropUsecase,
 	)
 	o.InitializeOptionEchoRouter(s.app, optionHandler)
 }
@@ -192,11 +194,11 @@ func (s *EchoServer) InitializeVote() {
 }
 
 func (s *EchoServer) InitializeRoom(
-	userRepo userDom.UserRepository, 
-	settingRoomRepo srDom.SettingRoomRepository, 
+	userRepo userDom.UserRepository,
+	settingRoomRepo srDom.SettingRoomRepository,
 	proposalRepo propDom.ProposalRepository,
 	optionsRepo optDom.OptionRepository,
-	) {
+) {
 	roomRepo := r.NewRoomXormRepository(s.db)
 	createRoomUseCase := roomUsecase.NewCreateUsecase(roomRepo)
 	deleteRoomUseCase := roomUsecase.NewDeleteUsecase(roomRepo)

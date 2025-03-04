@@ -23,6 +23,7 @@ type OptionEchoHandler struct {
 	GetAllOptionUsecase     *u.GetAllUsecase
 	GetOtionByIDUsecase     *u.GetByIDUsecase
 	GetOptionByValueUsecase *u.GetByValueUsecase
+	GetOptionByPropUsecase  *u.GetByPropUsecase
 }
 
 func NewOptionEchoHandler(
@@ -31,6 +32,7 @@ func NewOptionEchoHandler(
 	getAllUC *u.GetAllUsecase,
 	getByIDUC *u.GetByIDUsecase,
 	getByValue *u.GetByValueUsecase,
+	getByProp *u.GetByPropUsecase,
 ) *OptionEchoHandler {
 	return &OptionEchoHandler{
 		CreateOptionUsecase:     createUC,
@@ -38,6 +40,7 @@ func NewOptionEchoHandler(
 		GetAllOptionUsecase:     getAllUC,
 		GetOtionByIDUsecase:     getByIDUC,
 		GetOptionByValueUsecase: getByValue,
+		GetOptionByPropUsecase:  getByProp,
 	}
 }
 
@@ -52,7 +55,7 @@ func (h *OptionEchoHandler) CreateOption(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-	
+
 	proposalID, err := sv.NewID(req.ProposalID)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -163,4 +166,42 @@ func (h *OptionEchoHandler) GetOptionByValue(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, optionDTO)
 
+}
+
+func (h *OptionEchoHandler) GetOptionByProposal(c echo.Context) error {
+
+	idParam := c.Param("proposal_id")
+
+	propId, err := sv.NewID(idParam)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
+	}
+
+	options, err := h.GetOptionByPropUsecase.Execute(propId)
+
+	if err != nil {
+		if errors.Is(oerrors.ErrOptNotFound, err) {
+			return c.JSON(http.StatusNoContent, map[string]string{"error": se.ErrInvalidID.Error()})
+		}
+
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": se.ErrInvalidID.Error()})
+	}
+
+	var optionsDto []d.OptionDTO
+	for _, option := range options {
+		OptionDTO := &d.OptionDTO{
+			ID:         option.ID().Id,
+			Value:      option.Value().Value,
+			ProposalID: option.ProposalID().Id,
+		}
+		optionsDto = append(optionsDto, *OptionDTO)
+	}
+
+	response := map[string]interface{}{
+		"success": "opciones de la propuesta " + idParam,
+		"options": optionsDto,
+	}
+
+	return c.JSON(http.StatusOK, response)
 }
