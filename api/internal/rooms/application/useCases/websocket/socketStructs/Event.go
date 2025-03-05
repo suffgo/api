@@ -50,3 +50,7 @@ type FirstPropEvent struct {
 type NextPropEvent struct {
 	Prop string `json:"prop"`
 }
+
+type VoteEvent struct{
+	OptionId string `json:"option_id"`
+}

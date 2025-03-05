@@ -11,7 +11,7 @@ import (
 	"suffgo/internal/rooms/domain"
 	roomerr "suffgo/internal/rooms/domain/errors"
 	userdom "suffgo/internal/users/domain"
-
+	votedom "suffgo/internal/votes/domain"
 
 	"suffgo/internal/rooms/application/useCases/websocket/socketStructs"
 	sv "suffgo/internal/shared/domain/valueObjects"
@@ -23,6 +23,7 @@ type ManageWsUsecase struct {
 	roomRepo     domain.RoomRepository
 	proposalRepo propdom.ProposalRepository
 	optionsRepo  optdom.OptionRepository
+	voteRepo     votedom.VoteRepository
 }
 
 func NewManageWsUsecase(
@@ -30,6 +31,7 @@ func NewManageWsUsecase(
 	userRepo userdom.UserRepository,
 	proposalRepo propdom.ProposalRepository,
 	optionsRepo optdom.OptionRepository,
+	votesRepo votedom.VoteRepository,
 ) *ManageWsUsecase {
 
 	return &ManageWsUsecase{
@@ -37,6 +39,7 @@ func NewManageWsUsecase(
 		userRepo:     userRepo,
 		proposalRepo: proposalRepo,
 		optionsRepo:  optionsRepo,
+		voteRepo:     votesRepo,
 		rooms:        make(map[sv.ID]*socketStructs.RoomLobby),
 	}
 }
@@ -75,6 +78,7 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, userId, roomId sv.ID) erro
 			s.roomRepo,
 			s.proposalRepo,
 			s.optionsRepo,
+			s.voteRepo,
 		)
 		log.Printf("room initialized with id = %d \n", room.ID().Id)
 	}

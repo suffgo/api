@@ -50,6 +50,7 @@ func (c *Client) ReadMessages() {
 }
 
 func (c *Client) WriteMessages() {
+	
 	for {
 		select {
 		case message, ok := <-c.egress:

@@ -6,6 +6,7 @@ import (
 	optdom "suffgo/internal/options/domain"
 	propdom "suffgo/internal/proposals/domain"
 	"suffgo/internal/rooms/domain"
+	votedom "suffgo/internal/votes/domain"
 	"sync"
 )
 
@@ -21,10 +22,11 @@ type RoomLobby struct {
 	propRepo  propdom.ProposalRepository
 	roomRepo  domain.RoomRepository
 	optRepo   optdom.OptionRepository
+	voteRepo  votedom.VoteRepository
 	usecases  map[string]EventUsecase
 }
 
-func NewRoomLobby(admin *Client, room *domain.Room, roomRepo domain.RoomRepository, propRepo propdom.ProposalRepository, optRepo optdom.OptionRepository) *RoomLobby {
+func NewRoomLobby(admin *Client, room *domain.Room, roomRepo domain.RoomRepository, propRepo propdom.ProposalRepository, optRepo optdom.OptionRepository, voteRepo votedom.VoteRepository) *RoomLobby {
 
 	//error ya manejado anteriormente
 	proposals, _ := propRepo.GetByRoom(room.ID())
@@ -38,6 +40,7 @@ func NewRoomLobby(admin *Client, room *domain.Room, roomRepo domain.RoomReposito
 		roomRepo:  roomRepo,
 		propRepo:  propRepo,
 		optRepo:   optRepo,
+		voteRepo:  voteRepo,
 	}
 
 	r.initializeUsecases()
@@ -48,6 +51,7 @@ func NewRoomLobby(admin *Client, room *domain.Room, roomRepo domain.RoomReposito
 func (r *RoomLobby) initializeUsecases() {
 	r.usecases[EventSendMessage] = SendMessage
 	r.usecases[EventStartVoting] = StartVoting
+	r.usecases[EventVote] = ReceiveVote
 }
 
 func SendMessage(event Event, c *Client) error {
@@ -60,7 +64,7 @@ func SendMessage(event Event, c *Client) error {
 }
 
 func StartVoting(event Event, c *Client) error {
-	log.Println("roger that")
+	log.Printf("room with id = %d has begun \n", c.Lobby().room.AdminID().Id)
 
 	for _, prop := range c.Lobby().proposals {
 		log.Println(prop)
@@ -87,7 +91,7 @@ func StartVoting(event Event, c *Client) error {
 				Action:  EventError,
 				Payload: marshalOrPanic(ErrorEvent{Message: "error fetching options"}),
 			}
-	
+
 			c.egress <- errorEvent
 
 			return nil
@@ -96,7 +100,7 @@ func StartVoting(event Event, c *Client) error {
 		var optionsValue []string
 		for _, option := range options {
 			optionsValue = append(optionsValue, option.Value().Value)
-		} 
+		}
 
 		//todo lo necesario para poder votar
 		proposalevt := ProposalEvent{
@@ -120,6 +124,13 @@ func StartVoting(event Event, c *Client) error {
 	return nil
 }
 
+func ReceiveVote(event Event, c *Client) error {
+
+
+	log.Println("holis")
+	
+	return nil
+}
 
 func (r *RoomLobby) routeEvent(event Event, c *Client) error {
 	if usecase, ok := r.usecases[event.Action]; ok {
@@ -167,6 +178,7 @@ func marshalOrPanic(v interface{}) []byte {
 	}
 	return data
 }
+
 
 func (r *RoomLobby) AddClient(client *Client) {
 	r.clientsmx.Lock()
