@@ -197,7 +197,7 @@ func (s *EchoServer) InitializeRoom(
 	votesRepo voteDom.VoteRepository,
 ) {
 	roomRepo := r.NewRoomXormRepository(s.db)
-	createRoomUseCase := roomUsecase.NewCreateUsecase(roomRepo)
+	createRoomUseCase := roomUsecase.NewCreateUsecase(roomRepo, settingRoomRepo)
 	deleteRoomUseCase := roomUsecase.NewDeleteUsecase(roomRepo)
 	getAllRoomUseCase := roomUsecase.NewGetAllUsecase(roomRepo)
 	getByIDRoomUseCase := roomUsecase.NewGetByIDUsecase(roomRepo)
