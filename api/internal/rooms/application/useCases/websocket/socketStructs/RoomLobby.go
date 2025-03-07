@@ -97,9 +97,15 @@ func StartVoting(event Event, c *Client) error {
 			return nil
 		}
 
-		var optionsValue []string
+		var optionsValue []optdom.OptionDTO
 		for _, option := range options {
-			optionsValue = append(optionsValue, option.Value().Value)
+
+			opt := optdom.OptionDTO{
+				ID: option.ID().Id,
+				Value: option.Value().Value,
+				ProposalID: option.ProposalID().Id,
+			}
+			optionsValue = append(optionsValue, opt)
 		}
 
 		//todo lo necesario para poder votar
