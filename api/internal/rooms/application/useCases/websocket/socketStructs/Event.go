@@ -55,5 +55,5 @@ type NextPropEvent struct {
 }
 
 type VoteEvent struct {
-	OptionId string `json:"option_id"`
+	OptionId uint `json:"option_id"`
 }

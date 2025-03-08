@@ -22,7 +22,7 @@ type (
 	}
 )
 
-func NeweVote(
+func NewVote(
 	id *sv.ID,
 	userID *sv.ID,
 	optionID *sv.ID,

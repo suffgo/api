@@ -53,7 +53,7 @@ func (h *VoteEchoHandler) CreateVote(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	vote := d.NeweVote(
+	vote := d.NewVote(
 		nil,
 		userID,
 		optionID,
