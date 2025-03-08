@@ -7,7 +7,7 @@ import (
 	optdom "suffgo/internal/options/domain"
 	propdom "suffgo/internal/proposals/domain"
 	"suffgo/internal/rooms/domain"
-	sv "suffgo/internal/shared/domain/valueObjects"
+	
 	votedom "suffgo/internal/votes/domain"
 	"sync"
 )
@@ -56,107 +56,6 @@ func (r *RoomLobby) initializeUsecases() {
 	r.usecases[EventVote] = ReceiveVote
 }
 
-func SendMessage(event Event, c *Client) error {
-	for client := range c.Lobby().Clients() {
-		if client != c {
-			client.egress <- event
-		}
-	}
-	return nil
-}
-
-func StartVoting(event Event, c *Client) error {
-	log.Printf("room with id = %d has begun \n", c.Lobby().room.AdminID().Id)
-
-	for _, prop := range c.Lobby().proposals {
-		log.Println(prop)
-	}
-
-	if c.user.ID().Id != c.Lobby().Admin().user.ID().Id {
-
-		errorEvent := Event{
-			Action:  EventError,
-			Payload: marshalOrPanic(ErrorEvent{Message: "You are not the admin"}),
-		}
-
-		c.egress <- errorEvent
-		return nil
-	}
-
-	if len(c.Lobby().proposals) > 0 {
-		proposal := c.Lobby().proposals[0]
-
-		//obtengo opciones de la prop
-		options, err := c.lobby.optRepo.GetByProposal(proposal.ID())
-		if err != nil {
-			errorEvent := Event{
-				Action:  EventError,
-				Payload: marshalOrPanic(ErrorEvent{Message: "error fetching options"}),
-			}
-
-			c.egress <- errorEvent
-
-			return nil
-		}
-
-		var optionsValue []optdom.OptionDTO
-		for _, option := range options {
-
-			opt := optdom.OptionDTO{
-				ID:         option.ID().Id,
-				Value:      option.Value().Value,
-				ProposalID: option.ProposalID().Id,
-			}
-			optionsValue = append(optionsValue, opt)
-		}
-
-		//todo lo necesario para poder votar
-		proposalevt := ProposalEvent{
-			ID:          proposal.ID().Id,
-			Archive:     &proposal.Archive().Archive,
-			Description: &proposal.Description().Description,
-			Title:       proposal.Title().Title,
-			Options:     optionsValue,
-		}
-
-		prop := Event{
-			Action:  EventFirstProp,
-			Payload: marshalOrPanic(proposalevt),
-		}
-
-		for client := range c.Lobby().Clients() {
-			client.egress <- prop
-		}
-	}
-
-	return nil
-}
-
-// Si el id es = 0, no voto nada
-func ReceiveVote(event Event, c *Client) error {
-
-	var voteEvent VoteEvent
-
-	if err := json.Unmarshal(event.Payload, &voteEvent); err != nil {
-		return err
-	}
-
-	votedOpt, err := sv.NewID(uint(voteEvent.OptionId))
-	if err != nil {
-		log.Println(err.Error())
-		return nil
-	}
-	userId := c.user.ID()
-	vote := votedom.NewVote(nil, &userId, votedOpt)
-	//cuidado con esto capaz tenga que usar un canal
-	_, err = c.lobby.voteRepo.Save(*vote)
-
-	if err != nil {
-		log.Println(err.Error())
-		return nil
-	}
-	return nil
-}
 
 func (r *RoomLobby) routeEvent(event Event, c *Client) error {
 	if usecase, ok := r.usecases[event.Action]; ok {
