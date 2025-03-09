@@ -11,7 +11,7 @@ func InitializeProposalEchoRouter(e *echo.Echo, handler *ProposalEchoHandler) {
 	proposalGroup.GET("", handler.GetAllProposal)
 	proposalGroup.GET("/:id", handler.GetProposalByID)
 
-	proposalGroup.POST("/restore/:id", handler.RestoreProposal)
+	proposalGroup.POST("/restore/:id", handler.RestoreProposal)	
 
 	proposalGroup.Use(userInfr.AuthMiddleware)
 	proposalGroup.GET("/byRoom/:room_id", handler.GetProposalsByRoomId)

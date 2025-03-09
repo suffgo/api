@@ -246,5 +246,6 @@ func (r *RoomXormRepository) Update(room *d.Room) (*d.Room, error) {
 
 func (s *RoomXormRepository) UpdateState(roomID sv.ID, state string) error {
 
+	
 	return nil
 }

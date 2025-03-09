@@ -1,7 +1,7 @@
 package usecases
 
 import (
-
+	"log"
 	"suffgo/internal/settingsRoom/domain"
 	sv "suffgo/internal/shared/domain/valueObjects"
 )
@@ -16,7 +16,7 @@ func NewGetByRoomID(repository domain.SettingRoomRepository) *GetByRoomIDUsecase
 	}
 }
 func (s *GetByRoomIDUsecase) Execute(roomId sv.ID) (*domain.SettingRoom, error) {
-
+	log.Println("application")
 	settingRoom, err := s.GetByRoomIDUsecaseRepository.GetByRoom(roomId)
 	if err != nil {
 		return nil, err

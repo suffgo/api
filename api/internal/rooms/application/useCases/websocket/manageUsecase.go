@@ -6,13 +6,14 @@ import (
 
 	"github.com/gorilla/websocket"
 
+	optdom "suffgo/internal/options/domain"
 	propdom "suffgo/internal/proposals/domain"
 	"suffgo/internal/rooms/domain"
 	roomerr "suffgo/internal/rooms/domain/errors"
 	userdom "suffgo/internal/users/domain"
+	votedom "suffgo/internal/votes/domain"
 
 	"suffgo/internal/rooms/application/useCases/websocket/socketStructs"
-	_ "suffgo/internal/rooms/application/useCases/websocket/socketStructs"
 	sv "suffgo/internal/shared/domain/valueObjects"
 )
 
@@ -21,15 +22,25 @@ type ManageWsUsecase struct {
 	userRepo     userdom.UserRepository
 	roomRepo     domain.RoomRepository
 	proposalRepo propdom.ProposalRepository
+	optionsRepo  optdom.OptionRepository
+	voteRepo     votedom.VoteRepository
 }
 
-func NewManageWsUsecase(repo domain.RoomRepository, userRepo userdom.UserRepository, proposalRepo propdom.ProposalRepository) *ManageWsUsecase {
+func NewManageWsUsecase(
+	repo domain.RoomRepository,
+	userRepo userdom.UserRepository,
+	proposalRepo propdom.ProposalRepository,
+	optionsRepo optdom.OptionRepository,
+	votesRepo votedom.VoteRepository,
+) *ManageWsUsecase {
 
 	return &ManageWsUsecase{
-		roomRepo: repo,
-		userRepo: userRepo,
+		roomRepo:     repo,
+		userRepo:     userRepo,
 		proposalRepo: proposalRepo,
-		rooms:    make(map[sv.ID]*socketStructs.RoomLobby),
+		optionsRepo:  optionsRepo,
+		voteRepo:     votesRepo,
+		rooms:        make(map[sv.ID]*socketStructs.RoomLobby),
 	}
 }
 
@@ -54,8 +65,22 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, userId, roomId sv.ID) erro
 			return roomerr.ErrUserNotAdmin
 		}
 
-		s.rooms[roomId] = socketStructs.NewRoomLobby(client, room, s.roomRepo, s.proposalRepo)
-		log.Printf("Sala iniciada con id = %d \n", room.ID().Id)
+		room.State().SetState("online")
+		updatedroom, err := s.roomRepo.Update(room)
+
+		if err != nil {
+			return err
+		}
+
+		s.rooms[roomId] = socketStructs.NewRoomLobby(
+			client,
+			updatedroom,
+			s.roomRepo,
+			s.proposalRepo,
+			s.optionsRepo,
+			s.voteRepo,
+		)
+		log.Printf("room initialized with id = %d \n", room.ID().Id)
 	}
 
 	client.SetLobby(s.rooms[roomId])

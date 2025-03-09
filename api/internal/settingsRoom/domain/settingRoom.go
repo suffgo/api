@@ -13,7 +13,7 @@ type (
 		proposalTimer v.ProposalTimer
 		quorum        *v.Quorum
 		startTime     *v.DateTime
-		voterLimit    v.VoterLimit
+		voterLimit    v.VoterLimit //capacidad de la sala
 		roomID        *sv.ID
 	}
 
