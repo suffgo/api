@@ -79,3 +79,35 @@ func SendMessage(event Event, c *Client) error {
 	}
 	return nil
 }
+
+func SendResults(event Event, c *Client) error {
+	
+	//armo el json con los votos	
+	var userVotes []UserVoteEvent
+	for client, vote := range c.Lobby().results {
+		voterData := VoterData{
+			Username: client.user.Username().Username,
+			ID: client.user.ID().Id,
+		}
+
+		userVote := UserVoteEvent{
+			From: voterData,
+			OptionId: vote.OptionID().Id,
+		}
+
+		userVotes = append(userVotes, userVote)
+	}
+
+	evt := Event{
+		Action: EventResults,
+		Payload: marshalOrPanic(userVotes),
+	}
+
+	for client := range c.Lobby().Clients() {
+		client.egress <- evt
+		log.Println("resultados enviados a " + c.user.Username().Username)
+	}
+
+
+	return nil
+}

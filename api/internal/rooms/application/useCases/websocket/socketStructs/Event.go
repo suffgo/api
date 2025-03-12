@@ -57,3 +57,17 @@ type NextPropEvent struct {
 type VoteEvent struct {
 	OptionId uint `json:"option_id"`
 }
+
+type UserVoteEvent struct {
+	From     VoterData `json:"from"`
+	OptionId uint      `json:"option_id"`
+}
+
+type VoterData struct {
+	Username string `json:"username"`
+	ID       uint   `json:"id"`
+}
+
+type ResultsEvent struct {
+	Votes []UserVoteEvent `json:"votes"`
+}

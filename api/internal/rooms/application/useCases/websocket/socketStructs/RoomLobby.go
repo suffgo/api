@@ -7,7 +7,7 @@ import (
 	optdom "suffgo/internal/options/domain"
 	propdom "suffgo/internal/proposals/domain"
 	"suffgo/internal/rooms/domain"
-	
+
 	votedom "suffgo/internal/votes/domain"
 	"sync"
 )
@@ -16,16 +16,19 @@ type ClientList map[*Client]bool
 
 type RoomLobby struct {
 	sync.RWMutex
+	clientsmx      sync.RWMutex
+	votesProcesing chan struct{}
+
 	clients   ClientList
 	admin     *Client
 	room      *domain.Room
-	clientsmx sync.RWMutex
 	proposals []propdom.Proposal
 	propRepo  propdom.ProposalRepository
 	roomRepo  domain.RoomRepository
 	optRepo   optdom.OptionRepository
 	voteRepo  votedom.VoteRepository
 	usecases  map[string]EventUsecase
+	results   map[Client]votedom.Vote
 }
 
 func NewRoomLobby(admin *Client, room *domain.Room, roomRepo domain.RoomRepository, propRepo propdom.ProposalRepository, optRepo optdom.OptionRepository, voteRepo votedom.VoteRepository) *RoomLobby {
@@ -34,18 +37,21 @@ func NewRoomLobby(admin *Client, room *domain.Room, roomRepo domain.RoomReposito
 	proposals, _ := propRepo.GetByRoom(room.ID())
 
 	r := &RoomLobby{
-		clients:   make(ClientList),
-		admin:     admin,
-		room:      room,
-		usecases:  make(map[string]EventUsecase),
-		proposals: proposals,
-		roomRepo:  roomRepo,
-		propRepo:  propRepo,
-		optRepo:   optRepo,
-		voteRepo:  voteRepo,
+		clients:        make(ClientList),
+		admin:          admin,
+		room:           room,
+		usecases:       make(map[string]EventUsecase),
+		proposals:      proposals,
+		roomRepo:       roomRepo,
+		propRepo:       propRepo,
+		optRepo:        optRepo,
+		voteRepo:       voteRepo,
+		results:        make(map[Client]votedom.Vote),
+		votesProcesing: make(chan struct{}, 1),
 	}
 
 	r.initializeUsecases()
+	r.votesProcesing <- struct{}{}
 
 	return r
 }
@@ -55,7 +61,6 @@ func (r *RoomLobby) initializeUsecases() {
 	r.usecases[EventStartVoting] = StartVoting
 	r.usecases[EventVote] = ReceiveVote
 }
-
 
 func (r *RoomLobby) routeEvent(event Event, c *Client) error {
 	if usecase, ok := r.usecases[event.Action]; ok {
