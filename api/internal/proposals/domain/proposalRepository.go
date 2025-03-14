@@ -11,4 +11,5 @@ type ProposalRepository interface {
 	Save(proposal Proposal) (*Proposal, error)
 	Restore(id sv.ID) error
 	Update(proposal *Proposal) (*Proposal, error)
+	GetByRoom(roomId sv.ID) ([]Proposal, error)
 }

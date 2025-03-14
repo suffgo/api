@@ -2,7 +2,6 @@ package infrastructure
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	u "suffgo/internal/users/application/useCases"
@@ -180,7 +179,6 @@ func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
 	id, _ := sv.NewID(uint(idInput))
 
 	currentUserID, err := GetAuthenticatedUserID(c)
-	fmt.Println("EL USUARIO ACTUAL ES: ", currentUserID)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
 	}

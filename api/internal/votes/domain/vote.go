@@ -18,12 +18,11 @@ type (
 	}
 
 	VoteCreateRequest struct {
-		UserID   uint `json:"user_id"`
 		OptionID uint `json:"option_id"`
 	}
 )
 
-func NeweVote(
+func NewVote(
 	id *sv.ID,
 	userID *sv.ID,
 	optionID *sv.ID,

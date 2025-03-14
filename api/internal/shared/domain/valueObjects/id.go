@@ -26,6 +26,8 @@ func NewID(id interface{}) (*ID, error) {
 		uintID = uint(parsed)
 	case int:
 		uintID = uint(v)
+	case int64:
+		uintID = uint(v)
 	default:
 		return nil, errors.New("tipo no soportado: se espera uint o string")
 	}

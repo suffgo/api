@@ -1,6 +1,5 @@
 package valueobjects
 
-
 type (
 	Description struct {
 		Description string
@@ -8,7 +7,6 @@ type (
 )
 
 func NewDescription(description string) (*Description, error) {
-
 
 	return &Description{
 		Description: description,

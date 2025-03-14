@@ -173,5 +173,12 @@ func MakeConstraints(db database.Database) error {
 		fmt.Printf("ALTER TABLE vote ADD CONSTRAINT fk_option FOREIGN KEY(option_id) REFERENCES option(id) success\n")
 	}
 
+	_, err = db.GetDb().Exec("create unique index value_proposal_idx ON option(value, proposal_id)")
+	if err != nil {
+		return err
+	} else {
+		fmt.Printf("create unique index value_proposal_idx ON option(value, proposal_id)\n")
+	}
+
 	return nil
 }

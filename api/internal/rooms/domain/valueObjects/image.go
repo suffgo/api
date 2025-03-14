@@ -1,14 +1,24 @@
 package valueobjects
 
+import (
+	"path/filepath"
+)
+
 type Image struct {
-	image string
+	Image string
 }
 
 func NewImage(image string) (*Image, error) {
-
-	return &Image{image: image}, nil
+	return &Image{
+		Image: image,
+	}, nil
 }
 
-func (p *Image) Path() string {
-	return p.image
+const baseURL = "http://localhost:3000"
+
+func (i *Image) URL() string {
+	if i.Image == "" {
+		return ""
+	}
+	return baseURL + "/uploads/" + filepath.Base(i.Image)
 }

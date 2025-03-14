@@ -2,7 +2,7 @@ package valueobjects
 
 type (
 	Quorum struct {
-		Quorum *int
+		Quorum *int //esta en
 	}
 )
 

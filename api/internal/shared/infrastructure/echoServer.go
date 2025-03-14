@@ -95,6 +95,7 @@ func (s *EchoServer) Start() {
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 		AllowCredentials: true,
 	}))
+	s.app.Static("/uploads", "internal/rooms/infrastructure/uploads")
 
 	// s.app.Pre(middleware.HTTPSNonWWWRedirect()) a tener en cuenta para el futuro en caso de despliegue
 
@@ -105,7 +106,7 @@ func (s *EchoServer) Start() {
 	deps := NewDependencies(s.db)
 
 	s.InitializeUser(deps.UserRepo)
-	s.InitializeRoom(deps.UserRepo, deps.SettingRoomRepo)
+	s.InitializeRoom(deps.UserRepo, deps.SettingRoomRepo, deps.ProposalRepo, deps.OptionsRepo, deps.VotesRepo)
 	s.InitializeSettingRoom(deps.SettingRoomRepo, deps.RoomRepo)
 	s.InitializeProposal(deps.ProposalRepo, deps.RoomRepo)
 	s.InitializeVote()
@@ -114,10 +115,6 @@ func (s *EchoServer) Start() {
 	s.app.GET("/v1/health", func(c echo.Context) error {
 		return c.String(200, "OK")
 	})
-
-	// for _, route := range s.app.Routes() {
-	// 	fmt.Printf("Ruta registrada: Método=%s, Ruta=%s\n", route.Method, route.Path)
-	// } estas lineas sirven para debuguear registros de rutas
 
 	serverUrl := fmt.Sprintf(":%d", s.conf.Server.Port)
 	s.app.Logger.Fatal(s.app.Start(serverUrl))
@@ -163,6 +160,7 @@ func (s *EchoServer) InitializeOption() {
 	getAllOptionUseCase := optionUsecase.NewGetAllRepository(optionRepo)
 	getOptionByIDUseCase := optionUsecase.NewGetByIDUsecase(optionRepo)
 	getOptionByValueUseCase := optionUsecase.NewGetByValueUsecase(optionRepo)
+	getOptionByPropUsecase := optionUsecase.NewGetByPropUsecase(optionRepo)
 
 	optionHandler := o.NewOptionEchoHandler(
 		createOptionUseCase,
@@ -170,6 +168,7 @@ func (s *EchoServer) InitializeOption() {
 		getAllOptionUseCase,
 		getOptionByIDUseCase,
 		getOptionByValueUseCase,
+		getOptionByPropUsecase,
 	)
 	o.InitializeOptionEchoRouter(s.app, optionHandler)
 }
@@ -191,9 +190,15 @@ func (s *EchoServer) InitializeVote() {
 	v.InitializeVoteEchoRouter(s.app, voteHandler)
 }
 
-func (s *EchoServer) InitializeRoom(userRepo userDom.UserRepository, settingRoomRepo srDom.SettingRoomRepository) {
+func (s *EchoServer) InitializeRoom(
+	userRepo userDom.UserRepository,
+	settingRoomRepo srDom.SettingRoomRepository,
+	proposalRepo propDom.ProposalRepository,
+	optionsRepo optDom.OptionRepository,
+	votesRepo voteDom.VoteRepository,
+) {
 	roomRepo := r.NewRoomXormRepository(s.db)
-	createRoomUseCase := roomUsecase.NewCreateUsecase(roomRepo)
+	createRoomUseCase := roomUsecase.NewCreateUsecase(roomRepo, settingRoomRepo)
 	deleteRoomUseCase := roomUsecase.NewDeleteUsecase(roomRepo)
 	getAllRoomUseCase := roomUsecase.NewGetAllUsecase(roomRepo)
 	getByIDRoomUseCase := roomUsecase.NewGetByIDUsecase(roomRepo)
@@ -202,8 +207,7 @@ func (s *EchoServer) InitializeRoom(userRepo userDom.UserRepository, settingRoom
 	joinUsecase := roomUsecase.NewJoinRoomUsecase(roomRepo)
 	AddSingleUserUsecase := roomUsecaseAddUsers.NewAddSingleUserUsecase(roomRepo, userRepo)
 	UpdateRoomUseCase := roomUsecase.NewUpdateRoomUsecase(roomRepo)
-	ManageWsUsecase := roomWsUsecase.NewManageWsUsecase(roomRepo)
-	StartWsUsecae := roomWsUsecase.NewStartWsUsecase(roomRepo)
+	ManageWsUsecase := roomWsUsecase.NewManageWsUsecase(roomRepo, userRepo, proposalRepo, optionsRepo, votesRepo)
 	GetSrByRoomIDUsecase := roomUsecase.NewGetSrByRoomUsecase(roomRepo, settingRoomRepo)
 
 	roomHandler := r.NewRoomEchoHandler(
@@ -219,7 +223,6 @@ func (s *EchoServer) InitializeRoom(userRepo userDom.UserRepository, settingRoom
 		UpdateRoomUseCase,
 		ManageWsUsecase,
 		GetSrByRoomIDUsecase,
-		StartWsUsecae,
 	)
 	r.InitializeRoomEchoRouter(s.app, roomHandler)
 
@@ -252,6 +255,7 @@ func (s *EchoServer) InitializeProposal(propRepo propDom.ProposalRepository, roo
 	getProposalByIDUseCase := proposalUsecase.NewGetByIDUseCase(propRepo)
 	restoreProposalUseCase := proposalUsecase.NewRestoreUsecase(propRepo)
 	updateProposalUseCase := proposalUsecase.NewUpdateProposalUsecase(propRepo, roomRepo)
+	getByRoomUsecase := proposalUsecase.NewGetByRoomUsecase(propRepo)
 
 	proposalHandler := p.NewProposalEchoHandler(
 		createProposalUseCase,
@@ -260,6 +264,7 @@ func (s *EchoServer) InitializeProposal(propRepo propDom.ProposalRepository, roo
 		deleteProposalUseCase,
 		restoreProposalUseCase,
 		updateProposalUseCase,
+		getByRoomUsecase,
 	)
 
 	p.InitializeProposalEchoRouter(s.app, proposalHandler)

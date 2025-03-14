@@ -33,7 +33,6 @@ func createSession(userID sv.ID, name string, c echo.Context) error {
 		log.Printf("Error al guardar la sesión: %v", err)
 		return err
 	}
-	log.Println("Sesión guardada exitosamente")
 
 	return nil
 }

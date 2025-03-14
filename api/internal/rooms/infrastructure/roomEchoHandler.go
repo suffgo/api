@@ -4,12 +4,12 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	r "suffgo/internal/rooms/application/useCases"
 	addUsers "suffgo/internal/rooms/application/useCases/addUsers"
 	roomWs "suffgo/internal/rooms/application/useCases/websocket"
@@ -27,7 +27,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 
 	"suffgo/internal/settingsRoom/domain"
@@ -45,7 +44,6 @@ type RoomEchoHandler struct {
 	AddSingleUserUsecase *addUsers.AddSingleUserUsecase
 	GetUserByIDUsecase   *useruc.GetByIDUsecase
 	UpdateRoomUsecase    *r.UpdateRoomUsecase
-	StartWsUsecase       *roomWs.StartWsUsecase
 	GetSrByRoomIDUsecase *r.GetSrByRoomUsecase
 	ManageWsUsecase      *roomWs.ManageWsUsecase
 }
@@ -63,7 +61,6 @@ func NewRoomEchoHandler(
 	updateUC *r.UpdateRoomUsecase,
 	manageWsUC *roomWs.ManageWsUsecase,
 	getSrByRoomIDUC *r.GetSrByRoomUsecase,
-	startWsUC *roomWs.StartWsUsecase,
 
 ) *RoomEchoHandler {
 	return &RoomEchoHandler{
@@ -79,67 +76,68 @@ func NewRoomEchoHandler(
 		UpdateRoomUsecase:    updateUC,
 		ManageWsUsecase:      manageWsUC,
 		GetSrByRoomIDUsecase: getSrByRoomIDUC,
-		StartWsUsecase:       startWsUC,
 	}
 }
 
 func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 	var req d.RoomCreateRequest
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Datos de entrada inválidos: " + err.Error()})
 	}
+
+	// Validar datos de la sala
 	linkInvite, err := v.NewLinkInvite(req.LinkInvite)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Enlace de invitación inválido"})
 	}
+
 	isFormal, err := v.NewIsFormal(req.IsFormal)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Tipo de sala inválido"})
 	}
+
 	name, err := v.NewName(req.Name)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Nombre inválido"})
 	}
+
 	description, err := v.NewDescription(req.Description)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Descripción inválida"})
 	}
-	// Obtener el user_id de la sesion
+
+	// Obtener el ID del administrador desde la sesión
 	adminID, err := GetUserIDFromSession(c)
 	if err != nil {
-		return err
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuario no autenticado"})
 	}
 
+	// Manejo de imagen (validación y guardado)
 	var image *v.Image
 	if req.Image != "" {
-		// Guardar la imagen y obtener la ruta
-		imagePath, err := saveImage(req.Image, adminID.Id)
+		imagePath, err := saveBase64Image(req.Image, adminID.Id)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "No se pudo guardar la imagen de perfil"})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error al procesar la imagen: " + err.Error()})
 		}
 
-		// Crear el Value Object
+		// Crear un objeto v.Image a partir de imagePath
 		image, err = v.NewImage(imagePath)
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Ruta de imagen inválida"})
 		}
 	}
 
-	room := d.NewRoom(
-		nil,
-		*linkInvite,
-		*isFormal,
-		*name,
-		adminID,
-		*description,
-		image,
-	)
+	// Crear objeto de sala
+	state, _ := v.NewState("created")
+	room := d.NewRoom(nil, *linkInvite, *isFormal, *name, adminID, *description, image, state)
 
-	createdRoom, err := h.CreateRoomUsecase.Execute(*room, req.Image)
+	// Ejecutar caso de uso
+	createdRoom, err := h.CreateRoomUsecase.Execute(*room)
 	if err != nil {
-		return c.JSON(http.StatusConflict, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusConflict, map[string]string{"error": "Error al crear la sala: " + err.Error()})
 	}
 
+	// Crear respuesta con DTO
 	roomDTO := &d.RoomDTO{
 		ID:          createdRoom.ID().Id,
 		LinkInvite:  createdRoom.LinkInvite().LinkInvite,
@@ -149,40 +147,69 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 		Description: createdRoom.Description().Description,
 		RoomCode:    createdRoom.InviteCode().Code,
 		State:       createdRoom.State().CurrentState,
+		Image:       createdRoom.Image().URL(), // Usar el campo Image
 	}
 
-	response := map[string]interface{}{
-		"success": "éxito al crear sala",
+	return c.JSON(http.StatusCreated, map[string]interface{}{
+		"success": "Sala creada con éxito",
 		"room":    roomDTO,
-	}
-
-	return c.JSON(http.StatusCreated, response)
+	})
 }
-func saveImage(base64Image string, roomID uint) (string, error) {
-	// Decodificar la imagen base64
-	data, err := base64.StdEncoding.DecodeString(base64Image)
+
+func saveBase64Image(base64Image string, roomID uint) (string, error) {
+	// Extraer el tipo MIME y los datos Base64
+	mimeType, data, err := decodeBase64Image(base64Image)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error al decodificar la imagen: %w", err)
 	}
 
-	// Crear un nombre único para el archivo usando UUID
-	uniqueID := uuid.New().String()                                     // Genera un UUID único
-	fileName := fmt.Sprintf("room_%d_profile_%s.png", roomID, uniqueID) // Usar UUID en el nombre del archivo
-	filePath := filepath.Join("internal/rooms/infrastructure/uploads", fileName)
+	// Verificar el tipo MIME
+	if mimeType != "image/png" && mimeType != "image/jpeg" {
+		return "", fmt.Errorf("formato de imagen no soportado: %s", mimeType)
+	}
 
-	// Crear la carpeta "uploads" si no existe
-	err = os.MkdirAll("internal/rooms/infrastructure/uploads", os.ModePerm)
-	if err != nil {
-		return "", err
+	// Generar un nombre único para el archivo
+	uniqueID := uuid.New().String()
+	ext := ".png"
+	if mimeType == "image/jpg" {
+		ext = ".jpg"
+	}
+	fileName := fmt.Sprintf("room_%d_profile_%s%s", roomID, uniqueID, ext)
+
+	// Ruta donde se guardará la imagen
+	uploadPath := filepath.Join("internal", "rooms", "infrastructure", "uploads")
+	filePath := filepath.Join(uploadPath, fileName)
+
+	// Crear el directorio si no existe
+	if err := os.MkdirAll(uploadPath, os.ModePerm); err != nil {
+		return "", fmt.Errorf("error al crear directorio de imágenes: %w", err)
 	}
 
 	// Guardar la imagen en el servidor
-	err = ioutil.WriteFile(filePath, data, 0644)
-	if err != nil {
-		return "", err
+	if err := os.WriteFile(filePath, data, 0644); err != nil {
+		return "", fmt.Errorf("error al guardar la imagen: %w", err)
 	}
 
-	return filePath, nil
+	return fileName, nil
+}
+
+func decodeBase64Image(base64Image string) (string, []byte, error) {
+	// Separar el prefijo "data:image/..." de los datos Base64
+	parts := strings.Split(base64Image, ",")
+	if len(parts) != 2 {
+		return "", nil, fmt.Errorf("formato de imagen Base64 inválido")
+	}
+
+	// Extraer el tipo MIME (eliminando "data:")
+	mimeType := strings.TrimPrefix(strings.Split(parts[0], ";")[0], "data:")
+
+	// Decodificar los datos Base64
+	data, err := base64.StdEncoding.DecodeString(parts[1])
+	if err != nil {
+		return "", nil, fmt.Errorf("error al decodificar Base64: %w", err)
+	}
+
+	return mimeType, data, nil
 }
 
 func (h *RoomEchoHandler) DeleteRoom(c echo.Context) error {
@@ -245,14 +272,16 @@ func (h *RoomEchoHandler) GetAllRooms(c echo.Context) error {
 			}
 
 			roomDTO = &d.RoomDetailedDTO{
-				ID:         room.ID().Id,
-				LinkInvite: room.LinkInvite().LinkInvite,
-				IsFormal:   room.IsFormal().IsFormal,
-				RoomTitle:  room.Name().Name,
-				AdminName:  adminName,
-				RoomCode:   room.InviteCode().Code,
-				StartTime:  settingRoom.StartTime().DateTime,
-				State:      room.State().CurrentState,
+				ID:          room.ID().Id,
+				LinkInvite:  room.LinkInvite().LinkInvite,
+				IsFormal:    room.IsFormal().IsFormal,
+				RoomTitle:   room.Name().Name,
+				AdminName:   adminName,
+				Description: room.Description().Description,
+				RoomCode:    room.InviteCode().Code,
+				StartTime:   settingRoom.StartTime().DateTime,
+				State:       room.State().CurrentState,
+				Image:       room.Image().URL(),
 			}
 		} else {
 			roomDTO = &d.RoomDetailedDTO{
@@ -263,6 +292,7 @@ func (h *RoomEchoHandler) GetAllRooms(c echo.Context) error {
 				Description: room.Description().Description,
 				RoomCode:    room.InviteCode().Code,
 				State:       room.State().CurrentState,
+				Image:       room.Image().URL(),
 			}
 		}
 
@@ -300,11 +330,18 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 		}
 	}
 
+	userId, _ := GetUserIDFromSession(c)
+
 	var adminName string
 	if admin == nil { //el admin es un usuario eliminado
 		adminName = "null"
 	} else {
 		adminName = admin.FullName().Lastname + " " + admin.FullName().Name
+	}
+
+	privileges := false
+	if room.AdminID().Id == userId.Id {
+		privileges = true
 	}
 
 	var settingRoom *domain.SettingRoom
@@ -327,7 +364,8 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 			RoomCode:    room.InviteCode().Code,
 			StartTime:   settingRoom.StartTime().DateTime,
 			State:       room.State().CurrentState,
-			Image:       room.Image().Path(),
+			Image:       room.Image().URL(),
+			Privileges:  privileges,
 		}
 	} else {
 		roomDetailedDTO = &d.RoomDetailedDTO{
@@ -338,7 +376,8 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 			Description: room.Description().Description,
 			RoomCode:    room.InviteCode().Code,
 			State:       room.State().CurrentState,
-			Image:       room.Image().Path(),
+			Image:       room.Image().URL(),
+			Privileges:  privileges,
 		}
 	}
 
@@ -390,6 +429,12 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 	var roomsDTO []d.RoomDetailedDTO
 	for _, room := range rooms {
 
+		userId, _ := GetUserIDFromSession(c)
+		privileges := false
+		if userId.Id == room.AdminID().Id {
+			privileges = true
+		}
+
 		var roomDTO *d.RoomDetailedDTO
 		if room.IsFormal().IsFormal {
 			settingRoom, err := h.GetSrByRoomIDUsecase.Execute(room.ID())
@@ -402,14 +447,17 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 			}
 
 			roomDTO = &d.RoomDetailedDTO{
-				ID:         room.ID().Id,
-				LinkInvite: room.LinkInvite().LinkInvite,
-				IsFormal:   room.IsFormal().IsFormal,
-				RoomTitle:  room.Name().Name,
-				AdminName:  adminName,
-				RoomCode:   room.InviteCode().Code,
-				StartTime:  settingRoom.StartTime().DateTime,
-				State:      room.State().CurrentState,
+				ID:          room.ID().Id,
+				LinkInvite:  room.LinkInvite().LinkInvite,
+				IsFormal:    room.IsFormal().IsFormal,
+				RoomTitle:   room.Name().Name,
+				AdminName:   adminName,
+				Description: room.Description().Description,
+				RoomCode:    room.InviteCode().Code,
+				StartTime:   settingRoom.StartTime().DateTime,
+				State:       room.State().CurrentState,
+				Image:       room.Image().URL(),
+				Privileges:  privileges,
 			}
 		} else {
 			roomDTO = &d.RoomDetailedDTO{
@@ -420,6 +468,8 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 				Description: room.Description().Description,
 				RoomCode:    room.InviteCode().Code,
 				State:       room.State().CurrentState,
+				Image:       room.Image().URL(),
+				Privileges:  privileges,
 			}
 		}
 
@@ -445,6 +495,9 @@ func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 	room, err := h.JoinRoomUsecase.Execute(req.RoomCode, *userID)
 
 	if err != nil {
+		if errors.Is(err, rerr.ErrNotWhitelist) {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
+		}
 		if errors.Is(err, rerr.ErrRoomNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
@@ -461,8 +514,12 @@ func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 	}
 
 	var adminName string
+	privileges := false
 	if admin != nil {
 		adminName = admin.FullName().Name + " " + admin.FullName().Lastname
+		if userID.Id == room.AdminID().Id {
+			privileges = true
+		}
 	} else {
 		adminName = "null"
 	}
@@ -488,6 +545,7 @@ func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 			RoomCode:    room.InviteCode().Code,
 			StartTime:   settingRoom.StartTime().DateTime,
 			State:       room.State().CurrentState,
+			Privileges:  privileges,
 		}
 	} else {
 		roomDetailedDTO = &d.RoomDetailedDTO{
@@ -498,6 +556,7 @@ func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 			Description: room.Description().Description,
 			RoomCode:    room.InviteCode().Code,
 			State:       room.State().CurrentState,
+			Privileges:  privileges,
 		}
 	}
 
@@ -574,18 +633,6 @@ func (h *RoomEchoHandler) Restore(c echo.Context) error {
 
 }
 
-var (
-	upgrader = websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-		CheckOrigin: func(r *http.Request) bool {
-			// Permitir conexiones desde http://localhost:3000 (ajusta según tu frontend)
-			origin := r.Header.Get("Origin")
-			return origin == "http://localhost:4321"
-		},
-	}
-)
-
 func (h *RoomEchoHandler) Update(c echo.Context) error {
 
 	roomIDStr := c.Param("id")
@@ -631,7 +678,8 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room isFormal"})
 	}
 
-	image, err := v.NewImage(currentRoom.Image().Path())
+	image, err := v.NewImage(currentRoom.Image().Image)
+	state, err := v.NewState("created")
 
 	room := d.NewRoom(
 		id,
@@ -641,6 +689,7 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		adminID,
 		*description,
 		image,
+		state,
 	)
 
 	userID, err := GetUserIDFromSession(c)
@@ -653,6 +702,10 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 	if err != nil {
 		if err.Error() == "unauthorized" {
 			return c.JSON(http.StatusMethodNotAllowed, map[string]string{"error": err.Error()})
+		}
+
+		if errors.Is(rerr.ErrStateConstraint, err) {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -695,37 +748,43 @@ func GetUserIDFromSession(c echo.Context) (*sv.ID, error) {
 	return adminID, nil
 }
 
+var (
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			// Permitir conexiones desde http://localhost:3000 (ajusta según tu frontend)
+			origin := r.Header.Get("Origin")
+			return origin == "http://localhost:4321"
+		},
+	}
+)
+
 func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
 
-	sess, err := session.Get("session", c)
+	id := c.Param("room_id")
+	roomId, err := sv.NewID(id)
 	if err != nil {
-		c.Logger().Error("Error al obtener la sesión:", err)
 		return err
 	}
 
-	username, _ := sess.Values["name"].(string)
-
-	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
-	if err != nil {
-		log.Println("Error al actualizar a WebSocket:", err)
-		return err
-	}
-
-	roomID := c.Param("room_id")
 	clientID, err := GetUserIDFromSession(c)
 	if err != nil {
-		ws.Close()
 		return nil
 	}
 
-	for {
-		err = h.ManageWsUsecase.Execute(ws, username, roomID, *clientID)
-		if err != nil {
-			log.Println(err.Error())
-			break
-		}
+	//TODO: validar que sea el administrador
+
+	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		return err
 	}
-	ws.Close()
+
+	err = h.ManageWsUsecase.Execute(ws, *clientID, *roomId)
+	if err != nil {
+		ws.Close()
+		log.Println(err.Error())
+	}
 
 	return nil
 }

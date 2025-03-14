@@ -123,7 +123,7 @@ func (s *RoomXormRepository) Save(room d.Room) (*d.Room, error) {
 	}
 
 	if room.Image() != nil {
-		roomModel.Image = room.Image().Path()
+		roomModel.Image = room.Image().Image
 	}
 
 	_, err := s.db.GetDb().Insert(roomModel)

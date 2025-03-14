@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"strconv"
 	s "suffgo/internal/settingsRoom/application/useCases"
@@ -192,6 +193,36 @@ func (h *SettingRoomEchoHandler) GetSettingRoomByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, settingRoomDTO)
 }
 
+func (h *SettingRoomEchoHandler) GetSrByRoomID(c echo.Context) error {
+	idParam := c.Param("room_id")
+	idInput, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": se.ErrInvalidID.Error()})
+	}
+
+	id, _ := sv.NewID(idInput)
+	log.Println("infra")
+	settingRoom, err := h.GetByRoomIDUsecase.Execute(*id)
+
+	if err != nil {
+		if err.Error() == "setting room not found" {
+			return c.JSON(http.StatusNotFound, map[string]string{"message": err.Error()})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+	}
+
+	settingRoomDTO := &d.SettingRoomDTO{
+		ID:            settingRoom.ID().Id,
+		Privacy:       settingRoom.Privacy().Privacy,
+		ProposalTimer: settingRoom.ProposalTimer().ProposalTimer,
+		Quorum:        settingRoom.Quorum().Quorum,
+		StartTime:     settingRoom.StartTime().DateTime,
+		VoterLimit:    settingRoom.VoterLimit().VoterLimit,
+		RoomID:        settingRoom.RoomID().Id,
+	}
+	return c.JSON(http.StatusOK, settingRoomDTO)
+}
+
 func (h *SettingRoomEchoHandler) Update(c echo.Context) error {
 	settingRoomIDStr := c.Param("id")
 
@@ -257,7 +288,7 @@ func (h *SettingRoomEchoHandler) Update(c echo.Context) error {
 		if errors.Is(seterr.SettingRoomNotFoundError, err) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
-		
+
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
