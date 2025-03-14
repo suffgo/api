@@ -125,6 +125,11 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Ruta de imagen inválida"})
 		}
+	} else {
+		image, err = v.NewImage(req.Image)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Ruta de imagen inválida"})
+		}
 	}
 
 	// Crear objeto de sala

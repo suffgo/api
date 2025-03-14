@@ -17,7 +17,7 @@ func NewImage(image string) (*Image, error) {
 const baseURL = "http://localhost:3000"
 
 func (i *Image) URL() string {
-	if i.Image == "" {
+	if i == nil || i.Image == "" {
 		return ""
 	}
 	return baseURL + "/uploads/" + filepath.Base(i.Image)
