@@ -60,6 +60,7 @@ func (r *RoomLobby) initializeUsecases() {
 	r.usecases[EventSendMessage] = SendMessage
 	r.usecases[EventStartVoting] = StartVoting
 	r.usecases[EventVote] = ReceiveVote
+	r.usecases[EventResults] = SendResults
 }
 
 func (r *RoomLobby) routeEvent(event Event, c *Client) error {

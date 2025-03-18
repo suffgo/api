@@ -103,9 +103,10 @@ func SendResults(event Event, c *Client) error {
 		Payload: marshalOrPanic(userVotes),
 	}
 
+	log.Println(evt)
 	for client := range c.Lobby().Clients() {
 		client.egress <- evt
-		log.Println("resultados enviados a " + c.user.Username().Username)
+		log.Println("resultados enviados a " + client.user.Username().Username)
 	}
 
 
