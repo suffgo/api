@@ -247,7 +247,7 @@ func (h *UserEchoHandler) GetUserByID(c echo.Context) error {
 }
 
 func (h *UserEchoHandler) GetUserByEmail(c echo.Context) error {
-	
+
 	var request struct {
 		Email string `json:"email" validate:"required,email"`
 	}
@@ -431,10 +431,10 @@ func (h *UserEchoHandler) Update(c echo.Context) error {
 
 	// Llamar al caso de uso para actualizar el usuario
 	updatedUser, err := h.UpdateUsecase.Execute(user)
-	if err.Error() == "unauthorized" {
-		return c.JSON(http.StatusMethodNotAllowed, map[string]string{"error": err.Error()})
-	}
 	if err != nil {
+		if err.Error() == "unauthorized" {
+			return c.JSON(http.StatusMethodNotAllowed, map[string]string{"error": err.Error()})
+		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
