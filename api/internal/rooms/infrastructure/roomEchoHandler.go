@@ -498,12 +498,7 @@ func (h *RoomEchoHandler) AddSingleUser(c echo.Context) error {
 		return err
 	}
 
-	roomIDint, err := strconv.ParseUint(req.RoomID, 10, 64)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
-	}
-
-	roomID, err := sv.NewID(uint(roomIDint))
+	roomID, err := sv.NewID(req.RoomID)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
 	}
