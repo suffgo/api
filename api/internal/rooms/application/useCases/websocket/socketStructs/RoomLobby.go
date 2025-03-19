@@ -19,16 +19,17 @@ type RoomLobby struct {
 	clientsmx      sync.RWMutex
 	votesProcesing chan struct{}
 
-	clients   ClientList
-	admin     *Client
-	room      *domain.Room
-	proposals []propdom.Proposal
-	propRepo  propdom.ProposalRepository
-	roomRepo  domain.RoomRepository
-	optRepo   optdom.OptionRepository
-	voteRepo  votedom.VoteRepository
-	usecases  map[string]EventUsecase
-	results   map[Client]votedom.Vote
+	clients      ClientList
+	admin        *Client
+	room         *domain.Room
+	proposals    []propdom.Proposal
+	propRepo     propdom.ProposalRepository
+	roomRepo     domain.RoomRepository
+	optRepo      optdom.OptionRepository
+	voteRepo     votedom.VoteRepository
+	usecases     map[string]EventUsecase
+	results      map[Client]votedom.Vote
+	nextProposal int
 }
 
 func NewRoomLobby(admin *Client, room *domain.Room, roomRepo domain.RoomRepository, propRepo propdom.ProposalRepository, optRepo optdom.OptionRepository, voteRepo votedom.VoteRepository) *RoomLobby {
@@ -48,6 +49,7 @@ func NewRoomLobby(admin *Client, room *domain.Room, roomRepo domain.RoomReposito
 		voteRepo:       voteRepo,
 		results:        make(map[Client]votedom.Vote),
 		votesProcesing: make(chan struct{}, 1),
+		nextProposal:   0,
 	}
 
 	r.initializeUsecases()
@@ -61,6 +63,7 @@ func (r *RoomLobby) initializeUsecases() {
 	r.usecases[EventStartVoting] = StartVoting
 	r.usecases[EventVote] = ReceiveVote
 	r.usecases[EventResults] = SendResults
+	r.usecases[EventNextProp] = NextProposal
 }
 
 func (r *RoomLobby) routeEvent(event Event, c *Client) error {

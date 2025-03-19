@@ -44,10 +44,7 @@ type ProposalEvent struct {
 	Description *string            `json:"description"`
 	RoomID      uint               `json:"room_id"`
 	Options     []optdom.OptionDTO `json:"options"`
-}
-
-type FirstPropEvent struct {
-	Prop string `json:"prop"`
+	LastProp    bool               `json:"last_prop"`
 }
 
 type NextPropEvent struct {
