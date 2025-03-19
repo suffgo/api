@@ -1,6 +1,9 @@
 package valueobjects
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 type (
 	UserName struct {
@@ -13,7 +16,9 @@ func NewUserName(username string) (*UserName, error) {
 		return nil, errors.New("invalid username")
 	}
 
+	usernameMin := strings.ToLower(username)
+
 	return &UserName{
-		Username: username,
+		Username: usernameMin,
 	}, nil
 }

@@ -31,13 +31,13 @@ func NewImage(image string) (*Image, error) {
 		return nil, errors.New("error al procesar la imagen")
 	}
 
-	if mimeType != "image/png" && mimeType != "image/jpeg" {
+	if mimeType != "image/png" && mimeType != "image/jpg" {
 		return nil, errors.New("formato de imagen no soportado")
 	}
 
 	uniqueID := uuid.New().String()
 	ext := ".png"
-	if mimeType == "image/jpeg" {
+	if mimeType == "image/jpg" {
 		ext = ".jpg"
 	}
 	fileName := fmt.Sprintf("%s%s", uniqueID, ext)
