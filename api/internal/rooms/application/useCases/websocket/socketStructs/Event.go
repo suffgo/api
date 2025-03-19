@@ -44,10 +44,7 @@ type ProposalEvent struct {
 	Description *string            `json:"description"`
 	RoomID      uint               `json:"room_id"`
 	Options     []optdom.OptionDTO `json:"options"`
-}
-
-type FirstPropEvent struct {
-	Prop string `json:"prop"`
+	LastProp    bool               `json:"last_prop"`
 }
 
 type NextPropEvent struct {
@@ -56,4 +53,18 @@ type NextPropEvent struct {
 
 type VoteEvent struct {
 	OptionId uint `json:"option_id"`
+}
+
+type UserVoteEvent struct {
+	From     VoterData `json:"from"`
+	OptionId uint      `json:"option_id"`
+}
+
+type VoterData struct {
+	Username string `json:"username"`
+	ID       uint   `json:"id"`
+}
+
+type ResultsEvent struct {
+	Votes []UserVoteEvent `json:"votes"`
 }

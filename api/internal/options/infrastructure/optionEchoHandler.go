@@ -69,6 +69,10 @@ func (h *OptionEchoHandler) CreateOption(c echo.Context) error {
 
 	err = h.CreateOptionUsecase.Execute(*option)
 	if err != nil {
+		if errors.Is(err, oerrors.ErrOptRepeated) {
+			return c.JSON(http.StatusConflict, map[string]string{"error": err.Error()})
+		}
+
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 

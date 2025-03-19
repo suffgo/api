@@ -102,6 +102,7 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 
 	image, err := v.NewImage(req.Image)
 	if err != nil {
+		log.Printf("why %s\n", err.Error())
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Imagen Invalida"})
 	}
 
@@ -508,12 +509,7 @@ func (h *RoomEchoHandler) AddSingleUser(c echo.Context) error {
 		return err
 	}
 
-	roomIDint, err := strconv.ParseUint(req.RoomID, 10, 64)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
-	}
-
-	roomID, err := sv.NewID(uint(roomIDint))
+	roomID, err := sv.NewID(req.RoomID)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
 	}

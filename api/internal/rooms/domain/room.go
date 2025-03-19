@@ -67,7 +67,7 @@ type (
 
 	AddSingleUserRequest struct {
 		UserData string `json:"user_data"`
-		RoomID   string `json:"room_id"`
+		RoomID   uint `json:"room_id"`
 	}
 )
 

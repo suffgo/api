@@ -2,13 +2,19 @@ package socketStructs
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	sv "suffgo/internal/shared/domain/valueObjects"
 	votedom "suffgo/internal/votes/domain"
+	opterr "suffgo/internal/options/domain/errors"
 )
 
 // Si el id es = 0, no voto nada
 func ReceiveVote(event Event, c *Client) error {
+
+	defer func() {
+		c.lobby.votesProcesing <- struct{}{}
+	}()
 
 	var voteEvent VoteEvent
 
@@ -21,14 +27,22 @@ func ReceiveVote(event Event, c *Client) error {
 		log.Println(err.Error())
 		return nil
 	}
+	//chequeo que la opcion exista
+	_, err = c.lobby.optRepo.GetByID(*votedOpt)
+	if errors.Is(err, opterr.ErrOptNotFound) {
+		log.Printf("user %s voted in blank \n", c.user.Username().Username)
+	}
+
 	userId := c.user.ID()
 	vote := votedom.NewVote(nil, &userId, votedOpt)
-	//cuidado con esto capaz tenga que usar un canal
-	_, err = c.lobby.voteRepo.Save(*vote)
+	<-c.lobby.votesProcesing
+	vote, err = c.lobby.voteRepo.Save(*vote)
 
 	if err != nil {
-		log.Println(err.Error())
+		log.Println(err.Error()) //TODO: manejar mejor el error en caso de que por alguna razon no se ingrese un id de opt valido
 		return nil
 	}
+	c.lobby.results[*c] = *vote
+
 	return nil
 }
