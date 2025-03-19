@@ -102,6 +102,7 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 
 	image, err := v.NewImage(req.Image)
 	if err != nil {
+		log.Printf("why %s\n", err.Error())
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Imagen Invalida"})
 	}
 

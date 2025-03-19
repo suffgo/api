@@ -2,4 +2,4 @@ backups
 .env
 docker
 tmp
-api/internal/rooms/infrastructure/uploads/
+api/internal/rooms/infrastructure/uploads/*
