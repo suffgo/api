@@ -1,15 +1,10 @@
 package infrastructure
 
 import (
-	"encoding/base64"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
-	"strings"
 	r "suffgo/internal/rooms/application/useCases"
 	addUsers "suffgo/internal/rooms/application/useCases/addUsers"
 	roomWs "suffgo/internal/rooms/application/useCases/websocket"
@@ -25,7 +20,6 @@ import (
 
 	useruc "suffgo/internal/users/application/useCases"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 
@@ -106,32 +100,16 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Descripción inválida"})
 	}
 
+	image, err := v.NewImage(req.Image)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Imagen Invalida"})
+	}
+
 	// Obtener el ID del administrador desde la sesión
 	adminID, err := GetUserIDFromSession(c)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuario no autenticado"})
 	}
-
-	// Manejo de imagen (validación y guardado)
-	var image *v.Image
-	if req.Image != "" {
-		imagePath, err := saveBase64Image(req.Image, adminID.Id)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error al procesar la imagen: " + err.Error()})
-		}
-
-		// Crear un objeto v.Image a partir de imagePath
-		image, err = v.NewImage(imagePath)
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Ruta de imagen inválida"})
-		}
-	} else {
-		image, err = v.NewImage(req.Image)
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Ruta de imagen inválida"})
-		}
-	}
-
 	// Crear objeto de sala
 	state, _ := v.NewState("created")
 	room := d.NewRoom(nil, *linkInvite, *isFormal, *name, adminID, *description, image, state)
@@ -159,62 +137,6 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 		"success": "Sala creada con éxito",
 		"room":    roomDTO,
 	})
-}
-
-func saveBase64Image(base64Image string, roomID uint) (string, error) {
-	// Extraer el tipo MIME y los datos Base64
-	mimeType, data, err := decodeBase64Image(base64Image)
-	if err != nil {
-		return "", fmt.Errorf("error al decodificar la imagen: %w", err)
-	}
-
-	// Verificar el tipo MIME
-	if mimeType != "image/png" && mimeType != "image/jpeg" {
-		return "", fmt.Errorf("formato de imagen no soportado: %s", mimeType)
-	}
-
-	// Generar un nombre único para el archivo
-	uniqueID := uuid.New().String()
-	ext := ".png"
-	if mimeType == "image/jpg" {
-		ext = ".jpg"
-	}
-	fileName := fmt.Sprintf("room_%d_profile_%s%s", roomID, uniqueID, ext)
-
-	// Ruta donde se guardará la imagen
-	uploadPath := filepath.Join("internal", "rooms", "infrastructure", "uploads")
-	filePath := filepath.Join(uploadPath, fileName)
-
-	// Crear el directorio si no existe
-	if err := os.MkdirAll(uploadPath, os.ModePerm); err != nil {
-		return "", fmt.Errorf("error al crear directorio de imágenes: %w", err)
-	}
-
-	// Guardar la imagen en el servidor
-	if err := os.WriteFile(filePath, data, 0644); err != nil {
-		return "", fmt.Errorf("error al guardar la imagen: %w", err)
-	}
-
-	return fileName, nil
-}
-
-func decodeBase64Image(base64Image string) (string, []byte, error) {
-	// Separar el prefijo "data:image/..." de los datos Base64
-	parts := strings.Split(base64Image, ",")
-	if len(parts) != 2 {
-		return "", nil, fmt.Errorf("formato de imagen Base64 inválido")
-	}
-
-	// Extraer el tipo MIME (eliminando "data:")
-	mimeType := strings.TrimPrefix(strings.Split(parts[0], ";")[0], "data:")
-
-	// Decodificar los datos Base64
-	data, err := base64.StdEncoding.DecodeString(parts[1])
-	if err != nil {
-		return "", nil, fmt.Errorf("error al decodificar Base64: %w", err)
-	}
-
-	return mimeType, data, nil
 }
 
 func (h *RoomEchoHandler) DeleteRoom(c echo.Context) error {
