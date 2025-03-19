@@ -13,6 +13,7 @@ func InitializeRoomEchoRouter(e *echo.Echo, handler *RoomEchoHandler) {
 
 	roomGroup.Use(userInfr.AuthMiddleware)
 	roomGroup.POST("", handler.CreateRoom)
+	roomGroup.GET("/:id", handler.GetRoomByID)
 	roomGroup.DELETE("/:id", handler.DeleteRoom)
 	roomGroup.GET("/myRooms", handler.GetRoomsByAdmin)
 	roomGroup.GET("/:id", handler.GetRoomByID)

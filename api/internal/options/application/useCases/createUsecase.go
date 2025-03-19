@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"suffgo/internal/options/domain"
+	opterr "suffgo/internal/options/domain/errors"
 )
 
 type (
@@ -20,7 +21,7 @@ func NewCreateUsecase(repository domain.OptionRepository) *CreateUsecase {
 func (s *CreateUsecase) Execute(option domain.Option) error {
 	err := s.repository.Save(option)
 	if err != nil {
-		return err
+		return opterr.ErrOptRepeated
 	}
 	return nil
 }
