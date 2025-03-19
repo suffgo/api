@@ -25,6 +25,7 @@ func NewCreateUsecase(roomRepo domain.RoomRepository, srRepo domsettingroom.Sett
 }
 
 func (s *CreateUsecase) Execute(roomData domain.Room) (*domain.Room, error) {
+	roomData.State().SetState("created")
 
 	createdRoom, err := s.roomRepository.Save(roomData)
 	if err != nil {
@@ -32,32 +33,26 @@ func (s *CreateUsecase) Execute(roomData domain.Room) (*domain.Room, error) {
 	}
 
 	inviteCode, err := v.NewInviteCode(uuid.New().String())
-
 	if err != nil {
 		return nil, err
 	}
 
 	createdRoom.SetInviteCode(*inviteCode)
 	err = s.roomRepository.SaveInviteCode(inviteCode.Code, createdRoom.ID().Id)
-
 	if err != nil {
 		return nil, err
 	}
 
 	if createdRoom.IsFormal().IsFormal {
-
 		err = s.roomRepository.AddToWhitelist(createdRoom.ID(), createdRoom.AdminID())
-
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	//creo su registro de settingRoom con valores por defecto sin importar si es formal o no
+	// Crear registro de settingRoom con valores por defecto
 	settingRoom := generateDefaultRoomConfig(createdRoom.ID())
-
 	err = s.settingRoomRepo.Save(settingRoom)
-
 	if err != nil {
 		return nil, err
 	}

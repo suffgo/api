@@ -76,48 +76,51 @@ func NewRoomEchoHandler(
 func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 	var req d.RoomCreateRequest
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Datos de entrada inválidos: " + err.Error()})
 	}
+
+	// Validar datos de la sala
 	linkInvite, err := v.NewLinkInvite(req.LinkInvite)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Enlace de invitación inválido"})
 	}
+
 	isFormal, err := v.NewIsFormal(req.IsFormal)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Tipo de sala inválido"})
 	}
+
 	name, err := v.NewName(req.Name)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Nombre inválido"})
 	}
+
 	description, err := v.NewDescription(req.Description)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Descripción inválida"})
 	}
-	// Obtener el user_id de la sesion
-	adminID, err := GetUserIDFromSession(c)
 
+	image, err := v.NewImage(req.Image)
 	if err != nil {
-		return err
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Imagen Invalida"})
 	}
 
+	// Obtener el ID del administrador desde la sesión
+	adminID, err := GetUserIDFromSession(c)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuario no autenticado"})
+	}
+	// Crear objeto de sala
 	state, _ := v.NewState("created")
+	room := d.NewRoom(nil, *linkInvite, *isFormal, *name, adminID, *description, image, state)
 
-	room := d.NewRoom(
-		nil,
-		*linkInvite,
-		*isFormal,
-		*name,
-		adminID,
-		*description,
-		state,
-	)
-
+	// Ejecutar caso de uso
 	createdRoom, err := h.CreateRoomUsecase.Execute(*room)
 	if err != nil {
-		return c.JSON(http.StatusConflict, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusConflict, map[string]string{"error": "Error al crear la sala: " + err.Error()})
 	}
 
+	// Crear respuesta con DTO
 	roomDTO := &d.RoomDTO{
 		ID:          createdRoom.ID().Id,
 		LinkInvite:  createdRoom.LinkInvite().LinkInvite,
@@ -127,14 +130,13 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 		Description: createdRoom.Description().Description,
 		RoomCode:    createdRoom.InviteCode().Code,
 		State:       createdRoom.State().CurrentState,
+		Image:       createdRoom.Image().URL(), // Usar el campo Image
 	}
 
-	response := map[string]interface{}{
-		"success": "éxito al crear sala",
+	return c.JSON(http.StatusCreated, map[string]interface{}{
+		"success": "Sala creada con éxito",
 		"room":    roomDTO,
-	}
-
-	return c.JSON(http.StatusCreated, response)
+	})
 }
 
 func (h *RoomEchoHandler) DeleteRoom(c echo.Context) error {
@@ -197,14 +199,16 @@ func (h *RoomEchoHandler) GetAllRooms(c echo.Context) error {
 			}
 
 			roomDTO = &d.RoomDetailedDTO{
-				ID:         room.ID().Id,
-				LinkInvite: room.LinkInvite().LinkInvite,
-				IsFormal:   room.IsFormal().IsFormal,
-				RoomTitle:  room.Name().Name,
-				AdminName:  adminName,
-				RoomCode:   room.InviteCode().Code,
-				StartTime:  settingRoom.StartTime().DateTime,
-				State:      room.State().CurrentState,
+				ID:          room.ID().Id,
+				LinkInvite:  room.LinkInvite().LinkInvite,
+				IsFormal:    room.IsFormal().IsFormal,
+				RoomTitle:   room.Name().Name,
+				AdminName:   adminName,
+				Description: room.Description().Description,
+				RoomCode:    room.InviteCode().Code,
+				StartTime:   settingRoom.StartTime().DateTime,
+				State:       room.State().CurrentState,
+				Image:       room.Image().URL(),
 			}
 		} else {
 			roomDTO = &d.RoomDetailedDTO{
@@ -215,6 +219,7 @@ func (h *RoomEchoHandler) GetAllRooms(c echo.Context) error {
 				Description: room.Description().Description,
 				RoomCode:    room.InviteCode().Code,
 				State:       room.State().CurrentState,
+				Image:       room.Image().URL(),
 			}
 		}
 
@@ -286,6 +291,7 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 			RoomCode:    room.InviteCode().Code,
 			StartTime:   settingRoom.StartTime().DateTime,
 			State:       room.State().CurrentState,
+			Image:       room.Image().URL(),
 			Privileges:  privileges,
 		}
 	} else {
@@ -297,6 +303,7 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 			Description: room.Description().Description,
 			RoomCode:    room.InviteCode().Code,
 			State:       room.State().CurrentState,
+			Image:       room.Image().URL(),
 			Privileges:  privileges,
 		}
 	}
@@ -349,11 +356,11 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 	var roomsDTO []d.RoomDetailedDTO
 	for _, room := range rooms {
 
-		userId , _ := GetUserIDFromSession(c)
+		userId, _ := GetUserIDFromSession(c)
 		privileges := false
 		if userId.Id == room.AdminID().Id {
 			privileges = true
-		} 
+		}
 
 		var roomDTO *d.RoomDetailedDTO
 		if room.IsFormal().IsFormal {
@@ -367,15 +374,17 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 			}
 
 			roomDTO = &d.RoomDetailedDTO{
-				ID:         room.ID().Id,
-				LinkInvite: room.LinkInvite().LinkInvite,
-				IsFormal:   room.IsFormal().IsFormal,
-				RoomTitle:  room.Name().Name,
-				AdminName:  adminName,
-				RoomCode:   room.InviteCode().Code,
-				StartTime:  settingRoom.StartTime().DateTime,
-				State:      room.State().CurrentState,
-				Privileges: privileges,
+				ID:          room.ID().Id,
+				LinkInvite:  room.LinkInvite().LinkInvite,
+				IsFormal:    room.IsFormal().IsFormal,
+				RoomTitle:   room.Name().Name,
+				AdminName:   adminName,
+				Description: room.Description().Description,
+				RoomCode:    room.InviteCode().Code,
+				StartTime:   settingRoom.StartTime().DateTime,
+				State:       room.State().CurrentState,
+				Image:       room.Image().URL(),
+				Privileges:  privileges,
 			}
 		} else {
 			roomDTO = &d.RoomDetailedDTO{
@@ -386,7 +395,8 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 				Description: room.Description().Description,
 				RoomCode:    room.InviteCode().Code,
 				State:       room.State().CurrentState,
-				Privileges: privileges,
+				Image:       room.Image().URL(),
+				Privileges:  privileges,
 			}
 		}
 
@@ -553,7 +563,7 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room ID"})
 	}
 
-	var req d.RoomCreateRequest
+	var req d.RoomUpdate
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -590,6 +600,7 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room isFormal"})
 	}
 
+	image, err := v.NewImage(currentRoom.Image().Image)
 	state, err := v.NewState("created")
 
 	room := d.NewRoom(
@@ -599,6 +610,7 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		*name,
 		adminID,
 		*description,
+		image,
 		state,
 	)
 

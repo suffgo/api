@@ -8,6 +8,7 @@ import (
 )
 
 func DomainToModel(room *domain.Room) *m.Room {
+
 	return &m.Room{
 		ID:          room.ID().Id,
 		LinkInvite:  ptr(room.LinkInvite().LinkInvite),
@@ -16,6 +17,7 @@ func DomainToModel(room *domain.Room) *m.Room {
 		Description: room.Description().Description,
 		AdminID:     room.AdminID().Id,
 		State:       room.State().CurrentState,
+		Image:       room.Image().Image,
 	}
 }
 
@@ -46,12 +48,17 @@ func ModelToDomain(roomModel *m.Room) (*domain.Room, error) {
 		return nil, err
 	}
 
+	image, err := v.NewImage(roomModel.Image)
+	if err != nil {
+		return nil, err
+	}
+
 	state, err := v.NewState(roomModel.State)
 	if err != nil {
 		return nil, err
 	}
 
-	return domain.NewRoom(id, *linkInvite, *isFormal, *name, adminID, *description, state), nil
+	return domain.NewRoom(id, *linkInvite, *isFormal, *name, adminID, *description, image, state), nil
 }
 
 func ptr(s string) *string {
