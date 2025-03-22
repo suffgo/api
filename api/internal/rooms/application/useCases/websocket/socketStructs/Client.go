@@ -12,6 +12,7 @@ type Client struct {
 	conn   *websocket.Conn
 	user   userdom.User
 	lobby  *RoomLobby
+	voted  bool
 	egress chan Event //debido a que la conexion no soporta muchos mensajes al mismo tiempo, se utiliza este canal para que los mensajes lleguen uno a la vez
 }
 
@@ -19,6 +20,7 @@ func NewClient(conn *websocket.Conn, user userdom.User) *Client {
 	return &Client{
 		conn:   conn,
 		user:   user,
+		voted:  false,
 		egress: make(chan Event),
 	}
 }
@@ -50,7 +52,7 @@ func (c *Client) ReadMessages() {
 }
 
 func (c *Client) WriteMessages() {
-	
+
 	for {
 		select {
 		case message, ok := <-c.egress:

@@ -30,7 +30,17 @@ type SendMessageEvent struct {
 }
 
 type UpdateClientListEvent struct {
-	Clients []string `json:"clients"`
+	Clients []ClientData `json:"clients"`
+}
+
+//estructura utilizada para trackear votos en tiempo real
+type ClientData struct {
+	ID       uint   `json:"id"`
+	Name     string `json:"name"`
+	Lastname string `json:"lastname"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Voted    bool   `json:"voted"`
 }
 
 type ErrorEvent struct {
