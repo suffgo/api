@@ -16,6 +16,7 @@ func DomainToModel(user *domain.User) *m.Users {
 		Name:     user.FullName().Name,
 		Lastname: user.FullName().Lastname,
 		Email:    user.Email().Email,
+		Image:    user.Image().Image,
 	}
 }
 
@@ -45,7 +46,10 @@ func ModelToDomain(userModel *m.Users) (*domain.User, error) {
 	if err != nil {
 		return nil, err
 	}
+	image, err := v.NewImage(userModel.Image)
+	if err != nil {
+		return nil, err
+	}
 
-	
-	return domain.NewUser(id, *name, *username, *dni, *email, *password), nil
+	return domain.NewUser(id, *name, *username, *dni, *email, *password, image), nil
 }

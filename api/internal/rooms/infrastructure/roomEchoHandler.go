@@ -131,7 +131,7 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 		Description: createdRoom.Description().Description,
 		RoomCode:    createdRoom.InviteCode().Code,
 		State:       createdRoom.State().CurrentState,
-		Image:       createdRoom.Image().URL(), // Usar el campo Image
+		Image:       createdRoom.Image().URL(),
 	}
 
 	return c.JSON(http.StatusCreated, map[string]interface{}{

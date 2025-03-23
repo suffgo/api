@@ -135,6 +135,11 @@ func (h *UserEchoHandler) CreateUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
+
+	image, err := v.NewImage(req.Image)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
 	// Map DTO to domain entity
 
 	user := d.NewUser(
@@ -144,6 +149,7 @@ func (h *UserEchoHandler) CreateUser(c echo.Context) error {
 		*dni,
 		*email,
 		*hashed,
+		image,
 	)
 
 	// Call the use case
@@ -159,6 +165,7 @@ func (h *UserEchoHandler) CreateUser(c echo.Context) error {
 		Username: user.Username().Username,
 		Dni:      user.Dni().Dni,
 		Email:    user.Email().Email,
+		Image:    user.Image().URL(),
 	}
 
 	response := map[string]interface{}{
@@ -417,6 +424,11 @@ func (h *UserEchoHandler) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
+	image, err := v.NewImage(req.Image)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
 	currentPassword := currentUser.Password()
 
 	// Crear el objeto User con los datos actualizados
@@ -427,6 +439,7 @@ func (h *UserEchoHandler) Update(c echo.Context) error {
 		*dni,
 		*email,
 		currentPassword, // No actualizamos la contraseña
+		image,
 	)
 
 	// Llamar al caso de uso para actualizar el usuario
@@ -446,6 +459,7 @@ func (h *UserEchoHandler) Update(c echo.Context) error {
 		Username: updatedUser.Username().Username,
 		Dni:      updatedUser.Dni().Dni,
 		Email:    updatedUser.Email().Email,
+		Image:    updatedUser.Image().URL(),
 	}
 
 	// Devolver la respuesta

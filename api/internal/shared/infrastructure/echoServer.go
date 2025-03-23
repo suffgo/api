@@ -96,6 +96,7 @@ func (s *EchoServer) Start() {
 		AllowCredentials: true,
 	}))
 	s.app.Static("/uploads", "internal/rooms/infrastructure/uploads")
+	s.app.Static("/uploads", "internal/users/infrastructure/uploads")
 
 	// s.app.Pre(middleware.HTTPSNonWWWRedirect()) a tener en cuenta para el futuro en caso de despliegue
 

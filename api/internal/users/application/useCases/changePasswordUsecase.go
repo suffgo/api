@@ -40,6 +40,7 @@ func (s *ChangePassword) Execute(email v.Email, newPassword v.Password) error {
 		user.Dni(),
 		user.Email(),
 		*hashedPassword,
+		user.Image(),
 	)
 
 	// Actualizar en la base de datos
