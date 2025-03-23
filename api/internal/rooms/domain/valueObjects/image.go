@@ -31,7 +31,7 @@ func NewImage(image string) (*Image, error) {
 		return nil, errors.New("error al procesar la imagen")
 	}
 
-	if mimeType != "image/png" && mimeType != "image/jpg" && mimeType != "image/jpeg"{
+	if mimeType != "image/png" && mimeType != "image/jpg" && mimeType != "image/jpeg" {
 		return nil, errors.New("formato de imagen no soportado")
 	}
 
@@ -42,7 +42,7 @@ func NewImage(image string) (*Image, error) {
 	}
 	fileName := fmt.Sprintf("%s%s", uniqueID, ext)
 
-	uploadPath := filepath.Join("internal", "rooms", "infrastructure", "uploads")
+	uploadPath := filepath.Join("internal", "uploads", "uploadsRoom")
 	filePath := filepath.Join(uploadPath, fileName)
 
 	if err := os.MkdirAll(uploadPath, os.ModePerm); err != nil {
@@ -61,7 +61,7 @@ func (i *Image) URL() string {
 	if i == nil || i.Image == "" {
 		return ""
 	}
-	return baseURL + "/uploads/" + filepath.Base(i.Image)
+	return baseURL + "/uploads/uploadsRoom/" + filepath.Base(i.Image)
 }
 
 func decodeBase64Image(base64Image string) (string, []byte, error) {

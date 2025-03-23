@@ -95,7 +95,7 @@ func (s *EchoServer) Start() {
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 		AllowCredentials: true,
 	}))
-	s.app.Static("/uploads", "internal/rooms/infrastructure/uploads")
+	s.app.Static("/uploads", "internal/uploads/")
 
 	// s.app.Pre(middleware.HTTPSNonWWWRedirect()) a tener en cuenta para el futuro en caso de despliegue
 
