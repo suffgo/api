@@ -92,6 +92,7 @@ func (u *UserEchoHandler) Login(c echo.Context) error {
 		Username: user.Username().Username,
 		Dni:      user.Dni().Dni,
 		Email:    user.Email().Email,
+		Image:    user.Image().URL(),
 	}
 
 	response := map[string]interface{}{
@@ -219,6 +220,7 @@ func (h *UserEchoHandler) GetAllUsers(c echo.Context) error {
 			Username: user.Username().Username,
 			Dni:      user.Dni().Dni,
 			Email:    user.Email().Email,
+			Image:    user.Image().URL(),
 		}
 		usersDTO = append(usersDTO, *userDTO)
 	}
@@ -249,6 +251,7 @@ func (h *UserEchoHandler) GetUserByID(c echo.Context) error {
 		Username: user.Username().Username,
 		Dni:      user.Dni().Dni,
 		Email:    user.Email().Email,
+		Image:    user.Image().URL(),
 	}
 	return c.JSON(http.StatusOK, userDTO)
 }
@@ -294,6 +297,7 @@ func (h *UserEchoHandler) GetUserByEmail(c echo.Context) error {
 		Username: user.Username().Username,
 		Dni:      user.Dni().Dni,
 		Email:    user.Email().Email,
+		Image:    user.Image().URL(),
 	}
 
 	// Devolver el usuario si fue encontrado
