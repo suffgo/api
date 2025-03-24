@@ -71,7 +71,7 @@ func (h *ProposalEchoHandler) CreateProposal(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	archive, err := v.NewArchive(*req.Archive)
+	archive, err := v.NewArchive(req.Archive)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -112,7 +112,7 @@ func (h *ProposalEchoHandler) CreateProposal(c echo.Context) error {
 
 	proposalDTO := d.ProposalDTO{
 		ID:          createdProp.ID().Id,
-		Archive:     &createdProp.Archive().Archive,
+		Archive:     createdProp.Archive().URL(),
 		Title:       createdProp.Title().Title,
 		Description: &createdProp.Description().Description,
 		RoomID:      createdProp.RoomID().Id,
@@ -140,7 +140,7 @@ func (h *ProposalEchoHandler) GetAllProposal(c echo.Context) error {
 
 		propDTO := &d.ProposalDTO{
 			ID:          prop.ID().Id,
-			Archive:     &prop.Archive().Archive,
+			Archive:     prop.Archive().URL(),
 			Title:       prop.Title().Title,
 			Description: &prop.Description().Description,
 		}
@@ -171,7 +171,7 @@ func (h *ProposalEchoHandler) GetProposalByID(c echo.Context) error {
 
 	proposalDTO := &d.ProposalDTO{
 		ID:          proposal.ID().Id,
-		Archive:     &proposal.Archive().Archive,
+		Archive:     proposal.Archive().URL(),
 		Title:       proposal.Title().Title,
 		Description: &proposal.Description().Description,
 	}
@@ -253,7 +253,7 @@ func (h *ProposalEchoHandler) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	Archive, err := v.NewArchive(*req.Archive)
+	Archive, err := v.NewArchive(req.Archive)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -297,7 +297,7 @@ func (h *ProposalEchoHandler) Update(c echo.Context) error {
 
 	proposalDTO := d.ProposalDTO{
 		ID:          updatedProposal.ID().Id,
-		Archive:     &updatedProposal.Archive().Archive,
+		Archive:     updatedProposal.Archive().URL(),
 		Title:       updatedProposal.Title().Title,
 		Description: &updatedProposal.Description().Description,
 		RoomID:      updatedProposal.RoomID().Id,
@@ -336,7 +336,7 @@ func (h *ProposalEchoHandler) GetProposalsByRoomId(c echo.Context) error {
 
 		propDTO := &d.ProposalDTO{
 			ID:          prop.ID().Id,
-			Archive:     &prop.Archive().Archive,
+			Archive:     prop.Archive().URL(),
 			Title:       prop.Title().Title,
 			Description: &prop.Description().Description,
 			RoomID:      roomId.Id,
