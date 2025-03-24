@@ -70,6 +70,14 @@ func StartVoting(event Event, c *Client) error {
 		}
 	}
 
+	c.lobby.room.State().SetState("in progress")
+	_, err := c.lobby.roomRepo.Update(c.lobby.room)
+
+	if err != nil {
+		return nil
+	}
+
+	log.Println(c.lobby.room.State().CurrentState)
 	c.lobby.nextProposal++
 
 	return nil
@@ -77,6 +85,7 @@ func StartVoting(event Event, c *Client) error {
 
 func NextProposal(event Event, c *Client) error {
 
+	log.Println("enviando next proposal")
 	if c.user.ID().Id != c.Lobby().Admin().user.ID().Id {
 
 		errorEvent := Event{
@@ -133,6 +142,7 @@ func NextProposal(event Event, c *Client) error {
 		}
 
 		for client := range c.Lobby().Clients() {
+			client.voted = false
 			client.egress <- prop
 		}
 	} else {
@@ -140,6 +150,7 @@ func NextProposal(event Event, c *Client) error {
 		return nil
 	}
 
+	c.lobby.broadcastClientList()
 	c.lobby.nextProposal++
 	return nil
 }
@@ -154,7 +165,6 @@ func SendMessage(event Event, c *Client) error {
 }
 
 func SendResults(event Event, c *Client) error {
-
 	//armo el json con los votos
 	var userVotes []UserVoteEvent
 	for client, vote := range c.Lobby().results {

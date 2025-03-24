@@ -85,19 +85,28 @@ func (r *RoomLobby) Admin() *Client {
 
 func (r *RoomLobby) broadcastClientList() {
 	// 1. Recorremos los clientes activos para obtener sus nombres (o información requerida).
-	var usernames []string
+	var clients []ClientData
 	for client := range r.clients {
-		usernames = append(usernames, client.user.Username().Username)
+		clientData := ClientData{
+			ID:       client.user.ID().Id,
+			Name:     client.user.FullName().Name,
+			Lastname: client.user.FullName().Lastname,
+			Username: client.user.Username().Username,
+			Email:    client.user.Email().Email,
+			Voted:    client.voted,
+		}
+
+		clients = append(clients, clientData)
 	}
 
 	// 2. Creamos el evento con la acción y el payload correspondiente.
 	updateEventData := UpdateClientListEvent{
-		Clients: usernames,
+		Clients: clients,
 	}
 
 	event := Event{
 		Action:  EventUpdateClientList,
-		Payload: marshalOrPanic(updateEventData), // ver la función marshalOrPanic abajo
+		Payload: marshalOrPanic(updateEventData),
 	}
 
 	for client := range r.clients {

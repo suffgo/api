@@ -474,6 +474,7 @@ func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 			StartTime:   settingRoom.StartTime().DateTime,
 			State:       room.State().CurrentState,
 			Privileges:  privileges,
+			Image:       room.Image().URL(),
 		}
 	} else {
 		roomDetailedDTO = &d.RoomDetailedDTO{
@@ -485,6 +486,7 @@ func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 			RoomCode:    room.InviteCode().Code,
 			State:       room.State().CurrentState,
 			Privileges:  privileges,
+			Image:       room.Image().URL(),
 		}
 	}
 

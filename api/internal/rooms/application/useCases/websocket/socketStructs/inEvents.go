@@ -16,6 +16,11 @@ func ReceiveVote(event Event, c *Client) error {
 		c.lobby.votesProcesing <- struct{}{}
 	}()
 
+	//si ya voto no podes volver a hacerlo
+	if c.voted {
+		return nil
+	}
+
 	var voteEvent VoteEvent
 
 	if err := json.Unmarshal(event.Payload, &voteEvent); err != nil {
@@ -43,6 +48,9 @@ func ReceiveVote(event Event, c *Client) error {
 		return nil
 	}
 	c.lobby.results[*c] = *vote
+
+	c.voted = true
+	c.lobby.broadcastClientList() //con esto informo el momento en que un usuario vota
 
 	return nil
 }
