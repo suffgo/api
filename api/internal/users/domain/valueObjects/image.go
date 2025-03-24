@@ -42,7 +42,7 @@ func NewImage(image string) (*Image, error) {
 	}
 	fileName := fmt.Sprintf("%s%s", uniqueID, ext)
 
-	uploadPath := filepath.Join("internal", "uploads", "uploadsRoom")
+	uploadPath := filepath.Join("internal", "uploads", "uploadsUsers")
 	filePath := filepath.Join(uploadPath, fileName)
 
 	if err := os.MkdirAll(uploadPath, os.ModePerm); err != nil {
@@ -61,7 +61,7 @@ func (i *Image) URL() string {
 	if i == nil || i.Image == "" {
 		return ""
 	}
-	return baseURL + "/uploads/uploadsRoom/" + filepath.Base(i.Image)
+	return baseURL + "/uploads/uploadsUsers/" + filepath.Base(i.Image)
 }
 
 func decodeBase64Image(base64Image string) (string, []byte, error) {

@@ -13,6 +13,7 @@ type (
 		dni      v.Dni
 		email    v.Email
 		password v.Password
+		image    *v.Image
 	}
 
 	UserDTO struct {
@@ -23,6 +24,7 @@ type (
 		Dni      string `json:"dni"`
 		Email    string `json:"email"`
 		Password string `json:"password"`
+		Image    string `json:"image"`
 	}
 
 	//para no comprometer la pass
@@ -33,6 +35,7 @@ type (
 		Username string `json:"username"`
 		Dni      string `json:"dni"`
 		Email    string `json:"email"`
+		Image    string `json:"image"`
 	}
 
 	UserCreateRequest struct {
@@ -42,6 +45,7 @@ type (
 		Dni      string `json:"dni"`
 		Email    string `json:"email"`
 		Password string `json:"password"`
+		Image    string `json:"image"`
 	}
 
 	LoginRequest struct {
@@ -62,6 +66,7 @@ func NewUser(
 	dni v.Dni,
 	email v.Email,
 	password v.Password,
+	image *v.Image,
 ) *User {
 	return &User{
 		id:       id,
@@ -70,6 +75,7 @@ func NewUser(
 		dni:      dni,
 		email:    email,
 		password: password,
+		image:    image,
 	}
 }
 
@@ -95,4 +101,8 @@ func (u *User) Password() v.Password {
 
 func (u *User) FullName() v.FullName {
 	return u.name
+}
+
+func (u *User) Image() *v.Image {
+	return u.image
 }

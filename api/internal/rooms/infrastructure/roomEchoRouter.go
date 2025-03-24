@@ -16,6 +16,7 @@ func InitializeRoomEchoRouter(e *echo.Echo, handler *RoomEchoHandler) {
 	roomGroup.GET("/:id", handler.GetRoomByID)
 	roomGroup.DELETE("/:id", handler.DeleteRoom)
 	roomGroup.GET("/myRooms", handler.GetRoomsByAdmin)
+	roomGroup.GET("/:id", handler.GetRoomByID)
 	roomGroup.POST("/restore/:id", handler.Restore)
 	roomGroup.POST("/join", handler.JoinRoom)
 	roomGroup.POST("/addUser", handler.AddSingleUser)

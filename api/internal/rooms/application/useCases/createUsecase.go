@@ -32,7 +32,7 @@ func (s *CreateUsecase) Execute(roomData domain.Room) (*domain.Room, error) {
 		return nil, err
 	}
 
-	inviteCode, err := v.NewInviteCode(uuid.New().String())
+	inviteCode, err := v.NewInviteCode(uuid.New().String()[:6])
 	if err != nil {
 		return nil, err
 	}
