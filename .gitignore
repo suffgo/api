@@ -3,3 +3,4 @@ backups
 docker
 tmp
 api/internal/uploads/*
+api/internal/rooms/infrastructure/uploads/*

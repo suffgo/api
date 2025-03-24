@@ -28,7 +28,7 @@ type RoomLobby struct {
 	optRepo      optdom.OptionRepository
 	voteRepo     votedom.VoteRepository
 	usecases     map[string]EventUsecase
-	results      map[Client]votedom.Vote
+	results      map[*Client]votedom.Vote
 	nextProposal int
 }
 
@@ -47,7 +47,7 @@ func NewRoomLobby(admin *Client, room *domain.Room, roomRepo domain.RoomReposito
 		propRepo:       propRepo,
 		optRepo:        optRepo,
 		voteRepo:       voteRepo,
-		results:        make(map[Client]votedom.Vote),
+		results:        make(map[*Client]votedom.Vote),
 		votesProcesing: make(chan struct{}, 1),
 		nextProposal:   0,
 	}
@@ -88,12 +88,13 @@ func (r *RoomLobby) broadcastClientList() {
 	var clients []ClientData
 	for client := range r.clients {
 		clientData := ClientData{
-			ID:       client.user.ID().Id,
-			Name:     client.user.FullName().Name,
-			Lastname: client.user.FullName().Lastname,
-			Username: client.user.Username().Username,
-			Email:    client.user.Email().Email,
+			ID:       client.User.ID().Id,
+			Name:     client.User.FullName().Name,
+			Lastname: client.User.FullName().Lastname,
+			Username: client.User.Username().Username,
+			Email:    client.User.Email().Email,
 			Voted:    client.voted,
+			Image:   client.User.Image().URL(),
 		}
 
 		clients = append(clients, clientData)
@@ -110,7 +111,10 @@ func (r *RoomLobby) broadcastClientList() {
 	}
 
 	for client := range r.clients {
-		client.egress <- event
+		if r.clients[client] {
+			client.egress <- event
+		}
+		
 	}
 }
 
@@ -128,7 +132,7 @@ func (r *RoomLobby) AddClient(client *Client) {
 
 	r.clients[client] = true //lo agrego a la lista de clientes conectados
 	for user, conn := range r.clients {
-		log.Printf("user %s; conn: %t", user.user.Username().Username, conn)
+		log.Printf("user %s; conn: %t", user.User.Username().Username, conn)
 	}
 
 	r.broadcastClientList()
@@ -140,9 +144,11 @@ func (r *RoomLobby) removeClient(client *Client) {
 	defer r.clientsmx.Unlock()
 
 	if _, ok := r.clients[client]; ok {
-		log.Printf("removing client %s", client.user.Username().Username)
+		log.Printf("removing client %s", client.User.Username().Username)
 		client.conn.Close()
-		delete(r.clients, client)
+		r.clients[client] = false //estado desconectado
+		close(client.done)
+		//delete(r.clients, client)
 	}
 
 	r.broadcastClientList()

@@ -10,18 +10,20 @@ import (
 
 type Client struct {
 	conn   *websocket.Conn
-	user   userdom.User
+	User   userdom.User
 	lobby  *RoomLobby
 	voted  bool
 	egress chan Event //debido a que la conexion no soporta muchos mensajes al mismo tiempo, se utiliza este canal para que los mensajes lleguen uno a la vez
+	done   chan struct{}
 }
 
 func NewClient(conn *websocket.Conn, user userdom.User) *Client {
 	return &Client{
 		conn:   conn,
-		user:   user,
+		User:   user,
 		voted:  false,
 		egress: make(chan Event),
+		done:   make(chan struct{}),
 	}
 }
 
@@ -33,7 +35,7 @@ func (c *Client) ReadMessages() {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error ws message: %v \n", err)
 			}
-			break
+			return
 		}
 
 		var request Event
@@ -66,21 +68,24 @@ func (c *Client) WriteMessages() {
 			data, err := json.Marshal(message)
 			if err != nil {
 				log.Println(err)
-				break
+				return
 			}
 			if err := c.conn.WriteMessage(websocket.TextMessage, data); err != nil {
 				log.Printf("failed to send message: %v", err)
 			}
+		case <-c.done:
+            close(c.egress)
+            return
 		}
 	}
 }
 
-func (c *Client) User() userdom.User {
-	return c.user
-}
-
 func (c *Client) Conn() *websocket.Conn {
 	return c.conn
+}
+
+func (c *Client) SetConn(conn *websocket.Conn) {
+	c.conn = conn
 }
 
 func (c *Client) Lobby() *RoomLobby {

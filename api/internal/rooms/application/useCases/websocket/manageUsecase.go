@@ -50,8 +50,22 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, userId, roomId sv.ID) erro
 	if err != nil {
 		return err
 	}
+	var client *socketStructs.Client
+	reconnect := false
+	if s.rooms[roomId] != nil {
+		for clientKey := range s.rooms[roomId].Clients() {
+			if clientKey.User.ID().Id == user.ID().Id {
+				reconnect = true
+				client = clientKey
+				client.SetConn(ws)
+			}
+		}
+	} 
+	
+	if !reconnect {
+		client = socketStructs.NewClient(ws, *user)
+	}
 
-	client := socketStructs.NewClient(ws, *user)
 	if s.rooms[roomId] == nil {
 		room, err := s.roomRepo.GetByID(roomId)
 		if err != nil {
