@@ -36,20 +36,25 @@ func (c *Client) ReadMessages() {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error ws message: %v \n", err)
 			}
+			c.lobby.removeClient(c)
 			return
 		}
 
 		var request Event
 		if err := json.Unmarshal(payload, &request); err != nil {
 			log.Printf("error marshalling event : %v\n", err)
+			c.lobby.removeClient(c)
 			return
 		}
 
 		if err := c.Lobby().routeEvent(request, c); err != nil {
 			log.Println("error handling message: ", err)
+			c.lobby.removeClient(c)
 			return
 		}
 	}
+
+	
 }
 
 func (c *Client) WriteMessages() {

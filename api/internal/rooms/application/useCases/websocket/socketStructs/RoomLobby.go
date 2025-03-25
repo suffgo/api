@@ -145,8 +145,8 @@ func (r *RoomLobby) removeClient(client *Client) {
 	if _, ok := r.clients[client]; ok {
 		log.Printf("removing client %s", client.User.Username().Username)
 		client.conn.Close()
-
 		r.clients[client] = false //estado desconectado
+		delete(r.clients, client)
 		close(client.done)
 		//delete(r.clients, client)
 	}
