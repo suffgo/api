@@ -99,6 +99,8 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, userId, roomId sv.ID) erro
 			s.optionsRepo,
 			s.voteRepo,
 		)
+
+		go s.OnEmpty(s.rooms[roomId])
 	}
 
 	client.SetLobby(s.rooms[roomId])
@@ -108,7 +110,6 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, userId, roomId sv.ID) erro
 
 	s.rooms[roomId].AddClient(client)
 
-	go s.OnEmpty(s.rooms[roomId])
 	return nil
 }
 
