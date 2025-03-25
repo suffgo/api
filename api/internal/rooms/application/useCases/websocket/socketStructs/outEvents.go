@@ -8,7 +8,7 @@ import (
 func StartVoting(event Event, c *Client) error {
 	log.Printf("room with id = %d has begun \n", c.Lobby().room.AdminID().Id)
 
-	if c.user.ID().Id != c.Lobby().Admin().user.ID().Id {
+	if c.User.ID().Id != c.Lobby().Admin().User.ID().Id {
 
 		errorEvent := Event{
 			Action:  EventError,
@@ -66,7 +66,9 @@ func StartVoting(event Event, c *Client) error {
 		}
 
 		for client := range c.Lobby().Clients() {
-			client.egress <- prop
+			if client.conn != nil { 
+				client.egress <- prop
+			}
 		}
 	}
 
@@ -86,7 +88,7 @@ func StartVoting(event Event, c *Client) error {
 func NextProposal(event Event, c *Client) error {
 
 	log.Println("enviando next proposal")
-	if c.user.ID().Id != c.Lobby().Admin().user.ID().Id {
+	if c.User.ID().Id != c.Lobby().Admin().User.ID().Id {
 
 		errorEvent := Event{
 			Action:  EventError,
@@ -143,7 +145,9 @@ func NextProposal(event Event, c *Client) error {
 
 		for client := range c.Lobby().Clients() {
 			client.voted = false
-			client.egress <- prop
+			if client.conn != nil {
+				client.egress <- prop
+			}
 		}
 	} else {
 		log.Println("no more proposals")
@@ -157,7 +161,7 @@ func NextProposal(event Event, c *Client) error {
 
 func SendMessage(event Event, c *Client) error {
 	for client := range c.Lobby().Clients() {
-		if client != c {
+		if client != c && client.conn != nil {
 			client.egress <- event
 		}
 	}
@@ -169,8 +173,8 @@ func SendResults(event Event, c *Client) error {
 	var userVotes []UserVoteEvent
 	for client, vote := range c.Lobby().results {
 		voterData := VoterData{
-			Username: client.user.Username().Username,
-			ID:       client.user.ID().Id,
+			Username: client.User.Username().Username,
+			ID:       client.User.ID().Id,
 		}
 
 		userVote := UserVoteEvent{
@@ -188,8 +192,13 @@ func SendResults(event Event, c *Client) error {
 
 	log.Println(evt)
 	for client := range c.Lobby().Clients() {
-		client.egress <- evt
-		log.Println("resultados enviados a " + client.user.Username().Username)
+		if client.conn != nil {
+			client.egress <- evt
+			log.Println("resultados enviados a " + client.User.Username().Username)
+		} else {
+			log.Println("A este no porque se fue " + client.User.Username().Username)
+		}
+		
 	}
 
 	return nil

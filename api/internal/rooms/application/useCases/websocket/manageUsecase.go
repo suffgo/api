@@ -3,6 +3,7 @@ package websocket
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/gorilla/websocket"
 
@@ -50,8 +51,26 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, userId, roomId sv.ID) erro
 	if err != nil {
 		return err
 	}
+	var client *socketStructs.Client
+	reconnect := false
+	if s.rooms[roomId] != nil {
+		for cKey := range s.rooms[roomId].Clients() {
+			if cKey.User.ID().Id == user.ID().Id {
+				// Ya está conectado => rechazamos la nueva conexión
+				ws.WriteControl(
+					websocket.CloseMessage,
+					websocket.FormatCloseMessage(4002, "Ya estas conectado a la sala"),
+					time.Now().Add(time.Second),
+				)
+				return nil
+			}
+		}
+	}
 
-	client := socketStructs.NewClient(ws, *user)
+	if !reconnect {
+		client = socketStructs.NewClient(ws, *user)
+	}
+
 	if s.rooms[roomId] == nil {
 		room, err := s.roomRepo.GetByID(roomId)
 		if err != nil {
@@ -80,7 +99,8 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, userId, roomId sv.ID) erro
 			s.optionsRepo,
 			s.voteRepo,
 		)
-		log.Printf("room initialized with id = %d \n", room.ID().Id)
+
+		go s.OnEmpty(s.rooms[roomId])
 	}
 
 	client.SetLobby(s.rooms[roomId])
@@ -91,4 +111,10 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, userId, roomId sv.ID) erro
 	s.rooms[roomId].AddClient(client)
 
 	return nil
+}
+
+func (s *ManageWsUsecase) OnEmpty(room *socketStructs.RoomLobby) {
+	<-room.Empty
+	delete(s.rooms, room.Room().ID())
+	log.Printf("Room instance cleared id = %d \n", room.Room().ID().Id)
 }

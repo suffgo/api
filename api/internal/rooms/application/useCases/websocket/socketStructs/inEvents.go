@@ -35,10 +35,10 @@ func ReceiveVote(event Event, c *Client) error {
 	//chequeo que la opcion exista
 	_, err = c.lobby.optRepo.GetByID(*votedOpt)
 	if errors.Is(err, opterr.ErrOptNotFound) {
-		log.Printf("user %s voted in blank \n", c.user.Username().Username)
+		log.Printf("user %s voted in blank \n", c.User.Username().Username)
 	}
 
-	userId := c.user.ID()
+	userId := c.User.ID()
 	vote := votedom.NewVote(nil, &userId, votedOpt)
 	<-c.lobby.votesProcesing
 	vote, err = c.lobby.voteRepo.Save(*vote)
@@ -47,7 +47,7 @@ func ReceiveVote(event Event, c *Client) error {
 		log.Println(err.Error()) //TODO: manejar mejor el error en caso de que por alguna razon no se ingrese un id de opt valido
 		return nil
 	}
-	c.lobby.results[*c] = *vote
+	c.lobby.results[c] = *vote
 
 	c.voted = true
 	c.lobby.broadcastClientList() //con esto informo el momento en que un usuario vota

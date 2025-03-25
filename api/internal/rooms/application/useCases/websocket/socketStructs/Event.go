@@ -33,7 +33,7 @@ type UpdateClientListEvent struct {
 	Clients []ClientData `json:"clients"`
 }
 
-//estructura utilizada para trackear votos en tiempo real
+// estructura utilizada para trackear votos en tiempo real
 type ClientData struct {
 	ID       uint   `json:"id"`
 	Name     string `json:"name"`
@@ -41,6 +41,7 @@ type ClientData struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Voted    bool   `json:"voted"`
+	Image    string `json:"image"`
 }
 
 type ErrorEvent struct {
