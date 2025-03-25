@@ -605,7 +605,10 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room isFormal"})
 	}
 
-	image, err := v.NewImage(currentRoom.Image().Image)
+	image, err := v.NewImage(req.Image)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room Image"})
+	}
 	state, err := v.NewState("created")
 
 	room := d.NewRoom(
