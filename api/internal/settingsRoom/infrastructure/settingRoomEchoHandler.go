@@ -2,7 +2,6 @@ package infrastructure
 
 import (
 	"errors"
-	"log"
 	"net/http"
 	"strconv"
 	s "suffgo/internal/settingsRoom/application/useCases"
@@ -201,7 +200,6 @@ func (h *SettingRoomEchoHandler) GetSrByRoomID(c echo.Context) error {
 	}
 
 	id, _ := sv.NewID(idInput)
-	log.Println("infra")
 	settingRoom, err := h.GetByRoomIDUsecase.Execute(*id)
 
 	if err != nil {
@@ -285,7 +283,7 @@ func (h *SettingRoomEchoHandler) Update(c echo.Context) error {
 
 	updatedSettingRoom, err := h.UpdateSettingRoomUsecase.Execute(settingRoom)
 	if err != nil {
-		if errors.Is(seterr.SettingRoomNotFoundError, err) {
+		if errors.Is(err, seterr.SettingRoomNotFoundError) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
 
