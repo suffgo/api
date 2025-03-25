@@ -54,18 +54,15 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, userId, roomId sv.ID) erro
 	var client *socketStructs.Client
 	reconnect := false
 	if s.rooms[roomId] != nil {
-		for clientKey := range s.rooms[roomId].Clients() {
-			if clientKey.User.ID().Id == user.ID().Id {
+		for cKey := range s.rooms[roomId].Clients() {
+			if cKey.User.ID().Id == user.ID().Id {
+				// Ya está conectado => rechazamos la nueva conexión
 				ws.WriteControl(
 					websocket.CloseMessage,
 					websocket.FormatCloseMessage(4002, "Ya estas conectado a la sala"),
 					time.Now().Add(time.Second),
 				)
 				return nil
-			} else {
-				reconnect = true
-				client = clientKey
-				client.SetConn(ws)
 			}
 		}
 	}
@@ -102,7 +99,6 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, userId, roomId sv.ID) erro
 			s.optionsRepo,
 			s.voteRepo,
 		)
-		log.Printf("room initialized with id = %d \n", room.ID().Id)
 	}
 
 	client.SetLobby(s.rooms[roomId])
@@ -112,5 +108,12 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, userId, roomId sv.ID) erro
 
 	s.rooms[roomId].AddClient(client)
 
+	go s.OnEmpty(s.rooms[roomId])
 	return nil
+}
+
+func (s *ManageWsUsecase) OnEmpty(room *socketStructs.RoomLobby) {
+	<-room.Empty
+	delete(s.rooms, room.Room().ID())
+	log.Printf("Room instance cleared id = %d \n", room.Room().ID().Id)
 }

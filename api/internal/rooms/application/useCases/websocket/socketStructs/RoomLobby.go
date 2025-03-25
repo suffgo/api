@@ -18,6 +18,7 @@ type RoomLobby struct {
 	sync.RWMutex
 	clientsmx      sync.RWMutex
 	votesProcesing chan struct{}
+	Empty          chan struct{}
 
 	clients      ClientList
 	admin        *Client
@@ -50,6 +51,7 @@ func NewRoomLobby(admin *Client, room *domain.Room, roomRepo domain.RoomReposito
 		results:        make(map[*Client]votedom.Vote),
 		votesProcesing: make(chan struct{}, 1),
 		nextProposal:   0,
+		Empty:          make(chan struct{}, 1),
 	}
 
 	r.initializeUsecases()
@@ -151,8 +153,19 @@ func (r *RoomLobby) removeClient(client *Client) {
 		//delete(r.clients, client)
 	}
 	r.clientsmx.Unlock()
-	
+
 	r.broadcastClientList()
+
+	state := r.room.State().CurrentState
+	if len(r.clients) == 0 && state == "in progress" || state == "online" {
+		r.room.State().SetState("created")
+		_, err := r.roomRepo.Update(r.room)
+		if err != nil {
+			return
+		}
+		r.Empty <- struct{}{}
+
+	}
 }
 
 func (r *RoomLobby) Clients() ClientList {
