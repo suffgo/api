@@ -286,6 +286,7 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 		roomDetailedDTO = &d.RoomDetailedDTO{
 			ID:          room.ID().Id,
 			LinkInvite:  room.LinkInvite().LinkInvite,
+			IsFormal:    room.IsFormal().IsFormal,
 			RoomTitle:   room.Name().Name,
 			AdminName:   adminName,
 			Description: room.Description().Description,
@@ -299,6 +300,7 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 		roomDetailedDTO = &d.RoomDetailedDTO{
 			ID:          room.ID().Id,
 			LinkInvite:  room.LinkInvite().LinkInvite,
+			IsFormal:    room.IsFormal().IsFormal,
 			RoomTitle:   room.Name().Name,
 			AdminName:   adminName,
 			Description: room.Description().Description,
