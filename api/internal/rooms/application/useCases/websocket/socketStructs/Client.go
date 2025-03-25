@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/gorilla/websocket"
 	userdom "suffgo/internal/users/domain"
+
+	"github.com/gorilla/websocket"
 )
 
 type Client struct {
@@ -41,16 +42,14 @@ func (c *Client) ReadMessages() {
 		var request Event
 		if err := json.Unmarshal(payload, &request); err != nil {
 			log.Printf("error marshalling event : %v\n", err)
-			break
+			return
 		}
 
 		if err := c.Lobby().routeEvent(request, c); err != nil {
 			log.Println("error handling message: ", err)
-			break
+			return
 		}
 	}
-
-	c.lobby.removeClient(c)
 }
 
 func (c *Client) WriteMessages() {
@@ -62,7 +61,7 @@ func (c *Client) WriteMessages() {
 				if err := c.conn.WriteMessage(websocket.CloseMessage, nil); err != nil {
 					log.Println("connection closed", err)
 				}
-				break
+				return
 			}
 
 			data, err := json.Marshal(message)

@@ -94,7 +94,7 @@ func (r *RoomLobby) broadcastClientList() {
 			Username: client.User.Username().Username,
 			Email:    client.User.Email().Email,
 			Voted:    client.voted,
-			Image:   client.User.Image().URL(),
+			Image:    client.User.Image().URL(),
 		}
 
 		clients = append(clients, clientData)
@@ -114,7 +114,7 @@ func (r *RoomLobby) broadcastClientList() {
 		if r.clients[client] {
 			client.egress <- event
 		}
-		
+
 	}
 }
 
@@ -141,16 +141,17 @@ func (r *RoomLobby) AddClient(client *Client) {
 
 func (r *RoomLobby) removeClient(client *Client) {
 	r.clientsmx.Lock()
-	defer r.clientsmx.Unlock()
 
 	if _, ok := r.clients[client]; ok {
 		log.Printf("removing client %s", client.User.Username().Username)
 		client.conn.Close()
+
 		r.clients[client] = false //estado desconectado
 		close(client.done)
 		//delete(r.clients, client)
 	}
-
+	r.clientsmx.Unlock()
+	
 	r.broadcastClientList()
 }
 

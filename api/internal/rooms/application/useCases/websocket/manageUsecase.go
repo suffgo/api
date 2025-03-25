@@ -3,6 +3,7 @@ package websocket
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/gorilla/websocket"
 
@@ -55,6 +56,17 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, userId, roomId sv.ID) erro
 	if s.rooms[roomId] != nil {
 		for clientKey := range s.rooms[roomId].Clients() {
 			if clientKey.User.ID().Id == user.ID().Id {
+				if clientKey.Conn() != nil {
+					//Si ya esta conectado el usuario, reboto al nuevo
+					if err := ws.WriteControl(
+						websocket.CloseMessage, 
+						websocket.FormatCloseMessage(4002, "Ya estas conectado a la sala"), 
+						time.Now().Add(time.Second),
+					); err != nil {
+						log.Println("error sending close message:", err)
+					}
+					return nil
+				}
 				reconnect = true
 				client = clientKey
 				client.SetConn(ws)
@@ -98,7 +110,7 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, userId, roomId sv.ID) erro
 	}
 
 	client.SetLobby(s.rooms[roomId])
-
+	
 	go client.ReadMessages()
 	go client.WriteMessages()
 
