@@ -66,6 +66,7 @@ func (r *RoomLobby) initializeUsecases() {
 	r.usecases[EventVote] = ReceiveVote
 	r.usecases[EventResults] = SendResults
 	r.usecases[EventNextProp] = NextProposal
+	r.usecases[EventKickUser] = KickUser
 }
 
 func (r *RoomLobby) routeEvent(event Event, c *Client) error {
