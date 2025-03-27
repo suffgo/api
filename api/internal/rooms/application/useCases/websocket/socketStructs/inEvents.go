@@ -82,19 +82,23 @@ func KickUser(event Event, c *Client) error {
 
 	clientKicked := false
 	for client := range c.lobby.clients {
-		log.Println(client.User.ID().Id)
-		log.Println(kickEvent.UserId)
 		if client.User.ID().Id == kickEvent.UserId {
-
 			errorEvent := Event{
 				Action:  EventKickUser,
 				Payload: marshalOrPanic(ErrorEvent{Message: "you were kicked out of the room"}),
 			}
 
-			c.egress <- errorEvent
-
+			client.egress <- errorEvent //falta ver como asegurarme de que sea enviado antes de que cierre canal
 			c.lobby.removeClient(client)
 			clientKicked = true
+
+		} else {
+			errorEvent := Event{
+				Action:  EventKickInfoUser,
+				Payload: marshalOrPanic(ErrorEvent{Message: "an user was kicked"}),
+			}
+
+			client.egress <- errorEvent
 		}
 	}
 

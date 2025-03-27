@@ -23,6 +23,7 @@ const (
 	EventNextProp         = "next_proposal"
 	EventError            = "error"
 	EventKickUser         = "kick_user"
+	EventKickInfoUser     = "kick_info"
 )
 
 type SendMessageEvent struct {

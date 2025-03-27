@@ -144,9 +144,7 @@ func (r *RoomLobby) AddClient(client *Client) {
 
 func (r *RoomLobby) removeClient(client *Client) {
 	r.clientsmx.Lock()
-
 	if _, ok := r.clients[client]; ok {
-		log.Printf("removing client %s", client.User.Username().Username)
 		client.conn.Close()
 		r.clients[client] = false //estado desconectado
 		delete(r.clients, client)
@@ -158,7 +156,7 @@ func (r *RoomLobby) removeClient(client *Client) {
 	r.broadcastClientList()
 
 	state := r.room.State().CurrentState
-	if len(r.clients) == 0 && state == "in progress" || state == "online" {
+	if len(r.clients) == 0 && (state == "in progress" || state == "online") {
 		r.room.State().SetState("created")
 		_, err := r.roomRepo.Update(r.room)
 		if err != nil {
