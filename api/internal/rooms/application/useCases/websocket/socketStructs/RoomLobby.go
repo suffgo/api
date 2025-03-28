@@ -142,14 +142,13 @@ func (r *RoomLobby) AddClient(client *Client) {
 
 }
 
+// Segundo parametro opcional para indicar si fue kickeado en lugar de una desconexion
 func (r *RoomLobby) removeClient(client *Client) {
 	r.clientsmx.Lock()
 	if _, ok := r.clients[client]; ok {
 		client.conn.Close()
-		r.clients[client] = false //estado desconectado
 		delete(r.clients, client)
 		close(client.done)
-		//delete(r.clients, client)
 	}
 	r.clientsmx.Unlock()
 

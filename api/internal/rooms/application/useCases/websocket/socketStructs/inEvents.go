@@ -44,7 +44,7 @@ func ReceiveVote(event Event, c *Client) error {
 	vote, err = c.lobby.voteRepo.Save(*vote)
 
 	if err != nil {
-		log.Println(err.Error()) //TODO: manejar mejor el error en caso de que por alguna razon no se ingrese un id de opt valido
+		log.Println(err.Error()) 
 		return nil
 	}
 	c.lobby.results[c] = *vote
@@ -76,7 +76,6 @@ func KickUser(event Event, c *Client) error {
 		}
 
 		c.egress <- errorEvent
-
 		return nil
 	}
 
@@ -88,7 +87,8 @@ func KickUser(event Event, c *Client) error {
 				Payload: marshalOrPanic(ErrorEvent{Message: "you were kicked out of the room"}),
 			}
 
-			client.egress <- errorEvent //falta ver como asegurarme de que sea enviado antes de que cierre canal
+			client.egress <- errorEvent
+			<-client.errorSent
 			c.lobby.removeClient(client)
 			clientKicked = true
 
