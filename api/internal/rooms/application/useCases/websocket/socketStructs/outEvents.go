@@ -104,7 +104,7 @@ func NextProposal(event Event, c *Client) error {
 		lastProp = true
 	}
 
-	if c.lobby.nextProposal <= len(c.Lobby().proposals) {
+	if c.lobby.nextProposal < len(c.Lobby().proposals) {
 		proposal := c.Lobby().proposals[c.lobby.nextProposal]
 		options, err := c.lobby.optRepo.GetByProposal(proposal.ID())
 		if err != nil {
@@ -154,6 +154,10 @@ func NextProposal(event Event, c *Client) error {
 		return nil
 	}
 
+	if lastProp {
+		c.lobby.ChangeRoomState("finished")
+	}
+	
 	c.lobby.broadcastClientList()
 	c.lobby.nextProposal++
 	return nil

@@ -156,11 +156,7 @@ func (r *RoomLobby) removeClient(client *Client) {
 
 	state := r.room.State().CurrentState
 	if len(r.clients) == 0 && (state == "in progress" || state == "online") {
-		r.room.State().SetState("created")
-		_, err := r.roomRepo.Update(r.room)
-		if err != nil {
-			return
-		}
+		r.ChangeRoomState("created")
 		r.Empty <- struct{}{}
 
 	}
@@ -174,4 +170,14 @@ func (r *RoomLobby) Clients() ClientList {
 
 func (r *RoomLobby) Room() *domain.Room {
 	return r.room
+}
+
+func (r *RoomLobby) ChangeRoomState(state string) *domain.Room {
+	r.room.State().SetState(state)
+	_, err := r.roomRepo.Update(r.room)
+	if err != nil {
+		log.Println("Error updating room state")
+		return nil
+	}
+	return nil
 }
