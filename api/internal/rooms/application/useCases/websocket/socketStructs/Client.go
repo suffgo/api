@@ -10,21 +10,23 @@ import (
 )
 
 type Client struct {
-	conn   *websocket.Conn
-	User   userdom.User
-	lobby  *RoomLobby
-	voted  bool
-	egress chan Event //debido a que la conexion no soporta muchos mensajes al mismo tiempo, se utiliza este canal para que los mensajes lleguen uno a la vez
-	done   chan struct{}
+	conn      *websocket.Conn
+	User      userdom.User
+	lobby     *RoomLobby
+	voted     bool
+	egress    chan Event
+	done      chan struct{}
+	errorSent chan struct{}
 }
 
 func NewClient(conn *websocket.Conn, user userdom.User) *Client {
 	return &Client{
-		conn:   conn,
-		User:   user,
-		voted:  false,
-		egress: make(chan Event),
-		done:   make(chan struct{}),
+		conn:      conn,
+		User:      user,
+		voted:     false,
+		egress:    make(chan Event),
+		errorSent: make(chan struct{}),
+		done:      make(chan struct{}),
 	}
 }
 
@@ -53,8 +55,6 @@ func (c *Client) ReadMessages() {
 			return
 		}
 	}
-
-	
 }
 
 func (c *Client) WriteMessages() {
@@ -74,12 +74,21 @@ func (c *Client) WriteMessages() {
 				log.Println(err)
 				return
 			}
+
 			if err := c.conn.WriteMessage(websocket.TextMessage, data); err != nil {
 				log.Printf("failed to send message: %v", err)
 			}
+
+			var event Event
+			if err := json.Unmarshal(data, &event); err != nil {
+				log.Println("error unmarshalling message:", err)
+			} else if event.Action == "kick_user" {
+				c.errorSent <- struct{}{}
+			}
+
 		case <-c.done:
-            close(c.egress)
-            return
+			close(c.egress)
+			return
 		}
 	}
 }

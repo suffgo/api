@@ -22,6 +22,8 @@ const (
 	EventFirstProp        = "first_proposal"
 	EventNextProp         = "next_proposal"
 	EventError            = "error"
+	EventKickUser         = "kick_user"
+	EventKickInfoUser     = "kick_info"
 )
 
 type SendMessageEvent struct {
@@ -78,4 +80,8 @@ type VoterData struct {
 
 type ResultsEvent struct {
 	Votes []UserVoteEvent `json:"votes"`
+}
+
+type KickUserEvent struct {
+	UserId uint `json:"user_id"`
 }

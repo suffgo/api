@@ -66,6 +66,7 @@ func (r *RoomLobby) initializeUsecases() {
 	r.usecases[EventVote] = ReceiveVote
 	r.usecases[EventResults] = SendResults
 	r.usecases[EventNextProp] = NextProposal
+	r.usecases[EventKickUser] = KickUser
 }
 
 func (r *RoomLobby) routeEvent(event Event, c *Client) error {
@@ -141,23 +142,20 @@ func (r *RoomLobby) AddClient(client *Client) {
 
 }
 
+// Segundo parametro opcional para indicar si fue kickeado en lugar de una desconexion
 func (r *RoomLobby) removeClient(client *Client) {
 	r.clientsmx.Lock()
-
 	if _, ok := r.clients[client]; ok {
-		log.Printf("removing client %s", client.User.Username().Username)
 		client.conn.Close()
-		r.clients[client] = false //estado desconectado
 		delete(r.clients, client)
 		close(client.done)
-		//delete(r.clients, client)
 	}
 	r.clientsmx.Unlock()
 
 	r.broadcastClientList()
 
 	state := r.room.State().CurrentState
-	if len(r.clients) == 0 && state == "in progress" || state == "online" {
+	if len(r.clients) == 0 && (state == "in progress" || state == "online") {
 		r.room.State().SetState("created")
 		_, err := r.roomRepo.Update(r.room)
 		if err != nil {
