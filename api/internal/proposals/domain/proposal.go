@@ -16,14 +16,14 @@ type (
 
 	ProposalDTO struct {
 		ID          uint    `json:"id"`
-		Archive     *string `json:"archive"`
+		Archive     string  `json:"archive"`
 		Title       string  `json:"title"`
 		Description *string `json:"description"`
 		RoomID      uint    `json:"room_id"`
 	}
 
 	ProposalCreateRequest struct {
-		Archive       *string `json:"archive"`
+		Archive       string  `json:"archive"`
 		Title         string  `json:"title"`
 		Description   *string `json:"description"`
 		RoomID        uint    `json:"room_id"`
@@ -31,7 +31,7 @@ type (
 	}
 
 	ProposalUpdateRequest struct {
-		Archive     *string `json:"archive"`
+		Archive     string  `json:"archive"`
 		Title       string  `json:"title"`
 		Description *string `json:"description"`
 	}

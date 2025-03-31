@@ -59,6 +59,7 @@ type (
 		IsFormal    bool   `json:"is_formal"`
 		Name        string `json:"name"`
 		Description string `json:"description"`
+		Image       string `json:"image"`
 	}
 
 	JoinRoomRequest struct {
@@ -67,7 +68,7 @@ type (
 
 	AddSingleUserRequest struct {
 		UserData string `json:"user_data"`
-		RoomID   uint `json:"room_id"`
+		RoomID   uint   `json:"room_id"`
 	}
 )
 
