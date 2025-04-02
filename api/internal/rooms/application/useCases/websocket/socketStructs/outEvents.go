@@ -158,7 +158,6 @@ func NextProposal(event Event, c *Client) error {
 		c.lobby.ChangeRoomState("finished")
 	}
 	
-	c.lobby.broadcastClientList()
 	c.lobby.nextProposal++
 	return nil
 }

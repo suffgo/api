@@ -33,6 +33,8 @@ func (s *CreateUsecase) Execute(proposal domain.Proposal, requesterUsr sv.ID) (*
 		return nil, errors.New("invalid room id")
 	}
 
+	//TODO: insertar opcion nula
+
 	//validar usuario creador de propuesta con admin de la sala
 	if room.AdminID().Id != requesterUsr.Id {
 		return nil, errors.New("operación no autorizada para este usuario")

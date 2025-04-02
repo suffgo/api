@@ -17,7 +17,7 @@ type ClientList map[*Client]bool
 type RoomLobby struct {
 	sync.RWMutex
 	clientsmx      sync.RWMutex
-	votesProcesing chan struct{}
+	votesProcesing chan struct{} 
 	Empty          chan struct{}
 
 	clients      ClientList
@@ -142,7 +142,6 @@ func (r *RoomLobby) AddClient(client *Client) {
 
 }
 
-// Segundo parametro opcional para indicar si fue kickeado en lugar de una desconexion
 func (r *RoomLobby) removeClient(client *Client) {
 	r.clientsmx.Lock()
 	if _, ok := r.clients[client]; ok {
@@ -158,7 +157,7 @@ func (r *RoomLobby) removeClient(client *Client) {
 	if len(r.clients) == 0 && (state == "in progress" || state == "online") {
 		r.ChangeRoomState("created")
 		r.Empty <- struct{}{}
-
+		//TODO: borrar votos
 	}
 }
 
