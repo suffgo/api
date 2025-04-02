@@ -29,6 +29,7 @@ type UserEchoHandler struct {
 	RestoreUsecase        *u.RestoreUsecase
 	ChangePasswordUsecase *u.ChangePassword
 	UpdateUsecase         *u.UpdateUsecase
+	GetUsersByRoomUsecase *u.GetUsersByRoom
 }
 
 // Constructor for UserEchoHandler
@@ -42,6 +43,7 @@ func NewUserEchoHandler(
 	restoreUC *u.RestoreUsecase,
 	changePassUC *u.ChangePassword,
 	updateUC *u.UpdateUsecase,
+	getByRoomUC *u.GetUsersByRoom,
 ) *UserEchoHandler {
 	return &UserEchoHandler{
 		CreateUserUsecase:     createUC,
@@ -53,6 +55,7 @@ func NewUserEchoHandler(
 		RestoreUsecase:        restoreUC,
 		ChangePasswordUsecase: changePassUC,
 		UpdateUsecase:         updateUC,
+		GetUsersByRoomUsecase: getByRoomUC,
 	}
 }
 
@@ -104,7 +107,7 @@ func (u *UserEchoHandler) Login(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-func (h *UserEchoHandler) CreateUser(c echo.Context) error {
+func (u *UserEchoHandler) CreateUser(c echo.Context) error {
 	var req d.UserCreateRequest
 	// bindea el body del request (json) al dto
 	if err := c.Bind(&req); err != nil {
@@ -154,7 +157,7 @@ func (h *UserEchoHandler) CreateUser(c echo.Context) error {
 	)
 
 	// Call the use case
-	user, err = h.CreateUserUsecase.Execute(*user)
+	user, err = u.CreateUserUsecase.Execute(*user)
 	if err != nil {
 		return c.JSON(http.StatusConflict, map[string]string{"error": err.Error()})
 	}
@@ -177,7 +180,7 @@ func (h *UserEchoHandler) CreateUser(c echo.Context) error {
 	return c.JSON(http.StatusCreated, response)
 }
 
-func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
+func (u *UserEchoHandler) DeleteUser(c echo.Context) error {
 	idParam := c.Param("id")
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
@@ -191,7 +194,7 @@ func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
 	}
 
-	err = h.DeleteUserUsecase.Execute(*id, *currentUserID)
+	err = u.DeleteUserUsecase.Execute(*id, *currentUserID)
 	if err != nil {
 		if errors.Is(err, uerr.ErrUserNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
@@ -205,8 +208,8 @@ func (h *UserEchoHandler) DeleteUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"success": "user deleted succesfully"})
 }
 
-func (h *UserEchoHandler) GetAllUsers(c echo.Context) error {
-	users, err := h.GetAllUsersUsecase.Execute()
+func (u *UserEchoHandler) GetAllUsers(c echo.Context) error {
+	users, err := u.GetAllUsersUsecase.Execute()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -228,7 +231,7 @@ func (h *UserEchoHandler) GetAllUsers(c echo.Context) error {
 	return c.JSON(http.StatusOK, usersDTO)
 }
 
-func (h *UserEchoHandler) GetUserByID(c echo.Context) error {
+func (u *UserEchoHandler) GetUserByID(c echo.Context) error {
 	idParam := c.Param("id")
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
@@ -236,7 +239,7 @@ func (h *UserEchoHandler) GetUserByID(c echo.Context) error {
 	}
 
 	id, _ := sv.NewID(uint(idInput))
-	user, err := h.GetUserByIDUsecase.Execute(*id)
+	user, err := u.GetUserByIDUsecase.Execute(*id)
 	if err != nil {
 		if errors.Is(err, uerr.ErrUserNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
@@ -256,7 +259,7 @@ func (h *UserEchoHandler) GetUserByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, userDTO)
 }
 
-func (h *UserEchoHandler) GetUserByEmail(c echo.Context) error {
+func (u *UserEchoHandler) GetUserByEmail(c echo.Context) error {
 
 	var request struct {
 		Email string `json:"email" validate:"required,email"`
@@ -277,7 +280,7 @@ func (h *UserEchoHandler) GetUserByEmail(c echo.Context) error {
 	}
 
 	// Buscar el usuario por email
-	user, err := h.GetUserByEmailUsecase.Execute(*email)
+	user, err := u.GetUserByEmailUsecase.Execute(*email)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "Error retrieving user: " + err.Error(),
@@ -304,7 +307,7 @@ func (h *UserEchoHandler) GetUserByEmail(c echo.Context) error {
 	return c.JSON(http.StatusOK, userDTO)
 }
 
-func (h *UserEchoHandler) Logout(c echo.Context) error {
+func (u *UserEchoHandler) Logout(c echo.Context) error {
 
 	err := logout(c)
 	if err != nil {
@@ -315,7 +318,7 @@ func (h *UserEchoHandler) Logout(c echo.Context) error {
 }
 
 // handler para saber si esta autenticado
-func (h *UserEchoHandler) CheckAuth(c echo.Context) error {
+func (u *UserEchoHandler) CheckAuth(c echo.Context) error {
 	_, err := session.Get("session", c)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
@@ -324,7 +327,7 @@ func (h *UserEchoHandler) CheckAuth(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"success": "usuario autenticado"})
 }
 
-func (h *UserEchoHandler) Restore(c echo.Context) error {
+func (u *UserEchoHandler) Restore(c echo.Context) error {
 	idParam := c.Param("id")
 	idInput, err := strconv.ParseInt(idParam, 10, 64)
 
@@ -333,7 +336,7 @@ func (h *UserEchoHandler) Restore(c echo.Context) error {
 	}
 
 	id, _ := sv.NewID(uint(idInput))
-	err = h.RestoreUsecase.Execute(*id)
+	err = u.RestoreUsecase.Execute(*id)
 
 	if err != nil {
 		if errors.Is(err, uerr.ErrUserNotFound) {
@@ -347,7 +350,7 @@ func (h *UserEchoHandler) Restore(c echo.Context) error {
 
 }
 
-func (h *UserEchoHandler) ChangePassword(c echo.Context) error {
+func (u *UserEchoHandler) ChangePassword(c echo.Context) error {
 	var req d.ChangePasswordRequest
 
 	if err := c.Bind(&req); err != nil {
@@ -370,7 +373,7 @@ func (h *UserEchoHandler) ChangePassword(c echo.Context) error {
 		})
 	}
 
-	err = h.ChangePasswordUsecase.Execute(*email, *newPassword)
+	err = u.ChangePasswordUsecase.Execute(*email, *newPassword)
 	if err != nil {
 		switch {
 		case errors.Is(err, uerr.ErrUserNotFound):
@@ -387,6 +390,43 @@ func (h *UserEchoHandler) ChangePassword(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]string{
 		"success": "Password changed successfully",
+	})
+}
+
+func (u *UserEchoHandler) GetUsersByRoom(c echo.Context) error {
+	idParam := c.Param("id")
+	idInput, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
+	}
+
+	roomid, _ := sv.NewID(idInput)
+
+	users, err := u.GetUsersByRoomUsecase.Execute(*roomid)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": err.Error(),
+		})
+	}
+
+	var usersDTO []d.UserSafeDTO
+	for _, user := range users {
+		userDTO := &d.UserSafeDTO{
+			ID:       user.ID().Id,
+			Name:     user.FullName().Name,
+			Lastname: user.FullName().Lastname,
+			Username: user.Username().Username,
+			Dni:      user.Dni().Dni,
+			Email:    user.Email().Email,
+			Image:    user.Image().URL(),
+		}
+		usersDTO = append(usersDTO, *userDTO)
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"success": "users fetched sucessfully",
+		"users":   usersDTO,
 	})
 }
 

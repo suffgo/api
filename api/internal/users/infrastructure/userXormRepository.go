@@ -207,3 +207,8 @@ func (s *UserXormRepository) Update(user d.User) (*d.User, error) {
 	return updatedUser, nil
 
 }
+
+func (s *UserXormRepository) GetByRoom(roomId sv.ID) ([]d.User, error) {
+	//le tengo que pegar a la tabla user_rooms
+	return nil, nil
+}
