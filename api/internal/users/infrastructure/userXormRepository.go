@@ -207,3 +207,28 @@ func (s *UserXormRepository) Update(user d.User) (*d.User, error) {
 	return updatedUser, nil
 
 }
+
+func (s *UserXormRepository) GetByRoom(roomId sv.ID) ([]d.User, error) {
+	var users []m.Users
+	err := s.db.GetDb().
+		Table("users").
+		Join("INNER", "user_room", "user_room.user_id = users.id").
+		Where("user_room.room_id = ?", roomId.Id).
+		Find(&users)
+	if err != nil {
+		return nil, err
+	}
+
+	var usersDomain []d.User
+	for _, user := range users {
+		userDomain, err := mappers.ModelToDomain(&user)
+
+		if err != nil {
+			return nil, err
+		}
+
+		usersDomain = append(usersDomain, *userDomain)
+	}
+
+	return usersDomain, nil
+}

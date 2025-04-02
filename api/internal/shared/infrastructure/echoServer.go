@@ -105,7 +105,7 @@ func (s *EchoServer) Start() {
 
 	deps := NewDependencies(s.db)
 
-	s.InitializeUser(deps.UserRepo)
+	s.InitializeUser(deps.UserRepo, deps.RoomRepo, deps.SettingRoomRepo)
 	s.InitializeRoom(deps.UserRepo, deps.SettingRoomRepo, deps.ProposalRepo, deps.OptionsRepo, deps.VotesRepo)
 	s.InitializeSettingRoom(deps.SettingRoomRepo, deps.RoomRepo)
 	s.InitializeProposal(deps.ProposalRepo, deps.RoomRepo)
@@ -122,7 +122,7 @@ func (s *EchoServer) Start() {
 
 var getUserByIDUseCase *userUsecase.GetByIDUsecase
 
-func (s *EchoServer) InitializeUser(userRepo userDom.UserRepository) {
+func (s *EchoServer) InitializeUser(userRepo userDom.UserRepository, roomRepo roomDom.RoomRepository, setrRepo srDom.SettingRoomRepository) {
 
 	// Initialize Use Cases
 	createUserUseCase := userUsecase.NewCreateUsecase(userRepo)
@@ -134,6 +134,7 @@ func (s *EchoServer) InitializeUser(userRepo userDom.UserRepository) {
 	restoreUseCase := userUsecase.NewRestoreUsecase(userRepo)
 	changePasswordUseCase := userUsecase.NewChangePasswordUsecase(userRepo)
 	updateUseCase := userUsecase.NewUpdateUsecase(userRepo)
+	getByRoom := userUsecase.NewGetUsersByRoom(userRepo, roomRepo, setrRepo)
 	// Initialize Handler
 	userHandler := u.NewUserEchoHandler(
 		createUserUseCase,
@@ -145,6 +146,7 @@ func (s *EchoServer) InitializeUser(userRepo userDom.UserRepository) {
 		restoreUseCase,
 		changePasswordUseCase,
 		updateUseCase,
+		getByRoom,
 	)
 
 	// Initialize User Router

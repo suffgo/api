@@ -15,4 +15,5 @@ type UserRepository interface {
 	GetByUsername(username v.UserName) (*User, error)
 	Restore(id sv.ID) error
 	Update(user User) (*User, error)
+	GetByRoom(roomId sv.ID) ([]User, error)
 }
