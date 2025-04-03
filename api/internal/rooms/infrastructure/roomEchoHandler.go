@@ -40,6 +40,7 @@ type RoomEchoHandler struct {
 	UpdateRoomUsecase    *r.UpdateRoomUsecase
 	GetSrByRoomIDUsecase *r.GetSrByRoomUsecase
 	ManageWsUsecase      *roomWs.ManageWsUsecase
+	WhiteListRmUsecase   *r.WhitelistRmUsecase
 }
 
 func NewRoomEchoHandler(
@@ -55,6 +56,7 @@ func NewRoomEchoHandler(
 	updateUC *r.UpdateRoomUsecase,
 	manageWsUC *roomWs.ManageWsUsecase,
 	getSrByRoomIDUC *r.GetSrByRoomUsecase,
+	whitelistRmUC *r.WhitelistRmUsecase,
 
 ) *RoomEchoHandler {
 	return &RoomEchoHandler{
@@ -70,6 +72,7 @@ func NewRoomEchoHandler(
 		UpdateRoomUsecase:    updateUC,
 		ManageWsUsecase:      manageWsUC,
 		GetSrByRoomIDUsecase: getSrByRoomIDUC,
+		WhiteListRmUsecase:   whitelistRmUC,
 	}
 }
 
@@ -580,6 +583,10 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 
 	currentRoom, err := h.GetRoomByIDUsecase.Execute(*id)
 
+	if err != nil  {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid data"}) 
+	}
+	
 	adminID, err := sv.NewID(currentRoom.AdminID().Id) // Usar el ID del admin actual o el que corresponda
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room AdminID"})
@@ -657,6 +664,66 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 	})
 }
 
+func (r *RoomEchoHandler) RemoveFromWhitelistHandler(c echo.Context) error {
+
+	var req d.RemoveFromWhitelistRequest
+
+	log.Println("hello its me!")
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	adminId, _ := GetUserIDFromSession(c)
+
+	roomId, err := sv.NewID(req.RoomId)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+	userId, err := sv.NewID(req.UserId)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	err = r.WhiteListRmUsecase.Execute(*roomId, *userId, *adminId)
+
+	if err != nil {
+		//varios tipos de errores
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{"success": "room updated successfully",})
+}
+
+func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
+
+	id := c.Param("room_id")
+	roomId, err := sv.NewID(id)
+	if err != nil {
+		return err
+	}
+
+	clientID, err := GetUserIDFromSession(c)
+	if err != nil {
+		return nil
+	}
+
+	//TODO: validar que sea el administrador
+
+	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		return err
+	}
+
+	err = h.ManageWsUsecase.Execute(ws, *clientID, *roomId)
+	if err != nil {
+		ws.Close()
+		log.Println(err.Error())
+	}
+
+	return nil
+}
+
 // En caso de devolver error lo hace en forma de response
 func GetUserIDFromSession(c echo.Context) (*sv.ID, error) {
 	// Obtener el user_id de la sesion
@@ -689,32 +756,3 @@ var (
 		},
 	}
 )
-
-func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
-
-	id := c.Param("room_id")
-	roomId, err := sv.NewID(id)
-	if err != nil {
-		return err
-	}
-
-	clientID, err := GetUserIDFromSession(c)
-	if err != nil {
-		return nil
-	}
-
-	//TODO: validar que sea el administrador
-
-	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
-	if err != nil {
-		return err
-	}
-
-	err = h.ManageWsUsecase.Execute(ws, *clientID, *roomId)
-	if err != nil {
-		ws.Close()
-		log.Println(err.Error())
-	}
-
-	return nil
-}

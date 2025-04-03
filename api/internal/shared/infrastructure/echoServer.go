@@ -200,31 +200,33 @@ func (s *EchoServer) InitializeRoom(
 	votesRepo voteDom.VoteRepository,
 ) {
 	roomRepo := r.NewRoomXormRepository(s.db)
-	createRoomUseCase := roomUsecase.NewCreateUsecase(roomRepo, settingRoomRepo)
-	deleteRoomUseCase := roomUsecase.NewDeleteUsecase(roomRepo)
-	getAllRoomUseCase := roomUsecase.NewGetAllUsecase(roomRepo)
-	getByIDRoomUseCase := roomUsecase.NewGetByIDUsecase(roomRepo)
-	getByAdminRoomUseCase := roomUsecase.NewGetByAdminUsecase(roomRepo)
-	restoreUseCase := roomUsecase.NewRestoreUsecase(roomRepo)
-	joinUsecase := roomUsecase.NewJoinRoomUsecase(roomRepo)
-	AddSingleUserUsecase := roomUsecaseAddUsers.NewAddSingleUserUsecase(roomRepo, userRepo)
-	UpdateRoomUseCase := roomUsecase.NewUpdateRoomUsecase(roomRepo)
-	ManageWsUsecase := roomWsUsecase.NewManageWsUsecase(roomRepo, userRepo, proposalRepo, optionsRepo, votesRepo)
-	GetSrByRoomIDUsecase := roomUsecase.NewGetSrByRoomUsecase(roomRepo, settingRoomRepo)
+	createRoomUC := roomUsecase.NewCreateUsecase(roomRepo, settingRoomRepo)
+	deleteRoomUC := roomUsecase.NewDeleteUsecase(roomRepo)
+	getAllRoomUC := roomUsecase.NewGetAllUsecase(roomRepo)
+	getByIDRoomUC := roomUsecase.NewGetByIDUsecase(roomRepo)
+	getByAdminRoomUC := roomUsecase.NewGetByAdminUsecase(roomRepo)
+	restoreUC := roomUsecase.NewRestoreUsecase(roomRepo)
+	joinUC := roomUsecase.NewJoinRoomUsecase(roomRepo)
+	AddSingleUserUC := roomUsecaseAddUsers.NewAddSingleUserUsecase(roomRepo, userRepo)
+	UpdateRoomUC := roomUsecase.NewUpdateRoomUsecase(roomRepo)
+	ManageWsUC := roomWsUsecase.NewManageWsUsecase(roomRepo, userRepo, proposalRepo, optionsRepo, votesRepo)
+	getSrByRoomIDUC := roomUsecase.NewGetSrByRoomUsecase(roomRepo, settingRoomRepo)
+	rmWhitelistUC := roomUsecase.NewWhitelistRmUsecase(roomRepo)
 
 	roomHandler := r.NewRoomEchoHandler(
-		createRoomUseCase,
-		deleteRoomUseCase,
-		getAllRoomUseCase,
-		getByIDRoomUseCase,
-		getByAdminRoomUseCase,
-		restoreUseCase,
-		joinUsecase,
-		AddSingleUserUsecase,
+		createRoomUC,
+		deleteRoomUC,
+		getAllRoomUC,
+		getByIDRoomUC,
+		getByAdminRoomUC,
+		restoreUC,
+		joinUC,
+		AddSingleUserUC,
 		getUserByIDUseCase,
-		UpdateRoomUseCase,
-		ManageWsUsecase,
-		GetSrByRoomIDUsecase,
+		UpdateRoomUC,
+		ManageWsUC,
+		getSrByRoomIDUC,
+		rmWhitelistUC,
 	)
 	r.InitializeRoomEchoRouter(s.app, roomHandler)
 
