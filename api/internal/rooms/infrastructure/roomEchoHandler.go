@@ -583,10 +583,10 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 
 	currentRoom, err := h.GetRoomByIDUsecase.Execute(*id)
 
-	if err != nil  {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid data"}) 
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid data"})
 	}
-	
+
 	adminID, err := sv.NewID(currentRoom.AdminID().Id) // Usar el ID del admin actual o el que corresponda
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room AdminID"})
@@ -668,7 +668,6 @@ func (r *RoomEchoHandler) RemoveFromWhitelistHandler(c echo.Context) error {
 
 	var req d.RemoveFromWhitelistRequest
 
-	log.Println("hello its me!")
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -689,10 +688,18 @@ func (r *RoomEchoHandler) RemoveFromWhitelistHandler(c echo.Context) error {
 
 	if err != nil {
 		//varios tipos de errores
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		if errors.Is(rerr.ErrRoomNotFound, err) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		} else if errors.Is(uerr.ErrUserNotFound, err) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		} else if errors.Is(rerr.ErrUserNotAdmin, err) {
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
+		} else {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
 	}
 
-	return c.JSON(http.StatusOK, map[string]interface{}{"success": "room updated successfully",})
+	return c.JSON(http.StatusOK, map[string]interface{}{"success": "user deleted from whitelist sucessfully"})
 }
 
 func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
