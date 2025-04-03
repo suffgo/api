@@ -70,6 +70,11 @@ type (
 		UserData string `json:"user_data"`
 		RoomID   uint   `json:"room_id"`
 	}
+
+	RemoveFromWhitelistRequest struct {
+		UserId uint `json:"user_id"`
+		RoomId uint `json:"room_id"`
+	}
 )
 
 func NewRoom(
