@@ -10,6 +10,7 @@ import (
 	se "suffgo/internal/shared/domain/errors"
 	sv "suffgo/internal/shared/domain/valueObjects"
 	um "suffgo/internal/userRooms/infrastructure/models"
+	userRoomDom "suffgo/internal/userRooms/infrastructure/models"
 )
 
 type RoomXormRepository struct {
@@ -250,6 +251,19 @@ func (r *RoomXormRepository) Update(room *d.Room) (*d.Room, error) {
 }
 
 func (s *RoomXormRepository) UpdateState(roomID sv.ID, state string) error {
+
+	return nil
+}
+
+func (s *RoomXormRepository) RemoveFromWhitelist(roomId sv.ID, userId sv.ID) error {
+	affected, err := s.db.GetDb().Where("room_id = ? AND user_id = ?", roomId.Id, userId.Id).Delete(&userRoomDom.UserRoom{})
+	if err != nil {
+		return err
+	}
+
+	if affected == 0 {
+		return re.ErrRoomNotFound
+	}
 
 	return nil
 }
