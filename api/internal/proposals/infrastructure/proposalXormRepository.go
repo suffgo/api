@@ -146,8 +146,8 @@ func (s *ProposalXormRepository) Update(proposal *d.Proposal) (*d.Proposal, erro
 	return updatedProposal, nil
 }
 
-func (s *ProposalXormRepository)GetByRoom(roomId sv.ID) ([]d.Proposal, error) {
-	
+func (s *ProposalXormRepository) GetByRoom(roomId sv.ID) ([]d.Proposal, error) {
+
 	var proposals []m.Proposal
 
 	err := s.db.GetDb().Where("deleted_at IS NULL and room_id = ?", roomId.Id).Find(&proposals)
@@ -166,4 +166,8 @@ func (s *ProposalXormRepository)GetByRoom(roomId sv.ID) ([]d.Proposal, error) {
 		proposalsDomain = append(proposalsDomain, *proposalDomain)
 	}
 	return proposalsDomain, nil
+}
+
+func (s *ProposalXormRepository) GetResultsByRoom(roomId sv.ID) ([]d.ProposalResults, error) {
+	return nil, nil
 }

@@ -18,13 +18,14 @@ import (
 )
 
 type ProposalEchoHandler struct {
-	CreateProposalUsecase  *u.CreateUsecase
-	GetAllProposalUseCase  *u.GetAllUsecase
-	GetByIDProposalUseCase *u.GetByIDUsecase
-	DeleteProposalUseCase  *u.DeleteUseCase
-	RestoreUseCase         *u.RestoreUsecase
-	UpdateUseCase          *u.UpdateUsecase
-	GetByRoomID            *u.GetByRoomIDUsecase
+	CreateProposalUsecase   *u.CreateUsecase
+	GetAllProposalUseCase   *u.GetAllUsecase
+	GetByIDProposalUseCase  *u.GetByIDUsecase
+	DeleteProposalUseCase   *u.DeleteUseCase
+	RestoreUseCase          *u.RestoreUsecase
+	UpdateUseCase           *u.UpdateUsecase
+	GetByRoomID             *u.GetByRoomIDUsecase
+	GetResultsByRoomUsecase *u.GetResultsByRoomUsecase
 }
 
 func NewProposalEchoHandler(
@@ -35,15 +36,17 @@ func NewProposalEchoHandler(
 	restoreUC *u.RestoreUsecase,
 	updateUC *u.UpdateUsecase,
 	getByRoomId *u.GetByRoomIDUsecase,
+	getResultsByRoomUC *u.GetResultsByRoomUsecase,
 ) *ProposalEchoHandler {
 	return &ProposalEchoHandler{
-		CreateProposalUsecase:  createUC,
-		GetAllProposalUseCase:  getAllUC,
-		GetByIDProposalUseCase: getByID,
-		DeleteProposalUseCase:  deleteUC,
-		RestoreUseCase:         restoreUC,
-		UpdateUseCase:          updateUC,
-		GetByRoomID:            getByRoomId,
+		CreateProposalUsecase:   createUC,
+		GetAllProposalUseCase:   getAllUC,
+		GetByIDProposalUseCase:  getByID,
+		DeleteProposalUseCase:   deleteUC,
+		RestoreUseCase:          restoreUC,
+		UpdateUseCase:           updateUC,
+		GetByRoomID:             getByRoomId,
+		GetResultsByRoomUsecase: getResultsByRoomUC,
 	}
 }
 
@@ -345,4 +348,26 @@ func (h *ProposalEchoHandler) GetProposalsByRoomId(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, proposalDTO)
+}
+
+func (h *ProposalEchoHandler) GetResultsByRoom(c echo.Context) error {
+	userId, ok := c.Get("user_id").(string)
+	if !ok || userId == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
+	}
+
+	idParam := c.Param("room_id")
+
+	roomId, err := sv.NewID(idParam)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	proposal, err := h.GetResultsByRoomUsecase.Execute(roomId)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, proposal)
 }

@@ -35,6 +35,20 @@ type (
 		Title       string  `json:"title"`
 		Description *string `json:"description"`
 	}
+
+	ProposalResults struct {
+		PoposalTitle        string `json:"title"`
+		ProposalDescription string `json:"description"`
+
+		OptionId    uint   `json:"option_Id"`
+		OptionValue string `json:"option_value"`
+
+		VoteId uint `json:"vote_id"`
+
+		UserId    uint   `json:"user_id"`
+		Username  string `json:"Username"`
+		UserImage string `json:"User_image"`
+	}
 )
 
 func NewProposal(
