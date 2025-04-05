@@ -37,17 +37,23 @@ type (
 	}
 
 	ProposalResults struct {
-		PoposalTitle        string `json:"title"`
-		ProposalDescription string `json:"description"`
+		ProposalId          uint            `json:"id"`
+		PoposalTitle        string          `json:"title"`
+		ProposalDescription string          `json:"description"`
+		Options             []OptionResults `json:"options"`
+	}
 
-		OptionId    uint   `json:"option_Id"`
-		OptionValue string `json:"option_value"`
+	OptionResults struct {
+		OptionId    uint           `json:"option_Id"`
+		OptionValue string         `json:"option_value"`
+		Votes       []VotesResults `json:"votes"`
+	}
 
-		VoteId uint `json:"vote_id"`
-
+	VotesResults struct {
+		VoteId    uint   `json:"vote_id"`
 		UserId    uint   `json:"user_id"`
-		Username  string `json:"Username"`
-		UserImage string `json:"User_image"`
+		Username  string `json:"username"`
+		UserImage string `json:"user_image"`
 	}
 )
 

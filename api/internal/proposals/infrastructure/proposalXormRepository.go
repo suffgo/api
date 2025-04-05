@@ -169,5 +169,92 @@ func (s *ProposalXormRepository) GetByRoom(roomId sv.ID) ([]d.Proposal, error) {
 }
 
 func (s *ProposalXormRepository) GetResultsByRoom(roomId sv.ID) ([]d.ProposalResults, error) {
-	return nil, nil
+	type sqlResult struct {
+		ProposalId          uint   `xorm:"proposal_id"`
+		ProposalTitle       string `xorm:"proposal_title"`
+		ProposalDescription string `xorm:"proposal_description"`
+		OptionId            uint   `xorm:"option_id"`
+		OptionValue         string `xorm:"option_value"`
+		VoteId              uint   `xorm:"vote_id"`
+		UserId              uint   `xorm:"user_id"`
+		Username            string `xorm:"username"`
+		UserImage           string `xorm:"user_image"`
+	}
+
+	var rawResults []sqlResult
+	err := s.db.GetDb().SQL(`
+		SELECT 
+			p.id AS proposal_id,
+			p.title AS proposal_title,
+			p.description AS proposal_description,
+			o.id AS option_id,
+			o.value AS option_value,
+			v.id AS vote_id,
+			u.id AS user_id,
+			u.full_name AS username,
+			u.image AS user_image
+		FROM proposals p
+		LEFT JOIN options o ON o.proposal_id = p.id
+		LEFT JOIN votes v ON v.option_id = o.id
+		LEFT JOIN users u ON u.id = v.user_id
+		WHERE p.room_id = ?
+		ORDER BY p.id, o.id, v.id
+	`, roomId.Id).Find(&rawResults)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Procesar resultados
+	var results []d.ProposalResults
+	var currentProposal *d.ProposalResults
+	var currentOption *d.OptionResults
+
+	for _, row := range rawResults {
+		// Nueva propuesta
+		if currentProposal == nil || currentProposal.ProposalId != row.ProposalId {
+			if currentProposal != nil {
+				results = append(results, *currentProposal)
+			}
+			currentProposal = &d.ProposalResults{
+				ProposalId:          row.ProposalId,
+				PoposalTitle:        row.ProposalTitle,
+				ProposalDescription: row.ProposalDescription,
+				Options:             []d.OptionResults{},
+			}
+			currentOption = nil
+		}
+
+		// Nueva opción
+		if row.OptionId != 0 && (currentOption == nil || currentOption.OptionId != row.OptionId) {
+			if currentOption != nil {
+				currentProposal.Options = append(currentProposal.Options, *currentOption)
+			}
+			currentOption = &d.OptionResults{
+				OptionId:    row.OptionId,
+				OptionValue: row.OptionValue,
+				Votes:       []d.VotesResults{},
+			}
+		}
+
+		// Nuevo voto
+		if row.VoteId != 0 && currentOption != nil {
+			currentOption.Votes = append(currentOption.Votes, d.VotesResults{
+				VoteId:    row.VoteId,
+				UserId:    row.UserId,
+				Username:  row.Username,
+				UserImage: row.UserImage,
+			})
+		}
+	}
+
+	// Agregar los últimos elementos
+	if currentProposal != nil {
+		if currentOption != nil {
+			currentProposal.Options = append(currentProposal.Options, *currentOption)
+		}
+		results = append(results, *currentProposal)
+	}
+
+	return results, nil
 }
