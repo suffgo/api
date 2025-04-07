@@ -19,5 +19,5 @@ func InitializeProposalEchoRouter(e *echo.Echo, handler *ProposalEchoHandler) {
 	proposalGroup.DELETE("/:id", handler.DeleteProposal)
 	proposalGroup.PUT("/:id", handler.Update)
 
-	proposalGroup.GET("/results/:id", handler.GetResultsByRoom)
+	proposalGroup.GET("/results/:room_id", handler.GetResultsByRoom)
 }

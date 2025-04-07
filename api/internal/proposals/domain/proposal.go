@@ -38,7 +38,7 @@ type (
 
 	ProposalResults struct {
 		ProposalId          uint            `json:"id"`
-		PoposalTitle        string          `json:"title"`
+		ProposalTitle       string          `json:"title"`
 		ProposalDescription string          `json:"description"`
 		Options             []OptionResults `json:"options"`
 	}
