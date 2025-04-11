@@ -15,6 +15,7 @@ type SqlResult struct {
 	ProposalId          uint   `xorm:"proposal_id"`
 	ProposalTitle       string `xorm:"proposal_title"`
 	ProposalDescription string `xorm:"proposal_description"`
+	RoomID              uint   `xorm:"room_id"`
 	OptionId            uint   `xorm:"option_id"`
 	OptionValue         string `xorm:"option_value"`
 	VoteId              uint   `xorm:"vote_id"`

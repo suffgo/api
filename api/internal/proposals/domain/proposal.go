@@ -40,6 +40,7 @@ type (
 		ProposalId          uint            `json:"id"`
 		ProposalTitle       string          `json:"title"`
 		ProposalDescription string          `json:"description"`
+		RoomID              uint            `json:"room_id"`
 		Options             []OptionResults `json:"options"`
 	}
 

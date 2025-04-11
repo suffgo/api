@@ -171,23 +171,24 @@ func (s *ProposalXormRepository) GetByRoom(roomId sv.ID) ([]d.Proposal, error) {
 func (s *ProposalXormRepository) GetResultsByRoom(roomId sv.ID) ([]d.ProposalResults, error) {
 	var rawResults []m.SqlResult
 	err := s.db.GetDb().SQL(`
-		SELECT 
-			p.id AS proposal_id,
-			p.title AS proposal_title,
-			p.description AS proposal_description,
-			o.id AS option_id,
-			o.value AS option_value,
-			v.id AS vote_id,
-			u.id AS user_id,
-			u.username AS username,
-			u.image AS user_image
-		FROM proposal p
-		LEFT JOIN option o ON o.proposal_id = p.id
-		LEFT JOIN vote v ON v.option_id = o.id
-		LEFT JOIN users u ON u.id = v.user_id
-		WHERE p.room_id = ?
-		ORDER BY p.id, o.id, v.id
-	`, &roomId.Id).Find(&rawResults)
+    SELECT 
+        p.id AS proposal_id,
+        p.title AS proposal_title,
+        p.description AS proposal_description,
+        p.room_id AS room_id,
+        o.id AS option_id,
+        o.value AS option_value,
+        v.id AS vote_id,
+        u.id AS user_id,
+        u.username AS username,
+        u.image AS user_image
+    FROM proposal p
+    LEFT JOIN "option" o ON o.proposal_id = p.id  -- option es palabra reservada en PostgreSQL
+    LEFT JOIN vote v ON v.option_id = o.id
+    LEFT JOIN users u ON u.id = v.user_id
+    WHERE p.room_id = ?
+    ORDER BY p.id, o.id, v.id
+`, roomId.Id).Find(&rawResults)
 
 	if err != nil {
 		return nil, err
@@ -211,6 +212,7 @@ func (s *ProposalXormRepository) GetResultsByRoom(roomId sv.ID) ([]d.ProposalRes
 				ProposalId:          row.ProposalId,
 				ProposalTitle:       row.ProposalTitle,
 				ProposalDescription: row.ProposalDescription,
+				RoomID:              row.RoomID,
 				Options:             []d.OptionResults{},
 			}
 			currentOption = nil

@@ -359,15 +359,14 @@ func (h *ProposalEchoHandler) GetResultsByRoom(c echo.Context) error {
 	idParam := c.Param("room_id")
 
 	roomId, err := sv.NewID(idParam)
-
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	proposal, err := h.GetResultsByRoomUsecase.Execute(roomId)
+	proposals, err := h.GetResultsByRoomUsecase.Execute(roomId)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, proposal)
+	return c.JSON(http.StatusOK, proposals)
 }
