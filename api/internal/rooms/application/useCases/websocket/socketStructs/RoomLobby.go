@@ -157,7 +157,8 @@ func (r *RoomLobby) removeClient(client *Client) {
 	if len(r.clients) == 0 && (state == "in progress" || state == "online") {
 		r.ChangeRoomState("created")
 		r.Empty <- struct{}{}
-		//TODO: borrar votos
+		//Reiniciar votos cuando la sala es reiniciada para no afectar resultados finales
+		client.lobby.roomRepo.RestartRoom(r.room.ID())
 	}
 }
 
