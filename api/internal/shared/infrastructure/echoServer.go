@@ -238,7 +238,7 @@ func (s *EchoServer) InitializeSettingRoom(srRepo srDom.SettingRoomRepository, r
 	deleteSettingRoomUseCase := settingRoomUsecase.NewDeleteUsecase(srRepo)
 	getAllSettingRoomUseCase := settingRoomUsecase.NewGetAllUsecase(srRepo)
 	getSettingRoomByIDUseCase := settingRoomUsecase.NewGetByIDUsecase(srRepo)
-	updateSettingRoom := settingRoomUsecase.NewUpdateSettingRoomUsecase(srRepo)
+	updateSettingRoom := settingRoomUsecase.NewUpdateSettingRoomUsecase(srRepo, roomRepo)
 	getByRoomIdUsecase := settingRoomUsecase.NewGetByRoomID(srRepo)
 	settingRoomHandler := sr.NewSettingRoomEchoHandler(
 		createSettingRoomUseCase,

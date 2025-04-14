@@ -296,7 +296,7 @@ func (h *SettingRoomEchoHandler) Update(c echo.Context) error {
 		ProposalTimer: updatedSettingRoom.ProposalTimer().ProposalTimer,
 		Quorum:        updatedSettingRoom.Quorum().Quorum,
 		StartTime:     updatedSettingRoom.StartTime().DateTime,
-		VoterLimit:    updatedSettingRoom.ProposalTimer().ProposalTimer,
+		VoterLimit:    updatedSettingRoom.VoterLimit().VoterLimit,
 		RoomID:        updatedSettingRoom.ID().Id,
 	}
 
