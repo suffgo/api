@@ -267,3 +267,23 @@ func (s *RoomXormRepository) RemoveFromWhitelist(roomId sv.ID, userId sv.ID) err
 
 	return nil
 }
+
+func (s *RoomXormRepository) RestartRoom(roomId sv.ID) error {
+	roomIDInt := int64(roomId.Value())
+
+	_, err := s.db.GetDb().Exec(`
+		DELETE FROM vote
+		WHERE option_id IN (
+			SELECT o.id
+			FROM option o
+			JOIN proposal p ON o.proposal_id = p.id
+			WHERE p.room_id = ?
+		);
+	`, roomIDInt)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

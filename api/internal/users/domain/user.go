@@ -52,11 +52,6 @@ type (
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}
-
-	ChangePasswordRequest struct {
-		Email       string `json:"email"`
-		NewPassword string `json:"new_password"`
-	}
 )
 
 func NewUser(

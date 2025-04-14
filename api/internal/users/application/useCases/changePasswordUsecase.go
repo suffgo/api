@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"fmt"
+	sv "suffgo/internal/shared/domain/valueObjects"
 	d "suffgo/internal/users/domain"
 	v "suffgo/internal/users/domain/valueObjects"
 )
@@ -16,14 +17,13 @@ func NewChangePasswordUsecase(repo d.UserRepository) *ChangePassword {
 	}
 }
 
-func (s *ChangePassword) Execute(email v.Email, newPassword v.Password) error {
-	// Buscar usuario por email
-	user, err := s.repository.GetByEmail(email)
+func (s *ChangePassword) Execute(id sv.ID, newPassword v.Password) error {
+
+	user, err := s.repository.GetByID(id)
 	if err != nil {
-		return fmt.Errorf("failed to find user: %w", err)
+		return err
 	}
 
-	// Generar hash de la nueva contraseña
 	hashedPassword, err := v.HashPassword(newPassword.Password)
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %w", err)
@@ -44,7 +44,7 @@ func (s *ChangePassword) Execute(email v.Email, newPassword v.Password) error {
 	)
 
 	// Actualizar en la base de datos
-	_, err = s.repository.Update(*updateUser) // Manejar ambos valores de retorno
+	_, err = s.repository.Update(*updateUser)
 	if err != nil {
 		return fmt.Errorf("failed to update user: %w", err)
 	}

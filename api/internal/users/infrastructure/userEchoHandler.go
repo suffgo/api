@@ -351,18 +351,16 @@ func (u *UserEchoHandler) Restore(c echo.Context) error {
 }
 
 func (u *UserEchoHandler) ChangePassword(c echo.Context) error {
-	var req d.ChangePasswordRequest
-
+	var req struct {
+		NewPassword string `json:"new_password"`
+	}
+	id, err := GetAuthenticatedUserID(c)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
+	}
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "Invalid request format: " + err.Error(),
-		})
-	}
-
-	email, err := v.NewEmail(req.Email)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "Invalid email format: " + err.Error(),
 		})
 	}
 
@@ -372,22 +370,12 @@ func (u *UserEchoHandler) ChangePassword(c echo.Context) error {
 			"error": "Invalid password format: " + err.Error(),
 		})
 	}
-
-	err = u.ChangePasswordUsecase.Execute(*email, *newPassword)
+	err = u.ChangePasswordUsecase.Execute(*id, *newPassword)
 	if err != nil {
-		switch {
-		case errors.Is(err, uerr.ErrUserNotFound):
-			return c.JSON(http.StatusNotFound, map[string]string{
-				"error": "User not found with email: " + req.Email,
-			})
-		default:
-			// Devolvemos el error real para debug
-			return c.JSON(http.StatusInternalServerError, map[string]string{
-				"error": "Failed to change password: " + err.Error(),
-			})
-		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Failed to change password: " + err.Error(),
+		})
 	}
-
 	return c.JSON(http.StatusOK, map[string]string{
 		"success": "Password changed successfully",
 	})
@@ -492,7 +480,7 @@ func (h *UserEchoHandler) Update(c echo.Context) error {
 		if err.Error() == "unauthorized" {
 			return c.JSON(http.StatusMethodNotAllowed, map[string]string{"error": err.Error()})
 		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusConflict, map[string]string{"error": err.Error()})
 	}
 
 	// Crear el DTO para la respuesta
