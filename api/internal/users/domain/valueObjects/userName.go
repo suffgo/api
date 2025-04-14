@@ -12,7 +12,7 @@ type (
 )
 
 func NewUserName(username string) (*UserName, error) {
-	if username == "" {
+	if len(username) < 3 {
 		return nil, errors.New("invalid username")
 	}
 

@@ -492,7 +492,7 @@ func (h *UserEchoHandler) Update(c echo.Context) error {
 		if err.Error() == "unauthorized" {
 			return c.JSON(http.StatusMethodNotAllowed, map[string]string{"error": err.Error()})
 		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusConflict, map[string]string{"error": err.Error()})
 	}
 
 	// Crear el DTO para la respuesta
