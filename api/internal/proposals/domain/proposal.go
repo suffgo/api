@@ -35,6 +35,27 @@ type (
 		Title       string  `json:"title"`
 		Description *string `json:"description"`
 	}
+
+	ProposalResults struct {
+		ProposalId          uint            `json:"id"`
+		ProposalTitle       string          `json:"title"`
+		ProposalDescription string          `json:"description"`
+		RoomID              uint            `json:"room_id"`
+		Options             []OptionResults `json:"options"`
+	}
+
+	OptionResults struct {
+		OptionId    uint           `json:"option_Id"`
+		OptionValue string         `json:"option_value"`
+		Votes       []VotesResults `json:"votes"`
+	}
+
+	VotesResults struct {
+		VoteId    uint   `json:"vote_id"`
+		UserId    uint   `json:"user_id"`
+		Username  string `json:"username"`
+		UserImage string `json:"user_image"`
+	}
 )
 
 func NewProposal(

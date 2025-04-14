@@ -40,7 +40,9 @@ func NewEmail(email string) (*Email, error) {
 		return nil, errors.New("invalid email")
 	}
 
+	emailMin := strings.ToLower(email)
+
 	return &Email{
-		Email: email,
+		Email: emailMin,
 	}, nil
 }

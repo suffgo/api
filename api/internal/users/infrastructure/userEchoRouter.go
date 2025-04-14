@@ -13,12 +13,12 @@ func InitializeUserEchoRouter(e *echo.Echo, handler *UserEchoHandler) {
 	userGroup.GET("/email", handler.GetUserByEmail)
 
 	userGroup.POST("/login", handler.Login)
-	userGroup.POST("/newPassword", handler.ChangePassword)
 	userGroup.Use(AuthMiddleware)
 	userGroup.POST("/logout", handler.Logout)
 	userGroup.DELETE("/:id", handler.DeleteUser)
 	userGroup.POST("/restore/:id", handler.Restore)
 	userGroup.GET("/byRoom/:id", handler.GetUsersByRoom)
+	userGroup.PUT("/newPassword", handler.ChangePassword)
 
 	userGroup.POST("/logout", handler.Logout)
 	userGroup.GET("/auth", handler.CheckAuth)

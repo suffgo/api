@@ -238,7 +238,7 @@ func (s *EchoServer) InitializeSettingRoom(srRepo srDom.SettingRoomRepository, r
 	deleteSettingRoomUseCase := settingRoomUsecase.NewDeleteUsecase(srRepo)
 	getAllSettingRoomUseCase := settingRoomUsecase.NewGetAllUsecase(srRepo)
 	getSettingRoomByIDUseCase := settingRoomUsecase.NewGetByIDUsecase(srRepo)
-	updateSettingRoom := settingRoomUsecase.NewUpdateSettingRoomUsecase(srRepo)
+	updateSettingRoom := settingRoomUsecase.NewUpdateSettingRoomUsecase(srRepo, roomRepo)
 	getByRoomIdUsecase := settingRoomUsecase.NewGetByRoomID(srRepo)
 	settingRoomHandler := sr.NewSettingRoomEchoHandler(
 		createSettingRoomUseCase,
@@ -260,6 +260,7 @@ func (s *EchoServer) InitializeProposal(propRepo propDom.ProposalRepository, roo
 	restoreProposalUseCase := proposalUsecase.NewRestoreUsecase(propRepo)
 	updateProposalUseCase := proposalUsecase.NewUpdateProposalUsecase(propRepo, roomRepo)
 	getByRoomUsecase := proposalUsecase.NewGetByRoomUsecase(propRepo)
+	getResultsByRoomUsecase := proposalUsecase.NewGetResultsByRoomUsecase(propRepo)
 
 	proposalHandler := p.NewProposalEchoHandler(
 		createProposalUseCase,
@@ -269,6 +270,7 @@ func (s *EchoServer) InitializeProposal(propRepo propDom.ProposalRepository, roo
 		restoreProposalUseCase,
 		updateProposalUseCase,
 		getByRoomUsecase,
+		getResultsByRoomUsecase,
 	)
 
 	p.InitializeProposalEchoRouter(s.app, proposalHandler)
