@@ -211,7 +211,7 @@ func (s *EchoServer) InitializeRoom(
 	UpdateRoomUC := roomUsecase.NewUpdateRoomUsecase(roomRepo)
 	ManageWsUC := roomWsUsecase.NewManageWsUsecase(roomRepo, userRepo, proposalRepo, optionsRepo, votesRepo)
 	getSrByRoomIDUC := roomUsecase.NewGetSrByRoomUsecase(roomRepo, settingRoomRepo)
-	rmWhitelistUC := roomUsecase.NewWhitelistRmUsecase(roomRepo)
+	rmWhitelistUC := roomUsecase.NewWhitelistRmUsecase(roomRepo, userRepo)
 
 	roomHandler := r.NewRoomEchoHandler(
 		createRoomUC,
