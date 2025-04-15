@@ -204,5 +204,9 @@ func SendResults(event Event, c *Client) error {
 		
 	}
 
+	if c.lobby.nextProposal >= len(c.Lobby().proposals)-1  {
+		c.lobby.ChangeRoomState("finished")
+	}
+
 	return nil
 }
