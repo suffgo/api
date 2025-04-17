@@ -9,11 +9,10 @@ import (
 type (
 	Room struct {
 		id          *sv.ID
-		linkInvite  v.LinkInvite
 		isFormal    v.IsFormal
 		name        v.Name
 		adminID     *sv.ID
-		inviteCode  *v.InviteCode //es opcional porque al momento de creacion no existe
+		code        *v.InviteCode //es opcional porque al momento de creacion no existe
 		description v.Description
 		state       *v.State
 		image       *v.Image
@@ -21,12 +20,11 @@ type (
 
 	RoomDTO struct {
 		ID          uint   `json:"id"`
-		LinkInvite  string `json:"link_invite"`
 		IsFormal    bool   `json:"is_formal"`
 		Name        string `json:"name"`
 		AdminID     uint   `json:"admin_id"`
 		Description string `json:"description"`
-		RoomCode    string `json:"room_code"`
+		Code        string `json:"room_code"`
 		State       string `json:"state"`
 		Image       string `json:"image"`
 	}
@@ -34,12 +32,11 @@ type (
 	//Dto para informacion util al frontend
 	RoomDetailedDTO struct {
 		ID          uint       `json:"id"`
-		LinkInvite  string     `json:"link_invite"`
 		IsFormal    bool       `json:"is_formal"`
 		RoomTitle   string     `json:"room_title"`
 		AdminName   string     `json:"admin_name"`
 		Description string     `json:"description"`
-		RoomCode    string     `json:"room_code"`
+		Code        string     `json:"room_code"`
 		State       string     `json:"state"`
 		StartTime   *time.Time `json:"start_time"`
 		Image       string     `json:"image"`
@@ -47,7 +44,6 @@ type (
 	}
 
 	RoomCreateRequest struct {
-		LinkInvite  string `json:"link_invite"`
 		IsFormal    bool   `json:"is_formal"`
 		Name        string `json:"name"`
 		Description string `json:"description"`
@@ -55,7 +51,6 @@ type (
 	}
 
 	RoomUpdate struct {
-		LinkInvite  string `json:"link_invite"`
 		IsFormal    bool   `json:"is_formal"`
 		Name        string `json:"name"`
 		Description string `json:"description"`
@@ -79,8 +74,8 @@ type (
 
 func NewRoom(
 	id *sv.ID,
-	linkInvite v.LinkInvite,
 	isFormal v.IsFormal,
+	code *v.InviteCode,
 	name v.Name,
 	adminID *sv.ID,
 	description v.Description,
@@ -89,11 +84,10 @@ func NewRoom(
 ) *Room {
 	return &Room{
 		id:          id,
-		linkInvite:  linkInvite,
 		isFormal:    isFormal,
 		name:        name,
 		adminID:     adminID,
-		inviteCode:  nil,
+		code:        code,
 		description: description,
 		image:       image,
 		state:       state,
@@ -102,10 +96,6 @@ func NewRoom(
 
 func (r *Room) ID() sv.ID {
 	return *r.id
-}
-
-func (r *Room) LinkInvite() v.LinkInvite {
-	return r.linkInvite
 }
 
 func (r *Room) IsFormal() v.IsFormal {
@@ -128,13 +118,13 @@ func (r *Room) AdminID() sv.ID {
 	return *r.adminID
 }
 
-func (r *Room) InviteCode() v.InviteCode {
+func (r *Room) Code() v.InviteCode {
 
-	return *r.inviteCode
+	return *r.code
 }
 
 func (r *Room) SetInviteCode(inviteCode v.InviteCode) {
-	r.inviteCode = &inviteCode
+	r.code = &inviteCode
 }
 
 func (r *Room) Description() v.Description {
