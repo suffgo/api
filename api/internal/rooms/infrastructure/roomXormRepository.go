@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"errors"
+	"log"
 	"suffgo/cmd/database"
 	d "suffgo/internal/rooms/domain"
 	re "suffgo/internal/rooms/domain/errors"
@@ -118,6 +119,7 @@ func (s *RoomXormRepository) Save(room d.Room) (*d.Room, error) {
 		AdminID:     room.AdminID().Id,
 		Description: room.Description().Description,
 		State:       room.State().CurrentState,
+		Code:        room.Code().Code,
 		Image:       "",
 	}
 
@@ -138,26 +140,27 @@ func (s *RoomXormRepository) Save(room d.Room) (*d.Room, error) {
 	return roomDom, nil
 }
 
-
-
 func (s *RoomXormRepository) GetRoomByCode(inviteCode string) (*d.Room, error) {
 	//its only one room per code
-	var register []m.Room
-	err := s.db.GetDb().Where("code = ?", inviteCode).Find(&register)
+	register := new(m.Room)
+	has, err := s.db.GetDb().Where("code = ?", inviteCode).Get(register)
 
+	log.Println("pichu")
 	if err != nil {
 		return nil, err
 	}
 
-	if register == nil {
+	if !has {
 		return nil, re.ErrRoomNotFound
 	}
 
+	log.Println("pikachu")
 	roomDom, err := mappers.ModelToDomain(register)
 	if err != nil {
 		return nil, se.ErrDataMap
 	}
 
+	log.Println("raichu")
 	return roomDom, nil
 }
 
@@ -225,7 +228,6 @@ func (r *RoomXormRepository) Update(room *d.Room) (*d.Room, error) {
 
 	return updatedRoom, nil
 }
-
 
 func (s *RoomXormRepository) RemoveFromWhitelist(roomId sv.ID, userId sv.ID) error {
 	affected, err := s.db.GetDb().Where("room_id = ? AND user_id = ?", roomId.Id, userId.Id).Delete(&userRoomDom.UserRoom{})

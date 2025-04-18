@@ -110,7 +110,7 @@ func (h *RoomEchoHandler) CreateRoom(c echo.Context) error {
 	}
 	// Crear objeto de sala
 	state, _ := v.NewState("created")
-	room := d.NewRoom(nil, *isFormal, nil,*name, adminID, *description, image, state)
+	room := d.NewRoom(nil, *isFormal, nil, *name, adminID, *description, image, state)
 
 	// Ejecutar caso de uso
 	createdRoom, err := h.CreateRoomUsecase.Execute(*room)
@@ -567,6 +567,7 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 	}
 
 	currentRoom, err := h.GetRoomByIDUsecase.Execute(*id)
+	code := currentRoom.Code()
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid data"})
@@ -576,7 +577,6 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room AdminID"})
 	}
-
 
 	name, err := v.NewName(req.Name)
 	if err != nil {
@@ -597,12 +597,12 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room Image"})
 	}
-	state, err := v.NewState("created")
+	state, _ := v.NewState("created")
 
 	room := d.NewRoom(
 		id,
 		*isFormal,
-		nil,
+		&code,
 		*name,
 		adminID,
 		*description,
@@ -634,6 +634,7 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		IsFormal:    updatedRoom.IsFormal().IsFormal,
 		Name:        updatedRoom.Name().Name,
 		AdminID:     updatedRoom.AdminID().Id,
+		Code:        updatedRoom.Code().Code,
 		Description: updatedRoom.Description().Description,
 		State:       room.State().CurrentState,
 	}
