@@ -287,3 +287,7 @@ func (s *RoomXormRepository) RestartRoom(roomId sv.ID) error {
 
 	return nil
 }
+
+func (s *RoomXormRepository) HistoryRooms(userId sv.ID) ([]d.Room, error) {
+	return nil, nil
+}

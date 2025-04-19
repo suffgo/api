@@ -20,4 +20,5 @@ type RoomRepository interface {
 	UpdateState(room sv.ID, newState string) error
 	RemoveFromWhitelist(roomId sv.ID, userId sv.ID) error
 	RestartRoom(roomId sv.ID) error
+	HistoryRooms(userId sv.ID) ([]Room, error)
 }

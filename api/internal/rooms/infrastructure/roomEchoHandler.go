@@ -41,6 +41,7 @@ type RoomEchoHandler struct {
 	GetSrByRoomIDUsecase *r.GetSrByRoomUsecase
 	ManageWsUsecase      *roomWs.ManageWsUsecase
 	WhiteListRmUsecase   *r.WhitelistRmUsecase
+	HistoryRoomsUsecase  *r.HistoryRooms
 }
 
 func NewRoomEchoHandler(
@@ -57,6 +58,7 @@ func NewRoomEchoHandler(
 	manageWsUC *roomWs.ManageWsUsecase,
 	getSrByRoomIDUC *r.GetSrByRoomUsecase,
 	whitelistRmUC *r.WhitelistRmUsecase,
+	historyRoomsUC *r.HistoryRooms,
 
 ) *RoomEchoHandler {
 	return &RoomEchoHandler{
@@ -73,6 +75,7 @@ func NewRoomEchoHandler(
 		ManageWsUsecase:      manageWsUC,
 		GetSrByRoomIDUsecase: getSrByRoomIDUC,
 		WhiteListRmUsecase:   whitelistRmUC,
+		HistoryRoomsUsecase:  historyRoomsUC,
 	}
 }
 
@@ -583,10 +586,10 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 
 	currentRoom, err := h.GetRoomByIDUsecase.Execute(*id)
 
-	if err != nil  {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid data"}) 
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid data"})
 	}
-	
+
 	adminID, err := sv.NewID(currentRoom.AdminID().Id) // Usar el ID del admin actual o el que corresponda
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room AdminID"})
@@ -692,7 +695,7 @@ func (r *RoomEchoHandler) RemoveFromWhitelistHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, map[string]interface{}{"success": "room updated successfully",})
+	return c.JSON(http.StatusOK, map[string]interface{}{"success": "room updated successfully"})
 }
 
 func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
@@ -756,3 +759,27 @@ var (
 		},
 	}
 )
+
+func (h *RoomEchoHandler) HistoryRooms(c echo.Context) error {
+	userIDStr, ok := c.Get("user_id").(string)
+	if !ok || userIDStr == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
+	}
+
+	idInt, err := strconv.ParseUint(userIDStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": se.ErrInvalidID.Error()})
+	}
+
+	userID, err := sv.NewID(uint(idInt))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
+	}
+
+	rooms, err := h.HistoryRoomsUsecase.Execute(*userID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, rooms)
+}
