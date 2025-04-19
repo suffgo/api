@@ -139,12 +139,11 @@ func MakeConstraints(db database.Database) error {
 		fmt.Printf("ALTER TABLE settings_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id) success\n")
 	}
 
-	_, err = db.GetDb().Exec("ALTER TABLE option ADD CONSTRAINT fk_proposal FOREIGN KEY (proposal_id) REFERENCES proposal(id)")
+	_, err = db.GetDb().Exec("ALTER TABLE option ADD CONSTRAINT fk_proposal FOREIGN KEY (proposal_id) REFERENCES proposal(id) ON DELETE CASCADE;")
 	if err != nil {
-		return err
-	} else {
-		fmt.Printf("ALTER TABLE option ADD CONSTRAINT fk_proposal FOREIGN KEY (proposal_id) REFERENCES proposal(id) success\n")
+		return fmt.Errorf("error al crear fk_proposal con cascade: %w", err)
 	}
+	fmt.Println("Constraint fk_proposal con ON DELETE CASCADE creada con éxito")
 
 	_, err = db.GetDb().Exec("ALTER TABLE vote ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)")
 	if err != nil {
