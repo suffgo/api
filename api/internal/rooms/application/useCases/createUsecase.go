@@ -27,18 +27,14 @@ func NewCreateUsecase(roomRepo domain.RoomRepository, srRepo domsettingroom.Sett
 func (s *CreateUsecase) Execute(roomData domain.Room) (*domain.Room, error) {
 	roomData.State().SetState("created")
 
-	createdRoom, err := s.roomRepository.Save(roomData)
-	if err != nil {
-		return nil, err
-	}
-
 	inviteCode, err := v.NewInviteCode(uuid.New().String()[:6])
 	if err != nil {
 		return nil, err
 	}
 
-	createdRoom.SetInviteCode(*inviteCode)
-	err = s.roomRepository.SaveInviteCode(inviteCode.Code, createdRoom.ID().Id)
+	roomData.SetInviteCode(*inviteCode)
+
+	createdRoom, err := s.roomRepository.Save(roomData)
 	if err != nil {
 		return nil, err
 	}

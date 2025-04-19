@@ -2,7 +2,6 @@ package usecases
 
 import (
 	"suffgo/internal/rooms/domain"
-	rv "suffgo/internal/rooms/domain/valueObjects"
 )
 
 type (
@@ -27,23 +26,7 @@ func (s *GetAllUsecase) Execute() ([]domain.Room, error) {
 
 	updatedRooms := make([]domain.Room, 0, len(rooms))
 
-	for _, room := range rooms {
-		code, err := s.getAllRepository.GetInviteCode(room.ID().Id)
-
-		if err != nil {
-			return nil, err
-		}
-
-		inviteCode, err := rv.NewInviteCode(code)
-
-		if err != nil {
-			return nil, err
-		}
-
-		room.SetInviteCode(*inviteCode)
-
-		updatedRooms = append(updatedRooms, room)
-	}
+	updatedRooms = append(updatedRooms, rooms...)
 
 	return updatedRooms, nil
 }

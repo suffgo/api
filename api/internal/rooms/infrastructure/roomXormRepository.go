@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"errors"
+	"log"
 	"suffgo/cmd/database"
 	d "suffgo/internal/rooms/domain"
 	re "suffgo/internal/rooms/domain/errors"
@@ -9,7 +10,6 @@ import (
 	m "suffgo/internal/rooms/infrastructure/models"
 	se "suffgo/internal/shared/domain/errors"
 	sv "suffgo/internal/shared/domain/valueObjects"
-	um "suffgo/internal/userRooms/infrastructure/models"
 	userRoomDom "suffgo/internal/userRooms/infrastructure/models"
 )
 
@@ -114,12 +114,12 @@ func (r *RoomXormRepository) GetByAdminID(adminID sv.ID) ([]d.Room, error) {
 
 func (s *RoomXormRepository) Save(room d.Room) (*d.Room, error) {
 	roomModel := &m.Room{
-		LinkInvite:  ptr(room.LinkInvite().LinkInvite),
 		IsFormal:    room.IsFormal().IsFormal,
 		Name:        room.Name().Name,
 		AdminID:     room.AdminID().Id,
 		Description: room.Description().Description,
 		State:       room.State().CurrentState,
+		Code:        room.Code().Code,
 		Image:       "",
 	}
 
@@ -140,55 +140,34 @@ func (s *RoomXormRepository) Save(room d.Room) (*d.Room, error) {
 	return roomDom, nil
 }
 
-func ptr(s string) *string {
-	return &s
-}
-
-func (s *RoomXormRepository) SaveInviteCode(inviteCode string, roomID uint) error {
-	inviteCodeModel := &m.InviteCode{
-		RoomID: roomID,
-		Code:   inviteCode,
-	}
-
-	_, err := s.db.GetDb().Insert(inviteCodeModel)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *RoomXormRepository) GetInviteCode(roomID uint) (string, error) {
-	var register []m.InviteCode
-	err := s.db.GetDb().Where("room_id = ?", roomID).Find(&register)
-
-	if err != nil {
-		return "", err
-	}
-
-	return register[0].Code, nil
-}
-
-func (s *RoomXormRepository) GetRoomByCode(inviteCode string) (uint, error) {
+func (s *RoomXormRepository) GetRoomByCode(inviteCode string) (*d.Room, error) {
 	//its only one room per code
-	var register []m.InviteCode
-	err := s.db.GetDb().Where("code = ?", inviteCode).Find(&register)
+	register := new(m.Room)
+	has, err := s.db.GetDb().Where("code = ?", inviteCode).Get(register)
 
+	log.Println("pichu")
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	if register == nil {
-		return 0, re.ErrRoomNotFound
+	if !has {
+		return nil, re.ErrRoomNotFound
 	}
 
-	return register[0].RoomID, nil
+	log.Println("pikachu")
+	roomDom, err := mappers.ModelToDomain(register)
+	if err != nil {
+		return nil, se.ErrDataMap
+	}
+
+	log.Println("raichu")
+	return roomDom, nil
 }
 
 // agrego un registro a user_room (para usuario registrado)
 func (s *RoomXormRepository) AddToWhitelist(roomID sv.ID, userID sv.ID) error {
 
-	reg := um.UserRoom{
+	reg := userRoomDom.UserRoom{
 		UserID: userID.Id,
 		RoomID: roomID.Id,
 	}
@@ -203,7 +182,7 @@ func (s *RoomXormRepository) AddToWhitelist(roomID sv.ID, userID sv.ID) error {
 }
 
 func (s *RoomXormRepository) UserInWhitelist(roomID sv.ID, userID sv.ID) (bool, error) {
-	var register []um.UserRoom
+	var register []userRoomDom.UserRoom
 	err := s.db.GetDb().Where("room_id = ? and user_id = ?", roomID.Id, userID.Id).Find(&register)
 
 	if err != nil {
@@ -248,11 +227,6 @@ func (r *RoomXormRepository) Update(room *d.Room) (*d.Room, error) {
 	}
 
 	return updatedRoom, nil
-}
-
-func (s *RoomXormRepository) UpdateState(roomID sv.ID, state string) error {
-
-	return nil
 }
 
 func (s *RoomXormRepository) RemoveFromWhitelist(roomId sv.ID, userId sv.ID) error {
