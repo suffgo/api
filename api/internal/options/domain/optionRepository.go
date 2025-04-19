@@ -1,0 +1,15 @@
+package domain
+
+import (
+	v "suffgo/internal/options/domain/valueObjects"
+	sv "suffgo/internal/shared/domain/valueObjects"
+)
+
+type OptionRepository interface {
+	GetByID(id sv.ID) (*Option, error)
+	GetAll() ([]Option, error)
+	GetByValue(value v.Value) (*Option, error)
+	Delete(id sv.ID) error
+	Save(option Option) error
+	GetByProposal(id sv.ID) ([]Option, error)
+}

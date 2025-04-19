@@ -2,14 +2,40 @@ package infrastructure
 
 import (
 	"fmt"
+	"net/http"
 	"suffgo/cmd/config"
 	"suffgo/cmd/database"
 
-	userUsecase "suffgo/internal/user/application/useCases"
-	u "suffgo/internal/user/infrastructure"
+	optDom "suffgo/internal/options/domain"
+	propDom "suffgo/internal/proposals/domain"
+	roomDom "suffgo/internal/rooms/domain"
+	srDom "suffgo/internal/settingsRoom/domain"
+	userDom "suffgo/internal/users/domain"
+	voteDom "suffgo/internal/votes/domain"
 
-	optionUsecase "suffgo/internal/option/application/useCases"
-	o "suffgo/internal/option/infrastructure"
+	userUsecase "suffgo/internal/users/application/useCases"
+	u "suffgo/internal/users/infrastructure"
+
+	optionUsecase "suffgo/internal/options/application/useCases"
+	o "suffgo/internal/options/infrastructure"
+
+	voteUsecase "suffgo/internal/votes/application/useCases"
+	v "suffgo/internal/votes/infrastructure"
+
+	settingRoomUsecase "suffgo/internal/settingsRoom/application/useCases"
+	sr "suffgo/internal/settingsRoom/infrastructure"
+
+	proposalUsecase "suffgo/internal/proposals/application/useCases"
+	p "suffgo/internal/proposals/infrastructure"
+
+	roomUsecase "suffgo/internal/rooms/application/useCases"
+	roomUsecaseAddUsers "suffgo/internal/rooms/application/useCases/addUsers"
+	roomWsUsecase "suffgo/internal/rooms/application/useCases/websocket"
+
+	r "suffgo/internal/rooms/infrastructure"
+
+	"github.com/gorilla/sessions"
+	"github.com/labstack/echo-contrib/session"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -21,6 +47,8 @@ type EchoServer struct {
 	conf *config.Config
 }
 
+var Db database.Database
+
 func NewEchoServer(db database.Database, conf *config.Config) *EchoServer {
 	echoApp := echo.New()
 	return &EchoServer{
@@ -30,46 +58,100 @@ func NewEchoServer(db database.Database, conf *config.Config) *EchoServer {
 	}
 }
 
+type Dependencies struct {
+	UserRepo        userDom.UserRepository
+	RoomRepo        roomDom.RoomRepository
+	SettingRoomRepo srDom.SettingRoomRepository
+	ProposalRepo    propDom.ProposalRepository
+	VotesRepo       voteDom.VoteRepository
+	OptionsRepo     optDom.OptionRepository
+}
+
+func NewDependencies(db database.Database) *Dependencies {
+	userRepo := u.NewUserXormRepository(db)
+	roomRepo := r.NewRoomXormRepository(db)
+	settingRoomRepo := sr.NewSettingRoomXormRepository(db)
+	proposalRepo := p.NewProposalXormRepository(db)
+	voteRepo := v.NewVoteXormRepository(db)
+	optionRepo := o.NewOptionXormRepository(db)
+
+	return &Dependencies{
+		UserRepo:        userRepo,
+		RoomRepo:        roomRepo,
+		SettingRoomRepo: settingRoomRepo,
+		ProposalRepo:    proposalRepo,
+		VotesRepo:       voteRepo,
+		OptionsRepo:     optionRepo,
+	}
+}
+
 func (s *EchoServer) Start() {
 	s.app.Use(middleware.Recover())
 	s.app.Use(middleware.Logger())
 	s.db.GetDb().ShowSQL(true)
-	s.InitializeUser()
+	s.app.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins:     []string{"http://localhost:4321"},
+		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
+		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+		AllowCredentials: true,
+	}))
+	s.app.Static("/uploads", "internal/uploads/")
+
+	// s.app.Pre(middleware.HTTPSNonWWWRedirect()) a tener en cuenta para el futuro en caso de despliegue
+
+	authKey := []byte(s.conf.SecretKey)
+	store := sessions.NewCookieStore(authKey)
+	s.app.Use(session.Middleware(store))
+
+	deps := NewDependencies(s.db)
+
+	s.InitializeUser(deps.UserRepo, deps.RoomRepo, deps.SettingRoomRepo)
+	s.InitializeRoom(deps.UserRepo, deps.SettingRoomRepo, deps.ProposalRepo, deps.OptionsRepo, deps.VotesRepo)
+	s.InitializeSettingRoom(deps.SettingRoomRepo, deps.RoomRepo)
+	s.InitializeProposal(deps.ProposalRepo, deps.RoomRepo)
+	s.InitializeVote()
 	s.InitializeOption()
 
-	// Health check adding
 	s.app.GET("/v1/health", func(c echo.Context) error {
 		return c.String(200, "OK")
 	})
-
-	for _, route := range s.app.Routes() {
-		fmt.Printf("Ruta registrada: Método=%s, Ruta=%s\n", route.Method, route.Path)
-	}
 
 	serverUrl := fmt.Sprintf(":%d", s.conf.Server.Port)
 	s.app.Logger.Fatal(s.app.Start(serverUrl))
 }
 
-func (s *EchoServer) InitializeUser() {
-	// Initialize the User Repository with xorm impl
-	userRepo := u.NewUserXormRepository(s.db)
+var getUserByIDUseCase *userUsecase.GetByIDUsecase
+
+func (s *EchoServer) InitializeUser(userRepo userDom.UserRepository, roomRepo roomDom.RoomRepository, setrRepo srDom.SettingRoomRepository) {
 
 	// Initialize Use Cases
 	createUserUseCase := userUsecase.NewCreateUsecase(userRepo)
 	deleteUserUseCase := userUsecase.NewDeleteUsecase(userRepo)
 	getAllUsersUseCase := userUsecase.NewGetAllUsecase(userRepo)
-	getUserByIDUseCase := userUsecase.NewGetByIDUsecase(userRepo)
-
+	getUserByEmail := userUsecase.NewGetByEmailUsecase(userRepo)
+	getUserByIDUseCase = userUsecase.NewGetByIDUsecase(userRepo)
+	loginUseCase := userUsecase.NewLoginUsecase(userRepo)
+	restoreUseCase := userUsecase.NewRestoreUsecase(userRepo)
+	changePasswordUseCase := userUsecase.NewChangePasswordUsecase(userRepo)
+	updateUseCase := userUsecase.NewUpdateUsecase(userRepo)
+	getByRoom := userUsecase.NewGetUsersByRoom(userRepo, roomRepo, setrRepo)
 	// Initialize Handler
 	userHandler := u.NewUserEchoHandler(
 		createUserUseCase,
 		deleteUserUseCase,
 		getAllUsersUseCase,
 		getUserByIDUseCase,
+		getUserByEmail,
+		loginUseCase,
+		restoreUseCase,
+		changePasswordUseCase,
+		updateUseCase,
+		getByRoom,
 	)
 
 	// Initialize User Router
 	u.InitializeUserEchoRouter(s.app, userHandler)
+
 }
 
 func (s *EchoServer) InitializeOption() {
@@ -80,6 +162,7 @@ func (s *EchoServer) InitializeOption() {
 	getAllOptionUseCase := optionUsecase.NewGetAllRepository(optionRepo)
 	getOptionByIDUseCase := optionUsecase.NewGetByIDUsecase(optionRepo)
 	getOptionByValueUseCase := optionUsecase.NewGetByValueUsecase(optionRepo)
+	getOptionByPropUsecase := optionUsecase.NewGetByPropUsecase(optionRepo)
 
 	optionHandler := o.NewOptionEchoHandler(
 		createOptionUseCase,
@@ -87,6 +170,108 @@ func (s *EchoServer) InitializeOption() {
 		getAllOptionUseCase,
 		getOptionByIDUseCase,
 		getOptionByValueUseCase,
+		getOptionByPropUsecase,
 	)
 	o.InitializeOptionEchoRouter(s.app, optionHandler)
+}
+
+func (s *EchoServer) InitializeVote() {
+	voteRepo := v.NewVoteXormRepository(s.db)
+
+	createVoteUseCase := voteUsecase.NewCreateUsecase(voteRepo)
+	deleteVoteUseCase := voteUsecase.NewDeleteUsecase(voteRepo)
+	getAllVoteUseCase := voteUsecase.NewGetAllRepository(voteRepo)
+	getVoteByIDUseCase := voteUsecase.NewGetByIDUsecase(voteRepo)
+
+	voteHandler := v.NewVoteEchoHandler(
+		createVoteUseCase,
+		deleteVoteUseCase,
+		getAllVoteUseCase,
+		getVoteByIDUseCase,
+	)
+	v.InitializeVoteEchoRouter(s.app, voteHandler)
+}
+
+func (s *EchoServer) InitializeRoom(
+	userRepo userDom.UserRepository,
+	settingRoomRepo srDom.SettingRoomRepository,
+	proposalRepo propDom.ProposalRepository,
+	optionsRepo optDom.OptionRepository,
+	votesRepo voteDom.VoteRepository,
+) {
+	roomRepo := r.NewRoomXormRepository(s.db)
+	createRoomUC := roomUsecase.NewCreateUsecase(roomRepo, settingRoomRepo)
+	deleteRoomUC := roomUsecase.NewDeleteUsecase(roomRepo)
+	getAllRoomUC := roomUsecase.NewGetAllUsecase(roomRepo)
+	getByIDRoomUC := roomUsecase.NewGetByIDUsecase(roomRepo)
+	getByAdminRoomUC := roomUsecase.NewGetByAdminUsecase(roomRepo)
+	restoreUC := roomUsecase.NewRestoreUsecase(roomRepo)
+	joinUC := roomUsecase.NewJoinRoomUsecase(roomRepo)
+	AddSingleUserUC := roomUsecaseAddUsers.NewAddSingleUserUsecase(roomRepo, userRepo)
+	UpdateRoomUC := roomUsecase.NewUpdateRoomUsecase(roomRepo)
+	ManageWsUC := roomWsUsecase.NewManageWsUsecase(roomRepo, userRepo, proposalRepo, optionsRepo, votesRepo)
+	getSrByRoomIDUC := roomUsecase.NewGetSrByRoomUsecase(roomRepo, settingRoomRepo)
+	rmWhitelistUC := roomUsecase.NewWhitelistRmUsecase(roomRepo, userRepo)
+
+	roomHandler := r.NewRoomEchoHandler(
+		createRoomUC,
+		deleteRoomUC,
+		getAllRoomUC,
+		getByIDRoomUC,
+		getByAdminRoomUC,
+		restoreUC,
+		joinUC,
+		AddSingleUserUC,
+		getUserByIDUseCase,
+		UpdateRoomUC,
+		ManageWsUC,
+		getSrByRoomIDUC,
+		rmWhitelistUC,
+	)
+	r.InitializeRoomEchoRouter(s.app, roomHandler)
+
+}
+
+func (s *EchoServer) InitializeSettingRoom(srRepo srDom.SettingRoomRepository, roomRepo roomDom.RoomRepository) {
+
+	createSettingRoomUseCase := settingRoomUsecase.NewCreateUsecase(srRepo, roomRepo)
+	deleteSettingRoomUseCase := settingRoomUsecase.NewDeleteUsecase(srRepo)
+	getAllSettingRoomUseCase := settingRoomUsecase.NewGetAllUsecase(srRepo)
+	getSettingRoomByIDUseCase := settingRoomUsecase.NewGetByIDUsecase(srRepo)
+	updateSettingRoom := settingRoomUsecase.NewUpdateSettingRoomUsecase(srRepo, roomRepo)
+	getByRoomIdUsecase := settingRoomUsecase.NewGetByRoomID(srRepo)
+	settingRoomHandler := sr.NewSettingRoomEchoHandler(
+		createSettingRoomUseCase,
+		deleteSettingRoomUseCase,
+		getAllSettingRoomUseCase,
+		getSettingRoomByIDUseCase,
+		updateSettingRoom,
+		getByRoomIdUsecase,
+	)
+	sr.InitializeSettingRoomEchoRouter(s.app, settingRoomHandler)
+}
+
+func (s *EchoServer) InitializeProposal(propRepo propDom.ProposalRepository, roomRepo roomDom.RoomRepository) {
+
+	createProposalUseCase := proposalUsecase.NewCreateUsecase(propRepo, roomRepo)
+	deleteProposalUseCase := proposalUsecase.NewDeleteUseCase(propRepo, roomRepo)
+	getAllProposalsUseCase := proposalUsecase.NewGetAllUseCase(propRepo)
+	getProposalByIDUseCase := proposalUsecase.NewGetByIDUseCase(propRepo)
+	restoreProposalUseCase := proposalUsecase.NewRestoreUsecase(propRepo)
+	updateProposalUseCase := proposalUsecase.NewUpdateProposalUsecase(propRepo, roomRepo)
+	getByRoomUsecase := proposalUsecase.NewGetByRoomUsecase(propRepo)
+	getResultsByRoomUsecase := proposalUsecase.NewGetResultsByRoomUsecase(propRepo)
+
+	proposalHandler := p.NewProposalEchoHandler(
+		createProposalUseCase,
+		getAllProposalsUseCase,
+		getProposalByIDUseCase,
+		deleteProposalUseCase,
+		restoreProposalUseCase,
+		updateProposalUseCase,
+		getByRoomUsecase,
+		getResultsByRoomUsecase,
+	)
+
+	p.InitializeProposalEchoRouter(s.app, proposalHandler)
 }

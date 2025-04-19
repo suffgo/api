@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"suffgo/cmd/config"
 	"suffgo/cmd/database"
-	e "suffgo/internal/election/infrastructure/models"
-	o "suffgo/internal/option/infrastructure/models"
-	p "suffgo/internal/proposal/infrastructure/models"
-	po "suffgo/internal/proposalOption/infrastructure/models"
-	r "suffgo/internal/room/infrastructure/models"
-	s "suffgo/internal/settingRoom/infrastructure/models"
-	m "suffgo/internal/user/infrastructure/models"
-	ur "suffgo/internal/userRoom/infrastructure/models"
+	o "suffgo/internal/options/infrastructure/models"
+	p "suffgo/internal/proposals/infrastructure/models"
+	r "suffgo/internal/rooms/infrastructure/models"
+	s "suffgo/internal/settingsRoom/infrastructure/models"
+	ur "suffgo/internal/userRooms/infrastructure/models"
+	m "suffgo/internal/users/infrastructure/models"
+	e "suffgo/internal/votes/infrastructure/models"
 )
 
 func main() {
@@ -23,7 +22,7 @@ func main() {
 	MigrateProposal(db)
 	MigrateOption(db)
 	MigrateRoomSetting(db)
-	MigrateElection(db)
+	MigrateVote(db)
 
 	err := MakeConstraints(db)
 	if err != nil {
@@ -57,7 +56,7 @@ func MigrateRoom(db database.Database) error {
 }
 
 func MigrateProposal(db database.Database) error {
-	err := db.GetDb().Sync2(new(p.Proposal), new(po.ProposalOption))
+	err := db.GetDb().Sync2(new(p.Proposal))
 
 	if err != nil {
 		return err
@@ -80,7 +79,7 @@ func MigrateOption(db database.Database) error {
 }
 
 func MigrateRoomSetting(db database.Database) error {
-	err := db.GetDb().Sync2(new(s.SettingRoom))
+	err := db.GetDb().Sync2(new(s.SettingsRoom))
 
 	if err != nil {
 		return err
@@ -91,8 +90,8 @@ func MigrateRoomSetting(db database.Database) error {
 	return nil
 }
 
-func MigrateElection(db database.Database) error {
-	err := db.GetDb().Sync2(new(e.Election))
+func MigrateVote(db database.Database) error {
+	err := db.GetDb().Sync2(new(e.Vote))
 
 	if err != nil {
 		return err
@@ -119,11 +118,11 @@ func MakeConstraints(db database.Database) error {
 		fmt.Printf("ALTER TABLE user_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id) success\n")
 	}
 
-	_, err = db.GetDb().Exec("ALTER TABLE room ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)")
+	_, err = db.GetDb().Exec("ALTER TABLE room ADD CONSTRAINT fk_user FOREIGN KEY (admin_id)REFERENCES users(id)")
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("ALTER TABLE room ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)")
+		fmt.Printf("ALTER TABLE room ADD CONSTRAINT fk_user FOREIGN KEY (admin_id) REFERENCES users(id)")
 	}
 
 	_, err = db.GetDb().Exec("ALTER TABLE proposal ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id)")
@@ -133,47 +132,39 @@ func MakeConstraints(db database.Database) error {
 		fmt.Printf("ALTER TABLE proposal ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id) success\n")
 	}
 
-	_, err = db.GetDb().Exec("ALTER TABLE proposal_option ADD CONSTRAINT fk_option FOREIGN KEY (option_id) REFERENCES option(id)")
+	_, err = db.GetDb().Exec("ALTER TABLE settings_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id)")
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("ALTER TABLE proposal_option ADD CONSTRAINT fk_option FOREIGN KEY (option_id) REFERENCES option(id) success\n")
+		fmt.Printf("ALTER TABLE settings_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id) success\n")
 	}
 
-	_, err = db.GetDb().Exec("ALTER TABLE proposal_option ADD CONSTRAINT fk_proposal FOREIGN KEY (proposal_id) REFERENCES proposal(id)")
+	_, err = db.GetDb().Exec("ALTER TABLE option ADD CONSTRAINT fk_proposal FOREIGN KEY (proposal_id) REFERENCES proposal(id) ON DELETE CASCADE;")
+	if err != nil {
+		return fmt.Errorf("error al crear fk_proposal con cascade: %w", err)
+	}
+	fmt.Println("Constraint fk_proposal con ON DELETE CASCADE creada con éxito")
+
+	_, err = db.GetDb().Exec("ALTER TABLE vote ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)")
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("ALTER TABLE proposal_option ADD CONSTRAINT fk_proposal FOREIGN KEY (proposal_id) REFERENCES proposal(id) success\n")
+		fmt.Printf("ALTER TABLE vote ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) success\n")
 	}
 
-	_, err = db.GetDb().Exec("ALTER TABLE setting_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id)")
+	_, err = db.GetDb().Exec("ALTER TABLE vote ADD CONSTRAINT fk_option FOREIGN KEY(option_id) REFERENCES option(id)")
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("ALTER TABLE setting_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id) success\n")
+		fmt.Printf("ALTER TABLE vote ADD CONSTRAINT fk_option FOREIGN KEY(option_id) REFERENCES option(id) success\n")
 	}
 
-	_, err = db.GetDb().Exec("ALTER TABLE election ADD CONSTRAINT fk_proposal_option FOREIGN KEY (proposal_option_id) REFERENCES proposal_option(id)")
+	_, err = db.GetDb().Exec("create unique index value_proposal_idx ON option(value, proposal_id)")
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("ALTER TABLE election ADD CONSTRAINT fk_proposal_option FOREIGN KEY (proposal_option_id) REFERENCES proposal_option(id) success\n")
+		fmt.Printf("create unique index value_proposal_idx ON option(value, proposal_id)\n")
 	}
 
-	_, err = db.GetDb().Exec("ALTER TABLE election ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)")
-	if err != nil {
-		return err
-	} else {
-		fmt.Printf("ALTER TABLE election ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) success\n")
-	}
-
-	_, err = db.GetDb().Exec("ALTER TABLE election ADD CONSTRAINT fk_proposal FOREIGN KEY (proposal_id) REFERENCES proposal(id)")
-	if err != nil {
-		return err
-	} else {
-		fmt.Printf("ALTER TABLE election ADD CONSTRAINT fk_proposal FOREIGN KEY (proposal_id) REFERENCES proposal(id) success\n")
-	}
-	
 	return nil
 }
