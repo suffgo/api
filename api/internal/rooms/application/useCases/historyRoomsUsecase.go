@@ -20,13 +20,5 @@ func (s *HistoryRooms) Execute(userID sv.ID) ([]domain.Room, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	updatedRooms := make([]domain.Room, 0, len(rooms))
-
-	for _, room := range rooms {
-
-		updatedRooms = append(updatedRooms, room)
-	}
-
-	return updatedRooms, nil
+	return rooms, nil
 }

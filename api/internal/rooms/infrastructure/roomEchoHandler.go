@@ -749,20 +749,20 @@ var (
 	}
 )
 
-func (h *RoomEchoHandler) HistoryRooms(c echo.Context) error {
+func (h *RoomEchoHandler) History(c echo.Context) error {
 	userIDStr, ok := c.Get("user_id").(string)
 	if !ok || userIDStr == "" {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
 	}
 
-	idInt, err := strconv.ParseUint(userIDStr, 10, 64)
+	userIDUint, err := strconv.ParseUint(userIDStr, 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"error": se.ErrInvalidID.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID de usuario inválido"})
 	}
 
-	userID, err := sv.NewID(uint(idInt))
+	userID, err := sv.NewID(uint(userIDUint))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID de usuario inválido"})
 	}
 
 	rooms, err := h.HistoryRoomsUsecase.Execute(*userID)
@@ -770,5 +770,20 @@ func (h *RoomEchoHandler) HistoryRooms(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, rooms)
+	// Convertir rooms de dominio a DTOs directamente en el handler
+	roomDTOs := make([]map[string]interface{}, len(rooms))
+	for i, room := range rooms {
+		roomDTOs[i] = map[string]interface{}{
+			"id":          room.ID().Id,
+			"is_formal":   room.IsFormal().IsFormal,
+			"name":        room.Name().Name,
+			"admin_id":    room.AdminID().Id,
+			"description": room.Description().Description,
+			"room_code":   room.Code().Code,
+			"state":       room.State().CurrentState,
+			"image":       room.Image().Image,
+		}
+	}
+
+	return c.JSON(http.StatusOK, roomDTOs)
 }
