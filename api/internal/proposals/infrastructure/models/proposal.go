@@ -1,14 +1,11 @@
 package models
 
-import "time"
-
 type Proposal struct {
-	ID          uint       `xorm:"'id' pk autoincr"`
-	Archive     *string    `xorm:"'archive' null"` // Archivo con informacion detallada de la propuesta
-	Title       string     `xorm:"'title' not null"`
-	Description *string    `xorm:"'description' null"`
-	RoomID      uint       `xorm:"'room_id' index not null"`
-	DeletedAt   *time.Time `xorm:"deleted"`
+	ID          uint    `xorm:"'id' pk autoincr"`
+	Archive     *string `xorm:"'archive' null"` // Archivo con informacion detallada de la propuesta
+	Title       string  `xorm:"'title' not null"`
+	Description *string `xorm:"'description' null"`
+	RoomID      uint    `xorm:"'room_id' index not null"`
 }
 
 type SqlResult struct {

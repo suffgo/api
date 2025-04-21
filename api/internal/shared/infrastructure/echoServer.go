@@ -259,7 +259,6 @@ func (s *EchoServer) InitializeProposal(propRepo propDom.ProposalRepository, roo
 	deleteProposalUseCase := proposalUsecase.NewDeleteUseCase(propRepo, roomRepo)
 	getAllProposalsUseCase := proposalUsecase.NewGetAllUseCase(propRepo)
 	getProposalByIDUseCase := proposalUsecase.NewGetByIDUseCase(propRepo)
-	restoreProposalUseCase := proposalUsecase.NewRestoreUsecase(propRepo)
 	updateProposalUseCase := proposalUsecase.NewUpdateProposalUsecase(propRepo, roomRepo)
 	getByRoomUsecase := proposalUsecase.NewGetByRoomUsecase(propRepo)
 	getResultsByRoomUsecase := proposalUsecase.NewGetResultsByRoomUsecase(propRepo)
@@ -269,7 +268,6 @@ func (s *EchoServer) InitializeProposal(propRepo propDom.ProposalRepository, roo
 		getAllProposalsUseCase,
 		getProposalByIDUseCase,
 		deleteProposalUseCase,
-		restoreProposalUseCase,
 		updateProposalUseCase,
 		getByRoomUsecase,
 		getResultsByRoomUsecase,
