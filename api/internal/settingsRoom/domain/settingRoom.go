@@ -22,7 +22,7 @@ type (
 		Privacy       *bool      `json:"privacy"`
 		ProposalTimer int        `json:"proposal_timer"`
 		Quorum        *int       `json:"quorum"`
-		StartTime     *time.Time `json:"start_time"`
+		StartTime     *time.Time `json:"date_time"`
 		VoterLimit    int        `json:"voter_limit"`
 		RoomID        uint       `json:"room_id"`
 	}

@@ -17,4 +17,5 @@ type RoomRepository interface {
 	Update(room *Room) (*Room, error)
 	RemoveFromWhitelist(roomId sv.ID, userId sv.ID) error
 	RestartRoom(roomId sv.ID) error
+	HistoryRooms(userId sv.ID) ([]Room, error)
 }

@@ -211,6 +211,7 @@ func (s *EchoServer) InitializeRoom(
 	UpdateRoomUC := roomUsecase.NewUpdateRoomUsecase(roomRepo)
 	ManageWsUC := roomWsUsecase.NewManageWsUsecase(roomRepo, userRepo, proposalRepo, optionsRepo, votesRepo)
 	getSrByRoomIDUC := roomUsecase.NewGetSrByRoomUsecase(roomRepo, settingRoomRepo)
+	HistoryUC := roomUsecase.NewHistoryRoomsUsecase(roomRepo)
 	rmWhitelistUC := roomUsecase.NewWhitelistRmUsecase(roomRepo, userRepo)
 
 	roomHandler := r.NewRoomEchoHandler(
@@ -227,6 +228,7 @@ func (s *EchoServer) InitializeRoom(
 		ManageWsUC,
 		getSrByRoomIDUC,
 		rmWhitelistUC,
+		HistoryUC,
 	)
 	r.InitializeRoomEchoRouter(s.app, roomHandler)
 
@@ -257,7 +259,6 @@ func (s *EchoServer) InitializeProposal(propRepo propDom.ProposalRepository, roo
 	deleteProposalUseCase := proposalUsecase.NewDeleteUseCase(propRepo, roomRepo)
 	getAllProposalsUseCase := proposalUsecase.NewGetAllUseCase(propRepo)
 	getProposalByIDUseCase := proposalUsecase.NewGetByIDUseCase(propRepo)
-	restoreProposalUseCase := proposalUsecase.NewRestoreUsecase(propRepo)
 	updateProposalUseCase := proposalUsecase.NewUpdateProposalUsecase(propRepo, roomRepo)
 	getByRoomUsecase := proposalUsecase.NewGetByRoomUsecase(propRepo)
 	getResultsByRoomUsecase := proposalUsecase.NewGetResultsByRoomUsecase(propRepo)
@@ -267,7 +268,6 @@ func (s *EchoServer) InitializeProposal(propRepo propDom.ProposalRepository, roo
 		getAllProposalsUseCase,
 		getProposalByIDUseCase,
 		deleteProposalUseCase,
-		restoreProposalUseCase,
 		updateProposalUseCase,
 		getByRoomUsecase,
 		getResultsByRoomUsecase,
