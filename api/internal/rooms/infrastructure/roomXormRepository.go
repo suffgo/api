@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"suffgo/cmd/database"
+	"suffgo/internal/rooms/domain"
 	d "suffgo/internal/rooms/domain"
 	re "suffgo/internal/rooms/domain/errors"
 	"suffgo/internal/rooms/infrastructure/mappers"
@@ -260,4 +261,41 @@ func (s *RoomXormRepository) RestartRoom(roomId sv.ID) error {
 	}
 
 	return nil
+}
+
+func (s *RoomXormRepository) HistoryRooms(userId sv.ID) ([]d.Room, error) {
+	var roomModels []m.Room
+	err := s.db.GetDb().SQL(`
+        SELECT DISTINCT 
+            r.id,
+            r.is_formal,
+            r.code,
+            r.name,
+            r.admin_id,
+            r.description,
+            r.state,
+            COALESCE(r.image, '') AS image
+        FROM vote v
+        INNER JOIN option o ON v.option_id = o.id
+        INNER JOIN proposal p ON o.proposal_id = p.id
+        INNER JOIN room r ON p.room_id = r.id
+        WHERE v.user_id = ?
+        AND r.deleted_at IS NULL
+        AND p.deleted_at IS NULL
+    `, userId.Id).Find(&roomModels)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var rooms []domain.Room
+	for _, model := range roomModels {
+		domainRoom, err := mappers.ModelToDomain(&model)
+		if err != nil {
+			return nil, err
+		}
+		rooms = append(rooms, *domainRoom)
+	}
+
+	return rooms, nil
 }

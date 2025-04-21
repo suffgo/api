@@ -48,7 +48,7 @@ func (s *ProposalXormRepository) Save(proposal d.Proposal) (*d.Proposal, error) 
 func (s *ProposalXormRepository) GetAll() ([]d.Proposal, error) {
 	var proposals []m.Proposal
 
-	err := s.db.GetDb().Where("deleted_at IS NULL").Find(&proposals)
+	err := s.db.GetDb().Find(&proposals)
 	if err != nil {
 		return nil, err
 	}
@@ -98,21 +98,6 @@ func (s *ProposalXormRepository) Delete(id sv.ID) error {
 	return nil
 }
 
-func (s *ProposalXormRepository) Restore(proposalID sv.ID) error {
-	primitiveID := proposalID.Value()
-
-	proposal := &m.Proposal{DeletedAt: nil}
-
-	affected, err := s.db.GetDb().Unscoped().ID(primitiveID).Cols("deleted_at").Update(proposal)
-	if err != nil {
-		return err
-	}
-	if affected == 0 {
-		return pe.ErrPropNotFound
-	}
-	return err
-}
-
 func (s *ProposalXormRepository) Update(proposal *d.Proposal) (*d.Proposal, error) {
 	proposalID := proposal.ID().Id
 
@@ -150,7 +135,7 @@ func (s *ProposalXormRepository) GetByRoom(roomId sv.ID) ([]d.Proposal, error) {
 
 	var proposals []m.Proposal
 
-	err := s.db.GetDb().Where("deleted_at IS NULL and room_id = ?", roomId.Id).Find(&proposals)
+	err := s.db.GetDb().Where("room_id = ?", roomId.Id).Find(&proposals)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +168,7 @@ func (s *ProposalXormRepository) GetResultsByRoom(roomId sv.ID) ([]d.ProposalRes
         u.username AS username,
         u.image AS user_image
     FROM proposal p
-    LEFT JOIN "option" o ON o.proposal_id = p.id  -- option es palabra reservada en PostgreSQL
+    LEFT JOIN "option" o ON o.proposal_id = p.id 
     LEFT JOIN vote v ON v.option_id = o.id
     LEFT JOIN users u ON u.id = v.user_id
     WHERE p.room_id = ?
