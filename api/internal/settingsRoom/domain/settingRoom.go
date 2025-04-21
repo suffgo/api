@@ -31,7 +31,7 @@ type (
 		Privacy       *bool      `json:"privacy"`
 		ProposalTimer int        `json:"proposal_timer"`
 		Quorum        *int       `json:"quorum"`
-		DateTime      *time.Time `json:"date_time"`
+		DateTime      *time.Time `json:"start_time"`
 		VoterLimit    int        `json:"voter_limit"`
 		RoomID        uint       `json:"room_id"`
 	}
