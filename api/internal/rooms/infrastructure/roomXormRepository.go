@@ -2,7 +2,6 @@ package infrastructure
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"suffgo/cmd/database"
 	"suffgo/internal/rooms/domain"
@@ -286,23 +285,15 @@ func (s *RoomXormRepository) HistoryRooms(userId sv.ID) ([]d.Room, error) {
     `, userId.Id).Find(&roomModels)
 
 	if err != nil {
-		return nil, fmt.Errorf("error en consulta: %v", err)
-	}
-
-	fmt.Printf("Room models from DB: %+v\n", roomModels) // Log para ver los datos
-
-	if len(roomModels) == 0 {
-		return []domain.Room{}, nil
+		return nil, err
 	}
 
 	var rooms []domain.Room
 	for _, model := range roomModels {
-		fmt.Printf("Mapping model: %+v\n", model) // Log antes del mapeo
 		domainRoom, err := mappers.ModelToDomain(&model)
 		if err != nil {
-			return nil, fmt.Errorf("error mapeando room ID %d: %v", model.ID, err)
+			return nil, err
 		}
-		fmt.Printf("Resulting domain room: %+v\n", domainRoom) // Log después del mapeo
 		rooms = append(rooms, *domainRoom)
 	}
 
