@@ -23,4 +23,5 @@ func InitializeRoomEchoRouter(e *echo.Echo, handler *RoomEchoHandler) {
 	roomGroup.GET("/ws/:room_id", handler.WsHandler)
 	roomGroup.PUT("/:id", handler.Update)
 	roomGroup.DELETE("/whitelist/removeUser", handler.RemoveFromWhitelistHandler)
+	roomGroup.GET("/history", handler.History)
 }

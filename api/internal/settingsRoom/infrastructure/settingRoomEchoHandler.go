@@ -153,7 +153,7 @@ func (h *SettingRoomEchoHandler) GetAllSettingRoom(c echo.Context) error {
 			Privacy:       settingRoom.Privacy().Privacy,
 			ProposalTimer: settingRoom.ProposalTimer().ProposalTimer,
 			Quorum:        settingRoom.Quorum().Quorum,
-			StartTime:     settingRoom.StartTime().DateTime,
+			DateTime:      settingRoom.DateTime().DateTime,
 			VoterLimit:    settingRoom.VoterLimit().VoterLimit,
 			RoomID:        settingRoom.RoomID().Id,
 		}
@@ -185,7 +185,7 @@ func (h *SettingRoomEchoHandler) GetSettingRoomByID(c echo.Context) error {
 		Privacy:       settingRoom.Privacy().Privacy,
 		ProposalTimer: settingRoom.ProposalTimer().ProposalTimer,
 		Quorum:        settingRoom.Quorum().Quorum,
-		StartTime:     settingRoom.StartTime().DateTime,
+		DateTime:      settingRoom.DateTime().DateTime,
 		VoterLimit:    settingRoom.VoterLimit().VoterLimit,
 		RoomID:        settingRoom.RoomID().Id,
 	}
@@ -214,7 +214,7 @@ func (h *SettingRoomEchoHandler) GetSrByRoomID(c echo.Context) error {
 		Privacy:       settingRoom.Privacy().Privacy,
 		ProposalTimer: settingRoom.ProposalTimer().ProposalTimer,
 		Quorum:        settingRoom.Quorum().Quorum,
-		StartTime:     settingRoom.StartTime().DateTime,
+		DateTime:      settingRoom.DateTime().DateTime,
 		VoterLimit:    settingRoom.VoterLimit().VoterLimit,
 		RoomID:        settingRoom.RoomID().Id,
 	}
@@ -295,7 +295,7 @@ func (h *SettingRoomEchoHandler) Update(c echo.Context) error {
 		Privacy:       updatedSettingRoom.Privacy().Privacy,
 		ProposalTimer: updatedSettingRoom.ProposalTimer().ProposalTimer,
 		Quorum:        updatedSettingRoom.Quorum().Quorum,
-		StartTime:     updatedSettingRoom.StartTime().DateTime,
+		DateTime:      updatedSettingRoom.DateTime().DateTime,
 		VoterLimit:    updatedSettingRoom.VoterLimit().VoterLimit,
 		RoomID:        updatedSettingRoom.ID().Id,
 	}

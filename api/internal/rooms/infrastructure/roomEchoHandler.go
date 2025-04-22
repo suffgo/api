@@ -41,6 +41,7 @@ type RoomEchoHandler struct {
 	GetSrByRoomIDUsecase *r.GetSrByRoomUsecase
 	ManageWsUsecase      *roomWs.ManageWsUsecase
 	WhiteListRmUsecase   *r.WhitelistRmUsecase
+	HistoryRoomsUsecase  *r.HistoryRooms
 }
 
 func NewRoomEchoHandler(
@@ -57,6 +58,7 @@ func NewRoomEchoHandler(
 	manageWsUC *roomWs.ManageWsUsecase,
 	getSrByRoomIDUC *r.GetSrByRoomUsecase,
 	whitelistRmUC *r.WhitelistRmUsecase,
+	historyRoomsUC *r.HistoryRooms,
 
 ) *RoomEchoHandler {
 	return &RoomEchoHandler{
@@ -73,6 +75,7 @@ func NewRoomEchoHandler(
 		ManageWsUsecase:      manageWsUC,
 		GetSrByRoomIDUsecase: getSrByRoomIDUC,
 		WhiteListRmUsecase:   whitelistRmUC,
+		HistoryRoomsUsecase:  historyRoomsUC,
 	}
 }
 
@@ -202,7 +205,7 @@ func (h *RoomEchoHandler) GetAllRooms(c echo.Context) error {
 				AdminName:   adminName,
 				Description: room.Description().Description,
 				Code:        room.Code().Code,
-				StartTime:   settingRoom.StartTime().DateTime,
+				DateTime:    settingRoom.DateTime().DateTime,
 				State:       room.State().CurrentState,
 				Image:       room.Image().URL(),
 			}
@@ -284,7 +287,7 @@ func (h *RoomEchoHandler) GetRoomByID(c echo.Context) error {
 			AdminName:   adminName,
 			Description: room.Description().Description,
 			Code:        room.Code().Code,
-			StartTime:   settingRoom.StartTime().DateTime,
+			DateTime:    settingRoom.DateTime().DateTime,
 			State:       room.State().CurrentState,
 			Image:       room.Image().URL(),
 			Privileges:  privileges,
@@ -375,7 +378,7 @@ func (h *RoomEchoHandler) GetRoomsByAdmin(c echo.Context) error {
 				AdminName:   adminName,
 				Description: room.Description().Description,
 				Code:        room.Code().Code,
-				StartTime:   settingRoom.StartTime().DateTime,
+				DateTime:    settingRoom.DateTime().DateTime,
 				State:       room.State().CurrentState,
 				Image:       room.Image().URL(),
 				Privileges:  privileges,
@@ -462,7 +465,7 @@ func (h *RoomEchoHandler) JoinRoom(c echo.Context) error {
 			AdminName:   adminName,
 			Description: room.Description().Description,
 			Code:        room.Code().Code,
-			StartTime:   settingRoom.StartTime().DateTime,
+			DateTime:    settingRoom.DateTime().DateTime,
 			State:       room.State().CurrentState,
 			Privileges:  privileges,
 			Image:       room.Image().URL(),
@@ -680,6 +683,7 @@ func (r *RoomEchoHandler) RemoveFromWhitelistHandler(c echo.Context) error {
 		}
 	}
 
+	return c.JSON(http.StatusOK, map[string]interface{}{"success": "room updated successfully"})
 	return c.JSON(http.StatusOK, map[string]interface{}{"success": "user deleted from whitelist sucessfully"})
 }
 
@@ -744,3 +748,42 @@ var (
 		},
 	}
 )
+
+func (h *RoomEchoHandler) History(c echo.Context) error {
+	userIDStr, ok := c.Get("user_id").(string)
+	if !ok || userIDStr == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
+	}
+
+	userIDUint, err := strconv.ParseUint(userIDStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID de usuario inválido"})
+	}
+
+	userID, err := sv.NewID(uint(userIDUint))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID de usuario inválido"})
+	}
+
+	rooms, err := h.HistoryRoomsUsecase.Execute(*userID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	// Convertir rooms de dominio a DTOs directamente en el handler
+	roomDTOs := make([]map[string]interface{}, len(rooms))
+	for i, room := range rooms {
+		roomDTOs[i] = map[string]interface{}{
+			"id":          room.ID().Id,
+			"is_formal":   room.IsFormal().IsFormal,
+			"name":        room.Name().Name,
+			"admin_id":    room.AdminID().Id,
+			"description": room.Description().Description,
+			"room_code":   room.Code().Code,
+			"state":       room.State().CurrentState,
+			"image":       room.Image().Image,
+		}
+	}
+
+	return c.JSON(http.StatusOK, roomDTOs)
+}

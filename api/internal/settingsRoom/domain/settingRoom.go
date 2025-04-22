@@ -22,7 +22,7 @@ type (
 		Privacy       *bool      `json:"privacy"`
 		ProposalTimer int        `json:"proposal_timer"`
 		Quorum        *int       `json:"quorum"`
-		StartTime     *time.Time `json:"start_time"`
+		DateTime      *time.Time `json:"start_time"`
 		VoterLimit    int        `json:"voter_limit"`
 		RoomID        uint       `json:"room_id"`
 	}
@@ -31,7 +31,7 @@ type (
 		Privacy       *bool      `json:"privacy"`
 		ProposalTimer int        `json:"proposal_timer"`
 		Quorum        *int       `json:"quorum"`
-		DateTime      *time.Time `json:"date_time"`
+		DateTime      *time.Time `json:"start_time"`
 		VoterLimit    int        `json:"voter_limit"`
 		RoomID        uint       `json:"room_id"`
 	}
@@ -73,7 +73,7 @@ func (s *SettingRoom) Quorum() v.Quorum {
 	return *s.quorum
 }
 
-func (s *SettingRoom) StartTime() v.DateTime {
+func (s *SettingRoom) DateTime() v.DateTime {
 	return *s.startTime
 }
 
