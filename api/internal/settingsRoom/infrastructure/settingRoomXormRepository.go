@@ -77,7 +77,7 @@ func (s *SettingRoomXormRepository) Save(settingRoom d.SettingRoom) error {
 		Privacy:       settingRoom.Privacy().Privacy,
 		ProposalTimer: settingRoom.ProposalTimer().ProposalTimer,
 		Quorum:        settingRoom.Quorum().Quorum,
-		StartTime:     settingRoom.StartTime().DateTime,
+		DateTime:      settingRoom.DateTime().DateTime,
 		VoterLimit:    settingRoom.VoterLimit().VoterLimit,
 		RoomID:        settingRoom.RoomID().Id,
 	}
@@ -89,7 +89,7 @@ func (s *SettingRoomXormRepository) Save(settingRoom d.SettingRoom) error {
 	return nil
 }
 
-func (s *SettingRoomXormRepository) GetByRoom(roomID sv.ID) (*d.SettingRoom, error){
+func (s *SettingRoomXormRepository) GetByRoom(roomID sv.ID) (*d.SettingRoom, error) {
 	settingRoomModel := new(m.SettingsRoom)
 	has, err := s.db.GetDb().Where("room_id = ?", roomID.Id).Get(settingRoomModel)
 	if err != nil {

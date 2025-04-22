@@ -38,7 +38,7 @@ type (
 		Description string     `json:"description"`
 		Code        string     `json:"room_code"`
 		State       string     `json:"state"`
-		StartTime   *time.Time `json:"start_time"`
+		DateTime    *time.Time `json:"start_time"`
 		Image       string     `json:"image"`
 		Privileges  bool       `json:"privileges"`
 	}
