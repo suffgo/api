@@ -4,16 +4,19 @@ import (
 	"errors"
 	"suffgo/internal/rooms/domain"
 	rerr "suffgo/internal/rooms/domain/errors"
+	srdom "suffgo/internal/settingsRoom/domain"
 	sv "suffgo/internal/shared/domain/valueObjects"
 )
 
 type JoinRoomUsecase struct {
-	roomRepo domain.RoomRepository
+	roomRepo        domain.RoomRepository
+	setrRepo srdom.SettingRoomRepository
 }
 
-func NewJoinRoomUsecase(repository domain.RoomRepository) *JoinRoomUsecase {
+func NewJoinRoomUsecase(repository domain.RoomRepository, srRepo srdom.SettingRoomRepository) *JoinRoomUsecase {
 	return &JoinRoomUsecase{
 		roomRepo: repository,
+		setrRepo: srRepo,
 	}
 }
 
@@ -28,7 +31,14 @@ func (s *JoinRoomUsecase) Execute(roomCode string, userID sv.ID) (*domain.Room, 
 		return nil, errors.New("error al obtener la sala")
 	}
 
-	if room.IsFormal().IsFormal {
+	setroom, err := s.setrRepo.GetByRoom(room.ID())
+
+	if err != nil {
+		return nil, err
+	}
+
+
+	if *setroom.Privacy().Privacy {
 		//check whitelist en user_room. Aca estoy asumiendo que todas las salas formales usan whitelist
 		can, err := s.roomRepo.UserInWhitelist(room.ID(), userID)
 
