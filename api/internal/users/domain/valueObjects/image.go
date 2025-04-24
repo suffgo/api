@@ -39,6 +39,8 @@ func NewImage(image string) (*Image, error) {
 	ext := ".png"
 	if mimeType == "image/jpg" {
 		ext = ".jpg"
+	} else if mimeType == "image/webp" {
+		ext = ".webp"
 	}
 	fileName := fmt.Sprintf("%s%s", uniqueID, ext)
 
