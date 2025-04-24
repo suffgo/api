@@ -41,6 +41,8 @@ func (s *AddSingleUserUsecase) Execute(userData string, roomID, adminID sv.ID) e
 
 	if room.State().CurrentState == "online" {
 		return errors.New("La sala esta activa, no se puede agregar nuevos usuarios")
+	} else if room.State().CurrentState == "finished" {
+		return errors.New("La sala esta finalizada, no se puede agregar nuevos usuarios")
 	}
 
 	user, err := s.lookForUser(userData)

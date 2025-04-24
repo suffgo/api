@@ -35,6 +35,8 @@ func (u *UpdateSettingRoomUsecase) Execute(settingRoom *domain.SettingRoom) (*do
 
 	if room.State().CurrentState == "online" {
 		return nil, errors.New("La sala esta activa, no se puede modificar")
+	} else if room.State().CurrentState == "finished" {
+		return nil, errors.New("La sala esta finalizada, no se puede modificar")
 	}
 
 	if existingSettings == nil {
