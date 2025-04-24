@@ -31,7 +31,7 @@ func NewImage(image string) (*Image, error) {
 		return nil, errors.New("error al procesar la imagen")
 	}
 
-	if mimeType != "image/png" && mimeType != "image/jpg" && mimeType != "image/jpeg" {
+	if mimeType != "image/png" && mimeType != "image/jpg" && mimeType != "image/jpeg" && mimeType != "image/webp" {
 		return nil, errors.New("formato de imagen no soportado")
 	}
 
