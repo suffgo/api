@@ -29,12 +29,12 @@ func (u *UpdateSettingRoomUsecase) Execute(settingRoom *domain.SettingRoom) (*do
 		return nil, err
 	}
 
-	if room.State().CurrentState == "online" {
-		return nil, errors.New("La sala esta activa, no se puede modificar")
-	}
-
 	if !room.IsFormal().IsFormal {
 		return nil, errors.New("No se puede configurar salas informales")
+	}
+
+	if room.State().CurrentState == "online" {
+		return nil, errors.New("La sala esta activa, no se puede modificar")
 	}
 
 	if existingSettings == nil {
