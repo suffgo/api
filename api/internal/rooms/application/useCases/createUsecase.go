@@ -57,7 +57,7 @@ func (s *CreateUsecase) Execute(roomData domain.Room) (*domain.Room, error) {
 }
 
 func generateDefaultRoomConfig(roomId sv.ID) domsettingroom.SettingRoom {
-	t := true
+	t := false
 	zero := 0
 
 	privacy, _ := srv.NewPrivacy(&t)

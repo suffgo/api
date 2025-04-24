@@ -79,7 +79,11 @@ func (s *ManageWsUsecase) Execute(ws *websocket.Conn, userId, roomId sv.ID) erro
 		if room == nil {
 			return fmt.Errorf("room not found")
 		}
-
+		
+		if room.State().CurrentState == "finished" {
+			return nil
+		}
+		
 		if user.ID().Id != room.AdminID().Id {
 			return roomerr.ErrUserNotAdmin
 		}

@@ -206,7 +206,7 @@ func (s *EchoServer) InitializeRoom(
 	getByIDRoomUC := roomUsecase.NewGetByIDUsecase(roomRepo)
 	getByAdminRoomUC := roomUsecase.NewGetByAdminUsecase(roomRepo)
 	restoreUC := roomUsecase.NewRestoreUsecase(roomRepo)
-	joinUC := roomUsecase.NewJoinRoomUsecase(roomRepo)
+	joinUC := roomUsecase.NewJoinRoomUsecase(roomRepo, settingRoomRepo)
 	AddSingleUserUC := roomUsecaseAddUsers.NewAddSingleUserUsecase(roomRepo, userRepo)
 	UpdateRoomUC := roomUsecase.NewUpdateRoomUsecase(roomRepo)
 	ManageWsUC := roomWsUsecase.NewManageWsUsecase(roomRepo, userRepo, proposalRepo, optionsRepo, votesRepo)
