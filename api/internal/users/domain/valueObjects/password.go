@@ -2,8 +2,9 @@ package valueobjects
 
 import (
 	"errors"
+	"regexp"
 
-	passwordvalidator "github.com/wagslane/go-password-validator"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -14,14 +15,15 @@ type (
 )
 
 func NewPassword(password string) (*Password, error) {
-	if password == "" {
-		return nil, errors.New("invalid password")
-	}
-
-	minEntropy := 50.0
-	err := passwordvalidator.Validate(password, minEntropy)
+	err := validation.Validate(password,
+		validation.Required.Error("la contraseña es obligatoria"),
+		validation.Length(8, 0).Error("la contraseña debe tener al menos 8 caracteres"),
+		validation.Match(regexp.MustCompile(`[A-Z]`)).Error("la contraseña debe contener al menos una letra mayúscula"),
+		validation.Match(regexp.MustCompile(`[a-z]`)).Error("la contraseña debe contener al menos una letra minúscula"),
+		validation.Match(regexp.MustCompile(`[0-9]`)).Error("la contraseña debe contener al menos un número"),
+	)
 	if err != nil {
-		return nil, errors.New("weak password")
+		return nil, err
 	}
 
 	return &Password{
