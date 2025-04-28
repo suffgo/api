@@ -3,6 +3,7 @@ package valueobjects
 import (
 	"errors"
 
+	passwordvalidator "github.com/wagslane/go-password-validator"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -15,6 +16,12 @@ type (
 func NewPassword(password string) (*Password, error) {
 	if password == "" {
 		return nil, errors.New("invalid password")
+	}
+
+	minEntropy := 50.0
+	err := passwordvalidator.Validate(password, minEntropy)
+	if err != nil {
+		return nil, errors.New("weak password")
 	}
 
 	return &Password{
