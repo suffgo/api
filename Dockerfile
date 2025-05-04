@@ -1,17 +1,16 @@
 # -------- Build stage --------
-FROM golang:1.24.2 AS builder
+FROM golang:1.24-alpine AS builder
 WORKDIR /app
 
-# Solo copiamos los módulos para cachear capas de dependencias\ nCOPY api/go.mod api/go.sum ./
+# 1) Copiamos sólo los módulos (para cachear deps)
+COPY api/api/go.mod api/api/go.sum ./
 RUN go mod download
 
-# Copiamos el código
+# 2) Ahora copiamos TODO el código
 COPY api/ ./
 
-# Construimos un binario estático optimizado para Linux amd64
-RUN CGO_ENABLED=0 \ 
-    GOOS=linux \ 
-    GOARCH=amd64 \ 
+# 3) Construimos el binario
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -ldflags="-s -w" -o suffgo-api ./cmd/app
 
 # -------- Final stage --------
