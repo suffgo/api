@@ -19,11 +19,7 @@ func createSession(userID sv.ID, name string, c echo.Context) error {
 		return err
 	}
 	sess.Options = &sessions.Options{
-		Path:     "/",
 		MaxAge:   86400 * 2, // Duración de la sesión en segundos (2 días en este caso)
-		HttpOnly: true,
-		Secure:   false, // Establecer en 'false' si estás usando 'http'
-		SameSite: http.SameSiteLaxMode,
 	}
 	// Convertir el userID a string antes de almacenarlo
 	sess.Values["user_id"] = strconv.FormatUint(uint64(userID.Id), 10)
