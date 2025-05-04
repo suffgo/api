@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"strconv"
 	sv "suffgo/internal/shared/domain/valueObjects"
-
-	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 )
@@ -18,13 +16,7 @@ func createSession(userID sv.ID, name string, c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	sess.Options = &sessions.Options{
-		Path:     "/",
-		MaxAge:   86400 * 2, // Duración de la sesión en segundos (2 días en este caso)
-		HttpOnly: true,
-		Secure:   false, // Establecer en 'false' si estás usando 'http'
-		SameSite: http.SameSiteLaxMode,
-	}
+	sess.Options.MaxAge = 86400 * 2
 	// Convertir el userID a string antes de almacenarlo
 	sess.Values["user_id"] = strconv.FormatUint(uint64(userID.Id), 10)
 	sess.Values["name"] = name

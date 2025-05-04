@@ -1,12 +1,31 @@
-FROM golang:1.23.2 AS builder
-
+# -------- Build stage --------
+FROM golang:1.24.2 AS builder
 WORKDIR /app
 
-COPY ./api/ /app
+# Solo copiamos los módulos para cachear capas de dependencias\ nCOPY api/go.mod api/go.sum ./
 RUN go mod download
 
-RUN go install github.com/air-verse/air@latest
+# Copiamos el código
+COPY api/api/ ./
 
-# RUN go build -o main .
+# Construimos un binario estático optimizado para Linux amd64
+RUN CGO_ENABLED=0 \ 
+    GOOS=linux \ 
+    GOARCH=amd64 \ 
+    go build -ldflags="-s -w" -o suffgo-api ./cmd/app
 
-CMD ["air", "-d"]
+# -------- Final stage --------
+FROM alpine:3.21 AS runner
+
+# Certificados para conexiones HTTPS
+RUN apk add --no-cache ca-certificates
+WORKDIR /root/
+
+# Copiamos el binario desde builder
+COPY --from=builder /app/suffgo-api .
+
+# Puerto que la aplicación expone (se controla vía $PORT en producción)
+EXPOSE 10000
+
+# Arrancamos la API
+ENTRYPOINT ["./suffgo-api"]

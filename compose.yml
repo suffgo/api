@@ -3,7 +3,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: go-app
     depends_on:
       - db
@@ -21,7 +21,7 @@ services:
       # - ./main.go:/app/main.go:rw
     extra_hosts:
       - host.docker.internal:host-gateway
-
+        
   db:
     build: 
       context: . 
