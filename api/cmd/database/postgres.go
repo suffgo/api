@@ -33,11 +33,11 @@ func NewPostgresDatabase(conf *config.Config) Database {
         )
 
         // 🔍 Loggea las variables críticas
-        log.Printf("▶️  POSTGRES HOST    = %q", conf.Db.Host)
-        log.Printf("▶️  POSTGRES USER    = %q", conf.Db.User)
-        log.Printf("▶️  POSTGRES PASS    = %q", conf.Db.Password)
-        log.Printf("▶️  POSTGRES DBNAME  = %q", conf.Db.DBName)
-        log.Printf("▶️  DSN              = %q", dsn)
+        // log.Printf("▶️  POSTGRES HOST    = %q", conf.Db.Host)
+        // log.Printf("▶️  POSTGRES USER    = %q", conf.Db.User)
+        // log.Printf("▶️  POSTGRES PASS    = %q", conf.Db.Password)
+        // log.Printf("▶️  POSTGRES DBNAME  = %q", conf.Db.DBName)
+        // log.Printf("▶️  DSN              = %q", dsn)
 
         engine, err := xorm.NewEngine("postgres", dsn)
         if err != nil {
