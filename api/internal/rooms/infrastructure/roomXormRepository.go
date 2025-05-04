@@ -281,7 +281,6 @@ func (s *RoomXormRepository) HistoryRooms(userId sv.ID) ([]d.Room, error) {
         INNER JOIN room r ON p.room_id = r.id
         WHERE v.user_id = ?
         AND r.deleted_at IS NULL
-        AND p.deleted_at IS NULL
     `, userId.Id).Find(&roomModels)
 
 	if err != nil {
