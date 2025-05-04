@@ -2,6 +2,7 @@ package migrate
 
 import (
 	"fmt"
+	"strings"
 	"suffgo/cmd/config"
 	"suffgo/cmd/database"
 	o "suffgo/internal/options/infrastructure/models"
@@ -133,68 +134,68 @@ func MigrateVote(db database.Database) error {
 }
 
 func MakeConstraints(db database.Database) error {
+    statements := []struct {
+        sql  string
+        info string
+    }{
+        {
+            `ALTER TABLE user_room ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)`,
+            "fk_user on user_room",
+        },
+        {
+            `ALTER TABLE user_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id)`,
+            "fk_room on user_room",
+        },
+        {
+            `ALTER TABLE room DROP CONSTRAINT IF EXISTS fk_user; ALTER TABLE room ADD CONSTRAINT fk_user FOREIGN KEY (admin_id) REFERENCES users(id)`,
+            "fk_user on room",
+        },
+        {
+            `ALTER TABLE proposal ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id)`,
+            "fk_room on proposal",
+        },
+        {
+            `ALTER TABLE settings_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id)`,
+            "fk_room on settings_room",
+        },
+        {
+            `ALTER TABLE option ADD CONSTRAINT fk_proposal FOREIGN KEY (proposal_id) REFERENCES proposal(id) ON DELETE CASCADE`,
+            "fk_proposal with ON DELETE CASCADE",
+        },
+        {
+            `ALTER TABLE vote ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)`,
+            "fk_user on vote",
+        },
+        {
+            `ALTER TABLE vote ADD CONSTRAINT fk_option FOREIGN KEY (option_id) REFERENCES option(id)`,
+            "fk_option on vote",
+        },
+        {
+            `CREATE UNIQUE INDEX IF NOT EXISTS value_proposal_idx ON option(value, proposal_id)`,
+            "value_proposal_idx unique index on option(value, proposal_id)",
+        },
+    }
 
-	_, err := db.GetDb().Exec("ALTER TABLE user_room ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users (id)")
-	if err != nil {
-		return err
-	} else {
-		fmt.Printf("ALTER TABLE user_room ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) success\n")
-	}
+    for _, stmt := range statements {
+        if err := execIgnoreExists(db, stmt.sql); err != nil {
+            return fmt.Errorf("error ejecutando '%s': %w", stmt.info, err)
+        }
+        fmt.Printf("%s creada o ya existía, OK\n", stmt.info)
+    }
 
-	_, err = db.GetDb().Exec("ALTER TABLE user_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id)")
-	if err != nil {
-		return err
-	} else {
-		fmt.Printf("ALTER TABLE user_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id) success\n")
-	}
+    return nil
+}
 
-	_, err = db.GetDb().Exec("ALTER TABLE room ADD CONSTRAINT fk_user FOREIGN KEY (admin_id)REFERENCES users(id)")
-	if err != nil {
-		return err
-	} else {
-		fmt.Printf("ALTER TABLE room ADD CONSTRAINT fk_user FOREIGN KEY (admin_id) REFERENCES users(id)")
-	}
 
-	_, err = db.GetDb().Exec("ALTER TABLE proposal ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id)")
-	if err != nil {
-		return err
-	} else {
-		fmt.Printf("ALTER TABLE proposal ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id) success\n")
-	}
-
-	_, err = db.GetDb().Exec("ALTER TABLE settings_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id)")
-	if err != nil {
-		return err
-	} else {
-		fmt.Printf("ALTER TABLE settings_room ADD CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id) success\n")
-	}
-
-	_, err = db.GetDb().Exec("ALTER TABLE option ADD CONSTRAINT fk_proposal FOREIGN KEY (proposal_id) REFERENCES proposal(id) ON DELETE CASCADE;")
-	if err != nil {
-		return fmt.Errorf("error al crear fk_proposal con cascade: %w", err)
-	}
-	fmt.Println("Constraint fk_proposal con ON DELETE CASCADE creada con éxito")
-
-	_, err = db.GetDb().Exec("ALTER TABLE vote ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)")
-	if err != nil {
-		return err
-	} else {
-		fmt.Printf("ALTER TABLE vote ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) success\n")
-	}
-
-	_, err = db.GetDb().Exec("ALTER TABLE vote ADD CONSTRAINT fk_option FOREIGN KEY(option_id) REFERENCES option(id)")
-	if err != nil {
-		return err
-	} else {
-		fmt.Printf("ALTER TABLE vote ADD CONSTRAINT fk_option FOREIGN KEY(option_id) REFERENCES option(id) success\n")
-	}
-
-	_, err = db.GetDb().Exec("create unique index value_proposal_idx ON option(value, proposal_id)")
-	if err != nil {
-		return err
-	} else {
-		fmt.Printf("create unique index value_proposal_idx ON option(value, proposal_id)\n")
-	}
-
-	return nil
+// execIgnoreExists ejecuta la sentencia SQL y, si falla porque la constraint
+// ya existe, devuelve nil. Para otros errores, los propaga.
+func execIgnoreExists(db database.Database, sql string) error {
+    if _, err := db.GetDb().Exec(sql); err != nil {
+        if strings.Contains(err.Error(), "already exists") {
+            // Constraint ya existe: lo ignoramos
+            return nil
+        }
+        return err
+    }
+    return nil
 }
