@@ -3,7 +3,7 @@ FROM golang:1.24-alpine AS builder
 WORKDIR /app
 
 # 1) Copiamos sólo los módulos (para cachear deps)
-COPY api/api/go.mod api/api/go.sum ./
+COPY api/go.mod api/go.sum ./
 RUN go mod download
 
 # 2) Ahora copiamos TODO el código
