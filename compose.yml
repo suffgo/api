@@ -6,7 +6,8 @@ services:
       dockerfile: Dockerfile
     container_name: go-app
     depends_on:
-      - db
+      - db: 
+        condition: service_healthy
     env_file:
       - .env
     ports:
@@ -21,7 +22,7 @@ services:
       # - ./main.go:/app/main.go:rw
     extra_hosts:
       - host.docker.internal:host-gateway
-
+        
   db:
     build: 
       context: . 

@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"suffgo/cmd/config"
 	"suffgo/cmd/database"
 
@@ -86,21 +87,43 @@ func NewDependencies(db database.Database) *Dependencies {
 }
 
 func (s *EchoServer) Start() {
+
+	if s.conf.Prod {
+		s.app.Debug = false
+		s.db.GetDb().ShowSQL(false)
+		s.app.Pre(middleware.HTTPSNonWWWRedirect()) //para redirigir http:// → https:// y eliminar www
+
+		origins := strings.Split(s.conf.Server.AllowedCORS, ",")
+		s.app.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+			AllowOrigins:     origins,
+			AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
+			AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+			AllowCredentials: true,
+		}))
+	} else {
+		s.app.Debug = true
+		s.db.GetDb().ShowSQL(true)
+		s.app.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+			AllowOrigins:     []string{"http://localhost:4321"},
+			AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
+			AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+			AllowCredentials: true,
+		}))
+	}
+
 	s.app.Use(middleware.Recover())
 	s.app.Use(middleware.Logger())
-	s.db.GetDb().ShowSQL(true)
-	s.app.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"http://localhost:4321"},
-		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
-		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
-		AllowCredentials: true,
-	}))
-	s.app.Static("/uploads", "internal/uploads/")
-
-	// s.app.Pre(middleware.HTTPSNonWWWRedirect()) a tener en cuenta para el futuro en caso de despliegue
+	s.app.Static("/uploads", s.conf.Server.UploadsDir)
 
 	authKey := []byte(s.conf.SecretKey)
 	store := sessions.NewCookieStore(authKey)
+	store.Options = &sessions.Options{
+		HttpOnly: true,
+		Secure:   s.conf.Prod,
+		SameSite: http.SameSiteLaxMode,
+		Path:     "/",
+	}
+
 	s.app.Use(session.Middleware(store))
 
 	deps := NewDependencies(s.db)
