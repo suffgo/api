@@ -40,6 +40,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+	"suffgo/cmd/migrate"
 )
 
 type EchoServer struct {
@@ -114,7 +116,11 @@ func (s *EchoServer) Start() {
 
 		s.app.Static("/uploads", "internal/uploads/")
 	}
-
+	
+	if err := migrate.Make(); err != nil{
+		fmt.Printf("Migraciones ya fueron hechas: %v\n", err)
+	}
+	
 	s.app.Use(middleware.Recover())
 	s.app.Use(middleware.Logger())
 	authKey := []byte(s.conf.SecretKey)

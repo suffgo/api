@@ -1,4 +1,4 @@
-package main
+package migrate
 
 import (
 	"fmt"
@@ -13,22 +13,52 @@ import (
 	e "suffgo/internal/votes/infrastructure/models"
 )
 
-func main() {
+func Make() error {
 	conf := config.GetConfig()
 	db := database.NewPostgresDatabase(conf)
 
-	MigrateUser(db)
-	MigrateRoom(db)
-	MigrateProposal(db)
-	MigrateOption(db)
-	MigrateRoomSetting(db)
-	MigrateVote(db)
+	err := MigrateUser(db)
+	
+	if err != nil {
+		return err
+	}
 
-	err := MakeConstraints(db)
+	err = MigrateRoom(db)
+	if err != nil {
+		return err
+	}
+
+	err = MigrateProposal(db) 
+
+	if err != nil {
+		return err
+	}
+
+	
+	err = MigrateOption(db)
+
+	if err != nil {
+		return err
+	}
+
+	err = MigrateVote(db)
+	if err != nil {
+		return err
+	}
+
+
+	err = MigrateRoomSetting(db)
+	if err != nil {
+		return err
+	}
+
+	err = MakeConstraints(db)
 	if err != nil {
 		fmt.Printf("Error al agregar la clave foránea: %v\n", err)
 		panic(err.Error())
 	}
+
+	return nil
 }
 
 func MigrateUser(db database.Database) error {
