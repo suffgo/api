@@ -39,9 +39,14 @@ var (
 
 func GetConfig() *Config {
 	once.Do(func() {
-		err := godotenv.Load("././.env")
-		if err != nil {
-			log.Fatalf("Error al cargar archivo .env: %v", err)
+
+		prod := os.Getenv("PROD") == "true"
+
+		// sólo intentar leer .env en desarrollo
+		if !prod {
+		  if err := godotenv.Load("././.env"); err != nil {
+			log.Println("No se encontró , continúo con variables de entorno del sistema")
+		  }
 		}
 
 		dbHost := os.Getenv("POSTGRES_HOST")
