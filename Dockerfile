@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-FROM golang:1.24.2 AS builder
-
-=======
 # -------- Build stage --------
 FROM golang:1.24.2 AS builder
->>>>>>> 051add15caba3e3fd9eb8224cecf9688282234a3
 WORKDIR /app
 
 # Solo copiamos los módulos para cachear capas de dependencias\ nCOPY api/go.mod api/go.sum ./

@@ -100,6 +100,8 @@ func (s *EchoServer) Start() {
 			AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 			AllowCredentials: true,
 		}))
+
+		s.app.Static("/uploads", s.conf.Server.UploadsDir)
 	} else {
 		s.app.Debug = true
 		s.db.GetDb().ShowSQL(true)
@@ -109,12 +111,12 @@ func (s *EchoServer) Start() {
 			AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 			AllowCredentials: true,
 		}))
+
+		s.app.Static("/uploads", "internal/uploads/")
 	}
 
 	s.app.Use(middleware.Recover())
 	s.app.Use(middleware.Logger())
-	s.app.Static("/uploads", s.conf.Server.UploadsDir)
-
 	authKey := []byte(s.conf.SecretKey)
 	store := sessions.NewCookieStore(authKey)
 	store.Options = &sessions.Options{
