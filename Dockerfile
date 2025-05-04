@@ -6,7 +6,7 @@ WORKDIR /app
 RUN go mod download
 
 # Copiamos el código
-COPY api/api/ ./
+COPY api/ ./
 
 # Construimos un binario estático optimizado para Linux amd64
 RUN CGO_ENABLED=0 \ 
