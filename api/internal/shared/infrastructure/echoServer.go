@@ -40,6 +40,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+	"suffgo/cmd/migrate"
 )
 
 type EchoServer struct {
@@ -89,19 +91,21 @@ func NewDependencies(db database.Database) *Dependencies {
 func (s *EchoServer) Start() {
 
 	if s.conf.Prod {
-		s.app.Debug = false
-		s.db.GetDb().ShowSQL(false)
-		s.app.Pre(middleware.HTTPSNonWWWRedirect()) //para redirigir http:// → https:// y eliminar www
-
 		origins := strings.Split(s.conf.Server.AllowedCORS, ",")
+
+		s.app.Pre(middleware.HTTPSNonWWWRedirect()) //para redirigir http:// → https:// y eliminar www
+		s.app.Pre(middleware.RemoveTrailingSlash())
+
 		s.app.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 			AllowOrigins:     origins,
-			AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
-			AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+			AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
+			AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization, echo.HeaderCookie},
+			ExposeHeaders:    []string{"Set-Cookie"},
 			AllowCredentials: true,
 		}))
 
-		s.app.Static("/uploads", s.conf.Server.UploadsDir)
+		s.app.Static("/uploads", "internal/uploads/")
+
 	} else {
 		s.app.Debug = true
 		s.db.GetDb().ShowSQL(true)
@@ -115,6 +119,10 @@ func (s *EchoServer) Start() {
 		s.app.Static("/uploads", "internal/uploads/")
 	}
 
+	if err := migrate.Make(); err != nil {
+		fmt.Printf("Migraciones ya fueron hechas: %v\n", err)
+	}
+
 	s.app.Use(middleware.Recover())
 	s.app.Use(middleware.Logger())
 	authKey := []byte(s.conf.SecretKey)
@@ -122,7 +130,7 @@ func (s *EchoServer) Start() {
 	store.Options = &sessions.Options{
 		HttpOnly: true,
 		Secure:   s.conf.Prod,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteNoneMode,
 		Path:     "/",
 	}
 

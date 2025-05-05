@@ -684,8 +684,45 @@ func (r *RoomEchoHandler) RemoveFromWhitelistHandler(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{"success": "room updated successfully"})
-	return c.JSON(http.StatusOK, map[string]interface{}{"success": "user deleted from whitelist sucessfully"})
 }
+
+
+
+// En caso de devolver error lo hace en forma de response
+func GetUserIDFromSession(c echo.Context) (*sv.ID, error) {
+	// Obtener el user_id de la sesion
+	userIDStr, ok := c.Get("user_id").(string)
+	if !ok || userIDStr == "" {
+		return nil, c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
+	}
+
+	adminIDUint, err := strconv.ParseUint(userIDStr, 10, 64)
+	if err != nil {
+		return nil, c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
+	}
+
+	adminID, err := sv.NewID(uint(adminIDUint))
+	if err != nil {
+		return nil, c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
+	}
+
+	return adminID, nil
+}
+
+var (
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			origin := r.Header.Get("Origin")
+    		// Ajusta aquí tu dominio real
+    		if origin == "http://localhost:4321" ||origin == "https://mi-frontend.onrender.com" {
+      			return true
+    		}
+			return false
+		},
+	}
+)
 
 func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
 
@@ -715,39 +752,6 @@ func (h *RoomEchoHandler) WsHandler(c echo.Context) error {
 
 	return nil
 }
-
-// En caso de devolver error lo hace en forma de response
-func GetUserIDFromSession(c echo.Context) (*sv.ID, error) {
-	// Obtener el user_id de la sesion
-	userIDStr, ok := c.Get("user_id").(string)
-	if !ok || userIDStr == "" {
-		return nil, c.JSON(http.StatusUnauthorized, map[string]string{"error": "usuario no autenticado"})
-	}
-
-	adminIDUint, err := strconv.ParseUint(userIDStr, 10, 64)
-	if err != nil {
-		return nil, c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
-	}
-
-	adminID, err := sv.NewID(uint(adminIDUint))
-	if err != nil {
-		return nil, c.JSON(http.StatusBadRequest, map[string]string{"error": se.ErrInvalidID.Error()})
-	}
-
-	return adminID, nil
-}
-
-var (
-	upgrader = websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-		CheckOrigin: func(r *http.Request) bool {
-			// Permitir conexiones desde http://localhost:3000 (ajusta según tu frontend)
-			origin := r.Header.Get("Origin")
-			return origin == "http://localhost:4321"
-		},
-	}
-)
 
 func (h *RoomEchoHandler) History(c echo.Context) error {
 	userIDStr, ok := c.Get("user_id").(string)
