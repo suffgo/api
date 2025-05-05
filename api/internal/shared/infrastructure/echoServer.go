@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"suffgo/cmd/config"
 	"suffgo/cmd/database"
@@ -91,12 +92,22 @@ func NewDependencies(db database.Database) *Dependencies {
 func (s *EchoServer) Start() {
 
 	if s.conf.Prod {
+		origins := strings.Split(s.conf.Server.AllowedCORS, ",")
+		url, err := url.Parse(origins[0])
+		if err != nil {
+			s.app.Logger.Fatal(err)
+		}
 		s.app.Debug = false
 		s.db.GetDb().ShowSQL(false)
-		s.app.Pre(middleware.HTTPSNonWWWRedirect()) //para redirigir http:// → https:// y eliminar www
-		s.app.Pre(middleware.RemoveTrailingSlash()) 
+		s.app.Use(middleware.Proxy(middleware.NewRoundRobinBalancer([]*middleware.ProxyTarget{
+			{
+				URL: url,
+			},
+		})))
 
-		origins := strings.Split(s.conf.Server.AllowedCORS, ",")
+		s.app.Pre(middleware.HTTPSNonWWWRedirect()) //para redirigir http:// → https:// y eliminar www
+		s.app.Pre(middleware.RemoveTrailingSlash())
+
 		s.app.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 			AllowOrigins:     origins,
 			AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
@@ -106,6 +117,7 @@ func (s *EchoServer) Start() {
 		}))
 
 		s.app.Static("/uploads", s.conf.Server.UploadsDir)
+
 	} else {
 		s.app.Debug = true
 		s.db.GetDb().ShowSQL(true)
