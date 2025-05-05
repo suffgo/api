@@ -28,9 +28,11 @@ Levantamos el contenedor.
 
     docker compose up 
 
-Las migraciones se ejecutan automaticamente pero como se intentan ejecutar antes de que la base de datos pueda ser levantada, hay que reiniciar el contenedor asi la aplicacion se vuelve a ejecutar y ahi si va a poder hacer migraciones.
+Ejecutar migraciones
 
-> Quedɔ en backlog no mas este punto
+    sh scripts/migrate.sh
+
+> En produccion son automaticas.
 
 ## Troubleshooting
 
