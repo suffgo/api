@@ -3,7 +3,6 @@ package infrastructure
 import (
 	"fmt"
 	"net/http"
-	"net/url"
 	"strings"
 	"suffgo/cmd/config"
 	"suffgo/cmd/database"
@@ -93,17 +92,6 @@ func (s *EchoServer) Start() {
 
 	if s.conf.Prod {
 		origins := strings.Split(s.conf.Server.AllowedCORS, ",")
-		url, err := url.Parse(origins[0])
-		if err != nil {
-			s.app.Logger.Fatal(err)
-		}
-		s.app.Debug = false
-		s.db.GetDb().ShowSQL(false)
-		s.app.Use(middleware.Proxy(middleware.NewRoundRobinBalancer([]*middleware.ProxyTarget{
-			{
-				URL: url,
-			},
-		})))
 
 		s.app.Pre(middleware.HTTPSNonWWWRedirect()) //para redirigir http:// → https:// y eliminar www
 		s.app.Pre(middleware.RemoveTrailingSlash())
@@ -116,7 +104,7 @@ func (s *EchoServer) Start() {
 			AllowCredentials: true,
 		}))
 
-		s.app.Static("/uploads", s.conf.Server.UploadsDir)
+		s.app.Static("/uploads", "internal/uploads/")
 
 	} else {
 		s.app.Debug = true
