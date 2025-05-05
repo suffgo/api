@@ -110,6 +110,17 @@ func (s *EchoServer) Start() {
 			fmt.Printf("Migraciones ya fueron hechas: %v\n", err)
 		}
 
+		authKey := []byte(s.conf.SecretKey)
+		store := sessions.NewCookieStore(authKey)
+		store.Options = &sessions.Options{
+			HttpOnly: true,
+			Secure:   s.conf.Prod,
+			SameSite: http.SameSiteNoneMode,
+			Path:     "/",
+		}
+	
+		s.app.Use(session.Middleware(store))
+
 	} else {
 		s.app.Debug = true
 		s.db.GetDb().ShowSQL(true)
@@ -121,21 +132,23 @@ func (s *EchoServer) Start() {
 		}))
 
 		s.app.Static("/uploads", "internal/uploads/")
+
+		authKey := []byte(s.conf.SecretKey)
+		store := sessions.NewCookieStore(authKey)
+		store.Options = &sessions.Options{
+			HttpOnly: true,
+			Secure:   s.conf.Prod,
+			SameSite: http.SameSiteLaxMode,
+			Path:     "/",
+		}
+	
+		s.app.Use(session.Middleware(store))
 	}
 
 
 	s.app.Use(middleware.Recover())
 	s.app.Use(middleware.Logger())
-	authKey := []byte(s.conf.SecretKey)
-	store := sessions.NewCookieStore(authKey)
-	store.Options = &sessions.Options{
-		HttpOnly: true,
-		Secure:   s.conf.Prod,
-		SameSite: http.SameSiteNoneMode,
-		Path:     "/",
-	}
 
-	s.app.Use(session.Middleware(store))
 
 	deps := NewDependencies(s.db)
 
