@@ -94,12 +94,14 @@ func (s *EchoServer) Start() {
 		s.app.Debug = false
 		s.db.GetDb().ShowSQL(false)
 		s.app.Pre(middleware.HTTPSNonWWWRedirect()) //para redirigir http:// → https:// y eliminar www
+		s.app.Pre(middleware.RemoveTrailingSlash()) 
 
 		origins := strings.Split(s.conf.Server.AllowedCORS, ",")
 		s.app.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 			AllowOrigins:     origins,
-			AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
-			AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+			AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
+			AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization, echo.HeaderCookie},
+			ExposeHeaders:    []string{"Set-Cookie"},
 			AllowCredentials: true,
 		}))
 
@@ -116,11 +118,11 @@ func (s *EchoServer) Start() {
 
 		s.app.Static("/uploads", "internal/uploads/")
 	}
-	
-	if err := migrate.Make(); err != nil{
+
+	if err := migrate.Make(); err != nil {
 		fmt.Printf("Migraciones ya fueron hechas: %v\n", err)
 	}
-	
+
 	s.app.Use(middleware.Recover())
 	s.app.Use(middleware.Logger())
 	authKey := []byte(s.conf.SecretKey)
@@ -128,7 +130,7 @@ func (s *EchoServer) Start() {
 	store.Options = &sessions.Options{
 		HttpOnly: true,
 		Secure:   s.conf.Prod,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteNoneMode,
 		Path:     "/",
 	}
 
