@@ -716,7 +716,7 @@ var (
 		CheckOrigin: func(r *http.Request) bool {
 			origin := r.Header.Get("Origin")
     		// Ajusta aquí tu dominio real
-    		if origin == "http://localhost:4321" ||origin == "https://mi-frontend.onrender.com" {
+    		if origin == "http://localhost:4321" ||origin == "https://frontend-n5g3.onrender.com" {
       			return true
     		}
 			return false
