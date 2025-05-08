@@ -1,7 +1,8 @@
-package migrate
+package main
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"suffgo/cmd/config"
 	"suffgo/cmd/database"
@@ -14,52 +15,49 @@ import (
 	e "suffgo/internal/votes/infrastructure/models"
 )
 
-func Make() error {
+func main()  {
 	conf := config.GetConfig()
 	db := database.NewPostgresDatabase(conf)
 
 	err := MigrateUser(db)
 	
 	if err != nil {
-		return err
+		log.Fatalf("Error al migrar la tabla users: %v", err)
 	}
 
 	err = MigrateRoom(db)
 	if err != nil {
-		return err
+		log.Fatalf("Error al migrar la tabla users: %v", err)
 	}
 
 	err = MigrateProposal(db) 
 
 	if err != nil {
-		return err
+		log.Fatalf("Error al migrar la tabla users: %v", err)
 	}
 
 	
 	err = MigrateOption(db)
 
 	if err != nil {
-		return err
+		log.Fatalf("Error al migrar la tabla users: %v", err)
 	}
 
 	err = MigrateVote(db)
 	if err != nil {
-		return err
+		log.Fatalf("Error al migrar la tabla users: %v", err)
 	}
 
 
 	err = MigrateRoomSetting(db)
 	if err != nil {
-		return err
+		log.Fatalf("Error al migrar la tabla users: %v", err)
 	}
 
 	err = MakeConstraints(db)
 	if err != nil {
 		fmt.Printf("Error al agregar la clave foránea: %v\n", err)
-		panic(err.Error())
 	}
-
-	return nil
 }
 
 func MigrateUser(db database.Database) error {
