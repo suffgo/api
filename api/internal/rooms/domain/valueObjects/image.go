@@ -16,7 +16,7 @@ const (
 	baseURLEnv       = "BASE_URL"
 	uploadsPathEnv   = "UPLOADS_DIR"
 	defaultUploads   = "internal/uploads"
-	subfolderUploads = "uploadsUsers"
+	subfolderUploads = "uploadsRooms"
 )
 
 var (

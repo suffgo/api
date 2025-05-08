@@ -11,27 +11,43 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	baseURLEnv       = "BASE_URL"
+	uploadsPathEnv   = "UPLOADS_DIR"
+	defaultUploads   = "internal/uploads"
+	subfolderUploads = "uploadsArchives"
+)
+
+var (
+	baseURL        string
+	baseUploadPath string
+)
+
+func init() {
+	// Leer URL base de la API
+	baseURL = os.Getenv(baseURLEnv)
+	if baseURL == "" {
+		baseURL = "http://localhost:3000"
+	}
+
+	// Leer path de subida de archivos
+	baseUploadPath = os.Getenv(uploadsPathEnv)
+	if baseUploadPath == "" {
+		baseUploadPath = defaultUploads
+	}
+}
+
+// Archive representa un archivo subido
+// Guarda solo el nombre de archivo, la ruta física y la URL se calculan dinámicamente
+
 type Archive struct {
 	Archive string
 }
 
-const fileBaseURL = "http://localhost:3000"
-
-// Extensiones permitidas
-var allowedExtensions = map[string]string{
-	"application/pdf":    ".pdf",
-	"application/msword": ".doc",
-	"application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
-	"application/vnd.ms-excel": ".xls",
-	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
-}
-
+// NewArchive procesa un string Base64, valida el mime y guarda el archivo
+// retorna un Archive con el nombre de archivo generado
 func NewArchive(archive string) (*Archive, error) {
-	if archive == "" {
-		return &Archive{Archive: archive}, nil
-	}
-
-	if !strings.Contains(archive, ",") {
+	if archive == "" || !strings.Contains(archive, ",") {
 		return &Archive{Archive: archive}, nil
 	}
 
@@ -45,29 +61,34 @@ func NewArchive(archive string) (*Archive, error) {
 		return nil, errors.New("formato de archivo no soportado")
 	}
 
+	// Generar un nombre único
 	uniqueID := uuid.New().String()
 	fileName := fmt.Sprintf("%s%s", uniqueID, ext)
 
-	uploadPath := filepath.Join("internal", "uploads", "proposalFiles")
+	// Construir rutas según variables de entorno
+	uploadPath := filepath.Join(baseUploadPath, subfolderUploads)
 	filePath := filepath.Join(uploadPath, fileName)
 
+	// Crear directorios si no existen
 	if err := os.MkdirAll(uploadPath, os.ModePerm); err != nil {
-		return nil, errors.New("error al crear directorio de archivos")
+		return nil, fmt.Errorf("error al crear directorio de archivos: %w", err)
 	}
 
+	// Escribir el archivo en disco persistente
 	if err := os.WriteFile(filePath, data, 0644); err != nil {
-		return nil, errors.New("error al guardar el archivo")
+		return nil, fmt.Errorf("error al guardar el archivo: %w", err)
 	}
 
 	return &Archive{Archive: fileName}, nil
 }
 
-// Método para obtener la URL del archivo
+// URL devuelve la ruta pública completa donde se sirve el archivo
 func (a *Archive) URL() string {
 	if a == nil || a.Archive == "" {
 		return ""
 	}
-	return fileBaseURL + "/uploads/proposalFiles" + filepath.Base(a.Archive)
+	// Ej: https://mi-api.com/uploads/uploadsArchives/<fileName>
+	return fmt.Sprintf("%s/uploads/%s/%s", baseURL, subfolderUploads, filepath.Base(a.Archive))
 }
 
 func decodeBase64File(base64File string) (string, []byte, error) {
@@ -83,4 +104,13 @@ func decodeBase64File(base64File string) (string, []byte, error) {
 	}
 
 	return mimeType, data, nil
+}
+
+// Extensiones permitidas para archivos de propuesta
+var allowedExtensions = map[string]string{
+	"application/pdf":    ".pdf",
+	"application/msword": ".doc",
+	"application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+	"application/vnd.ms-excel":                                               ".xls",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":       ".xlsx",
 }
