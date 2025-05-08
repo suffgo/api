@@ -15,12 +15,12 @@ type (
 		Db        *Db
 		SecretKey string
 		Prod      bool
+		UploadsDir  string
 	}
 
 	Server struct {
 		Port        int
 		AllowedCORS string
-		UploadsDir  string
 	}
 
 	Db struct {
@@ -79,7 +79,6 @@ func GetConfig() *Config {
 		server := &Server{
 			Port:        apiPort,
 			AllowedCORS: origins,
-			UploadsDir:  os.Getenv("UPLOADS_DIR"),
 		}
 
 		configInstance = &Config{
@@ -87,6 +86,7 @@ func GetConfig() *Config {
 			Db:        db,
 			SecretKey: secretKey,
 			Prod:      os.Getenv("PROD") == "true",
+			UploadsDir:  os.Getenv("UPLOADS_DIR"),
 		}
 	})
 
