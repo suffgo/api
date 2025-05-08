@@ -104,7 +104,7 @@ func (s *EchoServer) Start() {
 			AllowCredentials: true,
 		}))
 
-		s.app.Static("/uploads", s.conf.UploadsDir)
+		s.app.Static("/uploads", s.conf.UploadsDir) 
 
 		if err := migrateFunc.Make(); err != nil {
 			fmt.Printf("Migraciones ya fueron hechas: %v\n", err)

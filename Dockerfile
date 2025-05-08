@@ -20,6 +20,12 @@ FROM alpine:3.21 AS runner
 RUN apk add --no-cache ca-certificates
 WORKDIR /root/
 
+RUN mkdir -p /var/data/uploads \
+    && chmod 755 /var/data/uploads
+
+# (opcional) documentar el volumen
+VOLUME ["/var/data/uploads"]
+
 # Copiamos el binario desde builder
 COPY --from=builder /app/suffgo-api .
 
