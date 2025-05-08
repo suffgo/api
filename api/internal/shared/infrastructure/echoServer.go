@@ -94,7 +94,7 @@ func (s *EchoServer) Start() {
 		origins := strings.Split(s.conf.Server.AllowedCORS, ",")
 
 		s.app.Pre(middleware.HTTPSNonWWWRedirect()) //para redirigir http:// → https:// y eliminar www
-		s.app.Pre(middleware.RemoveTrailingSlash())
+		//s.app.Pre(middleware.RemoveTrailingSlash())
 
 		s.app.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 			AllowOrigins:     origins,
@@ -104,7 +104,7 @@ func (s *EchoServer) Start() {
 			AllowCredentials: true,
 		}))
 
-		s.app.Static("/uploads", s.conf.UploadsDir)
+		s.app.Static("/uploads", s.conf.UploadsDir) 
 
 		if err := migrateFunc.Make(); err != nil {
 			fmt.Printf("Migraciones ya fueron hechas: %v\n", err)

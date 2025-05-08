@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"strconv"
 	u "suffgo/internal/users/application/useCases"
@@ -419,6 +420,7 @@ func (u *UserEchoHandler) GetUsersByRoom(c echo.Context) error {
 }
 
 func (h *UserEchoHandler) Update(c echo.Context) error {
+	log.Println("Update user handler called")
 	id, err := GetAuthenticatedUserID(c)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
