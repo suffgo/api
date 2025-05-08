@@ -104,7 +104,7 @@ func (s *EchoServer) Start() {
 			AllowCredentials: true,
 		}))
 
-		s.app.Static("/uploads", "internal/uploads/")
+		s.app.Static("/uploads", s.conf.UploadsDir)
 
 	} else {
 		s.app.Debug = true
