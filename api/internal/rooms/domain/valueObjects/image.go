@@ -15,9 +15,17 @@ type Image struct {
 	Image string
 }
 
-const baseURL = "http://localhost:3000"
+var baseURL string
 
 func NewImage(image string) (*Image, error) {
+	envBaseUrl := os.Getenv("PROD")
+
+	if envBaseUrl != "true" {
+		baseURL = "http://localhost:3000"
+	} else {
+		baseURL = "https://frontend-n5g3.onrender.com"
+	}
+
 	if image == "" {
 		return &Image{Image: image}, nil
 	}
