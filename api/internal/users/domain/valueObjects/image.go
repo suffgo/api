@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -48,6 +49,7 @@ type Image struct {
 // NewImage procesa el Base64, genera un UUID y guarda el archivo bajo:
 //   <baseUploadPath>/<subfolderUploads>/<uuid>.<ext>
 func NewImage(image string) (*Image, error) {
+	log.Println("baseUploadPath:", baseUploadPath)
 	if image == "" || !strings.Contains(image, ",") {
 		return &Image{Image: image}, nil
 	}
