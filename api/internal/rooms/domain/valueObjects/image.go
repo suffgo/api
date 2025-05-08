@@ -14,7 +14,7 @@ import (
 const (
 	// Puedes también leer esto de env si lo necesitas
 	baseURLEnv       = "BASE_URL"
-	uploadsPathEnv   = "UPLOADS_PATH"
+	uploadsPathEnv   = "UPLOADS_DIR"
 	defaultUploads   = "internal/uploads"
 	subfolderUploads = "uploadsUsers"
 )
