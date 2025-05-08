@@ -94,7 +94,7 @@ func (s *EchoServer) Start() {
 		origins := strings.Split(s.conf.Server.AllowedCORS, ",")
 
 		s.app.Pre(middleware.HTTPSNonWWWRedirect()) //para redirigir http:// → https:// y eliminar www
-		s.app.Pre(middleware.RemoveTrailingSlash())
+		//s.app.Pre(middleware.RemoveTrailingSlash())
 
 		s.app.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 			AllowOrigins:     origins,
