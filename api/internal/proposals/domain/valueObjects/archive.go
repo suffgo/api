@@ -31,7 +31,7 @@ func init() {
 	if prod == "false" {
 		baseURL = "http://localhost:3000"
 	} else {
-		baseURL = os.Getenv(baseURLEnv)
+		baseURL = "https://api-4618.onrender.com"
 	}
 
 	// Leer path de subida de archivos
