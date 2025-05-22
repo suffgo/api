@@ -16,6 +16,7 @@ const (
 	uploadsPathEnv   = "UPLOADS_DIR"
 	defaultUploads   = "internal/uploads"
 	subfolderUploads = "uploadsArchives"
+	prodEnv          = "PROD"
 )
 
 var (
@@ -26,8 +27,11 @@ var (
 func init() {
 	// Leer URL base de la API
 	baseURL = os.Getenv(baseURLEnv)
-	if baseURL == "" {
+	prod := os.Getenv(prodEnv)
+	if prod == "false" {
 		baseURL = "http://localhost:3000"
+	} else {
+		baseURL = os.Getenv(baseURLEnv)
 	}
 
 	// Leer path de subida de archivos
@@ -111,6 +115,6 @@ var allowedExtensions = map[string]string{
 	"application/pdf":    ".pdf",
 	"application/msword": ".doc",
 	"application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
-	"application/vnd.ms-excel":                                               ".xls",
-	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":       ".xlsx",
+	"application/vnd.ms-excel": ".xls",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
 }
