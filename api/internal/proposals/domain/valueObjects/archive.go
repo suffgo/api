@@ -4,8 +4,10 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -24,21 +26,24 @@ var (
 	baseUploadPath string
 )
 
-func init() {
-	// Leer URL base de la API
-	baseURL = os.Getenv(baseURLEnv)
-	prod := os.Getenv(prodEnv)
-	if prod == "false" {
-		baseURL = "http://localhost:3000"
-	} else {
-		baseURL = "https://api-4618.onrender.com"
-	}
 
-	// Leer path de subida de archivos
-	baseUploadPath = os.Getenv(uploadsPathEnv)
-	if baseUploadPath == "" {
-		baseUploadPath = defaultUploads
-	}
+func init() {
+    // Leemos PROD como bool (acepta "true","1","TRUE",etc.)
+    prod, _ := strconv.ParseBool(os.Getenv(prodEnv))
+
+    if prod {
+        baseURL = os.Getenv(baseURLEnv)
+        if baseURL == "" {
+            log.Fatal("en producción BASE_URL no puede estar vacío")
+        }
+    } else {
+        baseURL = "http://localhost:3000"
+    }
+
+    baseUploadPath = os.Getenv(uploadsPathEnv)
+    if baseUploadPath == "" {
+        baseUploadPath = defaultUploads
+    }
 }
 
 // Archive representa un archivo subido
